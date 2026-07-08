@@ -234,7 +234,7 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     }
 
     // Get label style from item or use defaults
-    const defaultLabelStyle = getDefaultLabelStyle(item.drawType);
+    const defaultLabelStyle = getDefaultLabelStyle();
     let labelStyleState: LabelStyleState = {
       textColor: defaultLabelStyle.textColor,
       textSize: defaultLabelStyle.textSize,
@@ -554,13 +554,6 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
     // Use ref to get current colorPicker state to avoid stale closure issues
     const currentColorPicker = colorPickerRef.current;
 
-    console.log("ðŸŽ¨ MyMapsSymbolizer: handleColorChange called", {
-      hexColor,
-      colorType: currentColorPicker.colorType,
-      labelColorType: currentColorPicker.labelColorType,
-      itemId: item.id,
-    });
-
     setState((prev) => {
       if (currentColorPicker.colorType === "fill") {
         const rgbWithAlpha = { ...rgb, a: prev.fillAlpha };
@@ -628,11 +621,6 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   };
 
   const closeColorPicker = () => {
-    console.log("ðŸ”´ MyMapsSymbolizer: closeColorPicker called", {
-      wasVisible: colorPicker.visible,
-      colorType: colorPicker.colorType,
-      labelColorType: colorPicker.labelColorType,
-    });
     setColorPicker((prev) => ({ ...prev, visible: false }));
   };
 
@@ -641,11 +629,6 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
   // ============================================
 
   const handleLabelColorChange = (prev: SymbolizerState, labelColorType: string, hexColor: string): SymbolizerState => {
-    console.log("ðŸ·ï¸ MyMapsSymbolizer: handleLabelColorChange called", {
-      labelColorType,
-      hexColor,
-      itemId: item.id,
-    });
 
     const newLabelStyle = { ...prev.labelStyle };
 
@@ -777,20 +760,6 @@ const MyMapsSymbolizer: React.FC<MyMapsSymbolizerProps> = ({ visible, item }) =>
       currentColor: state.labelStyle.anchorColor,
     });
   };
-
-  // ============================================
-  // RENDER
-  // ============================================
-
-  console.log("MyMapsSymbolizer render", {
-    visible,
-    itemId: item.id,
-    drawType: item.drawType,
-    labelVisible: item.labelVisible,
-    colorPickerVisible: colorPicker.visible,
-    labelStyle: item.labelStyle,
-    style: item.style,
-  });
 
   if (!visible) {
     return <div className="hidden" />;
@@ -980,8 +949,6 @@ export const attachSymbolizerListeners = (
   const getCurrentSymbolizerState = () => {
     if (!item) return null;
 
-    console.log("🔍 Getting current state from item:", item.id);
-
     // If item has a style, try to extract values from it
     const currentState = {
       pointType: item.pointType || "circle",
@@ -997,21 +964,16 @@ export const attachSymbolizerListeners = (
 
     // Extract current values from style object - handle the actual storage format
     if (item.style) {
-      console.log("🔍 Reading style object:", item.style);
 
       // Check if it's an OpenLayers Style object
       if (item.style instanceof Style) {
-        console.log("🔍 Reading from OpenLayers Style object using public API");
-        console.log("🔍 Full OpenLayers Style object:", item.style);
 
         // POINTS: Use image styles (existing logic)
         const imageStyle = item.style.getImage();
-        console.log("🔍 ImageStyle from getImage():", imageStyle);
 
         // LINES & POLYGONS: Use direct fill/stroke styles
         const directFill = item.style.getFill();
         const directStroke = item.style.getStroke();
-        console.log("🔍 Direct Fill/Stroke from style:", { directFill, directStroke });
 
         if (imageStyle) {
           // Handle CircleStyle
@@ -1020,10 +982,8 @@ export const attachSymbolizerListeners = (
             currentState.pointType = "circle";
 
             const fill = imageStyle.getFill();
-            console.log("🔍 Circle Fill object:", fill);
             if (fill) {
               const fillColorRaw = fill.getColor();
-              console.log("🔍 Circle fill color from OpenLayers (raw):", fillColorRaw, typeof fillColorRaw);
 
               let fillColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1038,7 +998,6 @@ export const attachSymbolizerListeners = (
               if (fillColor) {
                 currentState.fillColor = fillColor;
                 currentState.fillAlpha = fillColor.a;
-                console.log("🔍 Converted circle fill color:", currentState.fillColor);
               }
             }
 
@@ -1046,7 +1005,6 @@ export const attachSymbolizerListeners = (
             if (stroke) {
               currentState.strokeWidth = stroke.getWidth() || 2;
               const strokeColorRaw = stroke.getColor();
-              console.log("🔍 Circle stroke color from OpenLayers (raw):", strokeColorRaw, typeof strokeColorRaw);
 
               let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1061,7 +1019,6 @@ export const attachSymbolizerListeners = (
               if (strokeColor) {
                 currentState.strokeColor = strokeColor;
                 currentState.strokeAlpha = strokeColor.a;
-                console.log("🔍 Converted circle stroke color:", currentState.strokeColor);
               }
             }
           }
@@ -1083,10 +1040,8 @@ export const attachSymbolizerListeners = (
             }
 
             const fill = imageStyle.getFill();
-            console.log("🔍 RegularShape Fill object:", fill);
             if (fill) {
               const fillColorRaw = fill.getColor();
-              console.log("🔍 RegularShape fill color from OpenLayers (raw):", fillColorRaw, typeof fillColorRaw);
 
               let fillColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1101,16 +1056,13 @@ export const attachSymbolizerListeners = (
               if (fillColor) {
                 currentState.fillColor = fillColor;
                 currentState.fillAlpha = fillColor.a;
-                console.log("🔍 Converted RegularShape fill color:", currentState.fillColor);
               }
             }
 
             const stroke = imageStyle.getStroke();
-            console.log("🔍 RegularShape Stroke object:", stroke);
             if (stroke) {
               currentState.strokeWidth = stroke.getWidth() || 2;
               const strokeColorRaw = stroke.getColor();
-              console.log("🔍 RegularShape stroke color from OpenLayers (raw):", strokeColorRaw, typeof strokeColorRaw);
 
               let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1125,7 +1077,6 @@ export const attachSymbolizerListeners = (
               if (strokeColor) {
                 currentState.strokeColor = strokeColor;
                 currentState.strokeAlpha = strokeColor.a;
-                console.log("🔍 Converted RegularShape stroke color:", currentState.strokeColor);
               }
             }
           }
@@ -1133,12 +1084,10 @@ export const attachSymbolizerListeners = (
 
         // LINES & POLYGONS: Handle direct fill/stroke styles (for non-point geometries)
         if (!imageStyle && (directFill || directStroke)) {
-          console.log("🔍 Processing direct fill/stroke styles for line/polygon");
 
           // Handle direct fill (for polygons)
           if (directFill) {
             const fillColorRaw = directFill.getColor();
-            console.log("🔍 Direct fill color from OpenLayers (raw):", fillColorRaw, typeof fillColorRaw);
 
             let fillColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1153,14 +1102,12 @@ export const attachSymbolizerListeners = (
             if (fillColor) {
               currentState.fillColor = fillColor;
               currentState.fillAlpha = fillColor.a;
-              console.log("🔍 Converted direct fill color:", currentState.fillColor);
             }
           }
 
           // Handle direct stroke (for lines and polygons)
           if (directStroke) {
             const strokeColorRaw = directStroke.getColor();
-            console.log("🔍 Direct stroke color from OpenLayers (raw):", strokeColorRaw, typeof strokeColorRaw);
 
             let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1175,13 +1122,11 @@ export const attachSymbolizerListeners = (
             if (strokeColor) {
               currentState.strokeColor = strokeColor;
               currentState.strokeAlpha = strokeColor.a;
-              console.log("🔍 Converted direct stroke color:", currentState.strokeColor);
             }
 
             // Extract stroke width and dash pattern
             const extractedWidth = directStroke.getWidth();
             currentState.strokeWidth = extractedWidth || 2;
-            console.log("🔍 STROKE WIDTH DEBUG - Raw width from directStroke.getWidth():", extractedWidth, "Final strokeWidth:", currentState.strokeWidth);
 
             const lineDash = directStroke.getLineDash();
             if (lineDash && lineDash.length > 0) {
@@ -1191,16 +1136,9 @@ export const attachSymbolizerListeners = (
                 currentState.strokeType = "dot";
               }
             }
-            console.log("🔍 Extracted stroke properties for", item.geometryType, ":", {
-              strokeWidth: currentState.strokeWidth,
-              strokeType: currentState.strokeType,
-              lineDash,
-            });
           }
         }
       } else {
-        // Regular JSON object format (current storage structure)
-        console.log("🔍 Reading from JSON style object format");
         const style = item.style as {
           image?: {
             fill?: { color?: string | [number, number, number, number] };
@@ -1214,7 +1152,6 @@ export const attachSymbolizerListeners = (
         };
 
         if (style.image) {
-          console.log("🔍 Found style.image:", style.image);
 
           // Extract basic properties
           currentState.radius = style.image.radius || 8;
@@ -1224,7 +1161,6 @@ export const attachSymbolizerListeners = (
           // Extract fill color - handle both array and string formats
           if (style.image.fill && style.image.fill.color) {
             const fillColorData = style.image.fill.color;
-            console.log("🔍 Found fill color:", fillColorData, typeof fillColorData);
 
             let fillColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1239,20 +1175,17 @@ export const attachSymbolizerListeners = (
             if (fillColor) {
               currentState.fillColor = fillColor;
               currentState.fillAlpha = fillColor.a;
-              console.log("🔍 Converted JSON fill color:", fillColor);
             }
           }
 
           // Extract stroke properties
           if (style.image.stroke) {
-            console.log("🔍 Found stroke:", style.image.stroke);
 
             currentState.strokeWidth = style.image.stroke.width || 2;
 
             // Extract stroke color - handle both array and string formats
             if (style.image.stroke.color) {
               const strokeColorData = style.image.stroke.color;
-              console.log("🔍 Found stroke color:", strokeColorData, typeof strokeColorData);
 
               let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1267,7 +1200,6 @@ export const attachSymbolizerListeners = (
               if (strokeColor) {
                 currentState.strokeColor = strokeColor;
                 currentState.strokeAlpha = strokeColor.a;
-                console.log("🔍 Converted JSON stroke color:", strokeColor);
               }
             }
           }
@@ -1275,12 +1207,10 @@ export const attachSymbolizerListeners = (
 
         // LINES & POLYGONS: Handle direct fill/stroke in JSON (not from image)
         if (!style.image || (item.geometryType !== "Point" && item.geometryType !== "MultiPoint")) {
-          console.log("🔍 Processing direct fill/stroke from JSON for line/polygon");
 
           // Handle direct fill (for polygons)
           if (style.fill && style.fill.color) {
             const fillColorData = style.fill.color;
-            console.log("🔍 Found direct fill color:", fillColorData, typeof fillColorData);
 
             let fillColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1295,14 +1225,12 @@ export const attachSymbolizerListeners = (
             if (fillColor) {
               currentState.fillColor = fillColor;
               currentState.fillAlpha = fillColor.a;
-              console.log("🔍 Converted JSON direct fill color:", fillColor);
             }
           }
 
           // Handle direct stroke (for lines and polygons)
           if (style.stroke && style.stroke.color) {
             const strokeColorData = style.stroke.color;
-            console.log("🔍 Found direct stroke color:", strokeColorData, typeof strokeColorData);
 
             let strokeColor: { r: number; g: number; b: number; a: number } | null = null;
 
@@ -1317,22 +1245,17 @@ export const attachSymbolizerListeners = (
             if (strokeColor) {
               currentState.strokeColor = strokeColor;
               currentState.strokeAlpha = strokeColor.a;
-              console.log("🔍 Converted JSON direct stroke color:", strokeColor);
             }
           }
 
           // Handle stroke width from direct stroke
           if (style.stroke && style.stroke.width) {
             currentState.strokeWidth = style.stroke.width;
-            console.log("🔍 STROKE WIDTH DEBUG - JSON stroke width:", style.stroke.width, "Final strokeWidth:", currentState.strokeWidth);
           } else {
-            console.log("🔍 STROKE WIDTH DEBUG - No stroke width found in JSON style.stroke:", style.stroke);
           }
         }
       }
     }
-
-    console.log("🔍 Current state extracted:", currentState);
     return currentState;
   };
 
@@ -1350,8 +1273,6 @@ export const attachSymbolizerListeners = (
       // Fallback to point style if no item
       return getPointStyle(pointType, radius, strokeColor, strokeWidth, fillColor, rotation, strokeType);
     }
-
-    console.log("🎨 Creating style for geometry type:", item.geometryType, { pointType, strokeType, strokeColor, fillColor });
 
     // Use geometry type to determine correct styling function
     if (item.geometryType === "Point" || item.geometryType === "MultiPoint") {
@@ -1395,8 +1316,6 @@ export const attachSymbolizerListeners = (
   const updateSymbolizerPointType = (itemId: string, newPointType: string) => {
     if (!item) return;
 
-    console.log("🎯 Updating symbolizer point type:", { itemId, newPointType });
-
     // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
     const symbolizerContainer = container.querySelector(".mymaps-symbolizer-container");
     const strokeStyleSelect = symbolizerContainer?.querySelector("select[name='pointOutline']") as HTMLSelectElement;
@@ -1418,17 +1337,6 @@ export const attachSymbolizerListeners = (
     const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
     const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-    console.log("🔍 Current state before point type update:", state);
-    console.log("🔧 Using DOM values for point type change:", {
-      pointType: newPointType,
-      strokeType: currentStrokeType,
-      radius: currentRadius,
-      fillAlpha: currentFillAlpha,
-      strokeAlpha: currentStrokeAlpha,
-      strokeWidth: currentStrokeWidth,
-      rotation: currentRotation,
-    });
-
     // Create new style with updated point type using ALL current DOM values
     const style = createPointStyleFromHelpers(
       newPointType, // Use the new point type
@@ -1446,20 +1354,15 @@ export const attachSymbolizerListeners = (
       pointType: newPointType,
       strokeType: currentStrokeType,
     };
-
-    console.log("🎯 Updating item in store with new point type:", { itemId, updates, style });
     updateItem(itemId, updates);
 
     // Emit event to refresh the feature on the map
     emit("mymap-style-updated", { itemId, style, pointType: newPointType });
-    console.log("🔄 Emitted mymap-style-updated event for point type change:", itemId);
   };
 
   // Function to update symbolizer fill color
   const updateSymbolizerFillColor = (itemId: string, newColor: { r: number; g: number; b: number }) => {
     if (!item) return;
-
-    console.log("🎯 Updating symbolizer fill color:", { itemId, newColor });
 
     // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
     const symbolizerContainer = container.querySelector(".mymaps-symbolizer-container");
@@ -1483,17 +1386,6 @@ export const attachSymbolizerListeners = (
 
     // Read current stroke color from DOM
     const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
-
-    console.log("🔍 Current state before fill color update:", state);
-    console.log("🔧 Using DOM values for fill color:", {
-      pointType: currentPointType,
-      strokeType: currentStrokeType,
-      radius: currentRadius,
-      fillAlpha: currentFillAlpha,
-      strokeAlpha: currentStrokeAlpha,
-      strokeWidth: currentStrokeWidth,
-      rotation: currentRotation,
-    });
 
     // Update the fill color in state and override all values with DOM values
     const updatedState = {
@@ -1526,20 +1418,15 @@ export const attachSymbolizerListeners = (
       pointType: updatedState.pointType, // Preserve pointType
       strokeType: updatedState.strokeType, // Preserve strokeType
     };
-
-    console.log("🎯 Updating item in store with new fill color:", { itemId, updates, style });
     updateItem(itemId, updates);
 
     // Emit event to refresh the feature on the map
     emit("mymap-style-updated", { itemId, style, fillColor: newColor });
-    console.log("🔄 Emitted mymap-style-updated event for fill color change:", itemId);
   };
 
   // Function to update symbolizer stroke color
   const updateSymbolizerStrokeColor = (itemId: string, newColor: { r: number; g: number; b: number }) => {
     if (!item) return;
-
-    console.log("🎯 Updating symbolizer stroke color:", { itemId, newColor });
 
     // CRITICAL FIX: Get current dropdown values AND slider values from DOM to preserve all current settings
     const symbolizerContainer = container.querySelector(".mymaps-symbolizer-container");
@@ -1563,17 +1450,6 @@ export const attachSymbolizerListeners = (
 
     // Read current fill color from DOM
     const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
-
-    console.log("🔍 Current state before stroke color update:", state);
-    console.log("🔧 Using DOM values for stroke color:", {
-      pointType: currentPointType,
-      strokeType: currentStrokeType,
-      radius: currentRadius,
-      fillAlpha: currentFillAlpha,
-      strokeAlpha: currentStrokeAlpha,
-      strokeWidth: currentStrokeWidth,
-      rotation: currentRotation,
-    });
 
     // Update the stroke color in state and override all values with DOM values
     const updatedState = {
@@ -1606,20 +1482,15 @@ export const attachSymbolizerListeners = (
       pointType: updatedState.pointType, // Preserve pointType
       strokeType: updatedState.strokeType, // Preserve strokeType
     };
-
-    console.log("🎯 Updating item in store with new stroke color:", { itemId, updates, style });
     updateItem(itemId, updates);
 
     // Emit event to refresh the feature on the map
     emit("mymap-style-updated", { itemId, style, strokeColor: newColor });
-    console.log("🔄 Emitted mymap-style-updated event for stroke color change:", itemId);
   };
 
   // Function to update symbolizer fill opacity - GEOMETRY AWARE
   const updateSymbolizerFillOpacity = (itemId: string, newOpacity: number) => {
     if (!item) return;
-
-    console.log("🎯 Updating symbolizer fill opacity for", item.geometryType, ":", { itemId, newOpacity });
 
     const symbolizerContainer = container.querySelector(".mymaps-symbolizer-container");
     const state = getCurrentSymbolizerState();
@@ -1645,16 +1516,6 @@ export const attachSymbolizerListeners = (
     // Read current colors from DOM
     const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
     const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
-
-    console.log("🔧 DOM values for fill opacity:", {
-      geometryType: item.geometryType,
-      pointType: currentPointType,
-      strokeType: currentStrokeType,
-      radius: sliderVals.radius,
-      strokeAlpha: sliderVals.strokeAlpha,
-      strokeWidth: sliderVals.strokeWidth,
-      rotation: sliderVals.rotation,
-    });
 
     // Update the fill opacity in state
     const updatedState = {
@@ -1700,21 +1561,16 @@ export const attachSymbolizerListeners = (
         strokeType: updatedState.strokeType,
         fillAlpha: newOpacity, // Preserve fillAlpha for persistence
       };
-
-      console.log("🎯 Updating", item.geometryType, "item in store with new fill opacity:", { itemId, updates, style });
       updateItem(itemId, updates);
 
       // Emit event to refresh the feature on the map
       emit("mymap-style-updated", { itemId, style, fillOpacity: newOpacity });
-      console.log("🔄 Emitted mymap-style-updated event for fill opacity change:", itemId);
     }
   };
 
   // Function to update symbolizer stroke opacity - GEOMETRY AWARE
   const updateSymbolizerStrokeOpacity = (itemId: string, newOpacity: number) => {
     if (!item) return;
-
-    console.log("🎯 Updating symbolizer stroke opacity for", item.geometryType, ":", { itemId, newOpacity });
 
     const symbolizerContainer = container.querySelector(".mymaps-symbolizer-container");
     const state = getCurrentSymbolizerState();
@@ -1740,16 +1596,6 @@ export const attachSymbolizerListeners = (
     // Read current colors from DOM
     const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
     const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
-
-    console.log("🔧 DOM values for stroke opacity:", {
-      geometryType: item.geometryType,
-      pointType: currentPointType,
-      strokeType: currentStrokeType,
-      radius: sliderVals.radius,
-      fillAlpha: sliderVals.fillAlpha,
-      strokeWidth: sliderVals.strokeWidth,
-      rotation: sliderVals.rotation,
-    });
 
     // Update the stroke opacity in state
     const updatedState = {
@@ -1800,13 +1646,10 @@ export const attachSymbolizerListeners = (
         strokeType: updatedState.strokeType,
         strokeAlpha: newOpacity, // Preserve strokeAlpha for persistence
       };
-
-      console.log("🎯 Updating", item.geometryType, "item in store with new stroke opacity:", { itemId, updates, style });
       updateItem(itemId, updates);
 
       // Emit event to refresh the feature on the map
       emit("mymap-style-updated", { itemId, style, strokeOpacity: newOpacity });
-      console.log("🔄 Emitted mymap-style-updated event for stroke opacity change:", itemId);
     }
   };
 
@@ -1971,7 +1814,7 @@ export const attachSymbolizerListeners = (
         updateSymbolizerStrokeColor(currentItem.id, { r: rgbColor.r, g: rgbColor.g, b: rgbColor.b });
       } else {
         // Handle label/callout colors
-        const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+        const defaultLabelStyle = getDefaultLabelStyle();
         const currentLabelStyle = {
           ...defaultLabelStyle,
           ...((currentItem.labelStyle as Record<string, unknown>) || {}),
@@ -1992,8 +1835,6 @@ export const attachSymbolizerListeners = (
             ...currentLabelStyle,
             [propertyName]: selectedColor,
           };
-
-          console.log("🏷️ Updating label style via DOM color picker:", { colorType, propertyName, selectedColor, updatedLabelStyle });
           updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
           emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
         }
@@ -2082,7 +1923,6 @@ export const attachSymbolizerListeners = (
   // Re-attach symbolizer component event listeners (React handlers are lost when copying HTML to overlay)
   const symbolizerContainer = container.querySelector(".mymaps-symbolizer-container");
   if (symbolizerContainer) {
-    console.log("🔧 Setting up Symbolizer DOM event listeners with store-based state management");
 
     // 🎯 Get current state once at the top for all controls to use
     const currentState = getCurrentSymbolizerState();
@@ -2097,12 +1937,10 @@ export const attachSymbolizerListeners = (
       // 🎯 CRITICAL: Set dropdown value from current state before attaching events
       const currentPointType = item.pointType || currentState.pointType || "circle";
       pointStyleSelect.value = currentPointType;
-      console.log("🔧 Set point style dropdown value from state:", currentPointType);
 
       pointStyleSelect.addEventListener("change", (e) => {
         e.stopPropagation();
         const newPointType = (e.target as HTMLSelectElement).value;
-        console.log("🎯 Point style changed via DOM event:", newPointType);
 
         // Update the item's point type and style
         updateSymbolizerPointType(item.id, newPointType);
@@ -2116,12 +1954,10 @@ export const attachSymbolizerListeners = (
       // 🎯 Set stroke type dropdown value from current state
       const currentStrokeType = item.strokeType || currentState.strokeType || "normal";
       strokeTypeSelect.value = currentStrokeType;
-      console.log("🔧 Set stroke type dropdown value from state:", currentStrokeType);
 
       strokeTypeSelect.addEventListener("change", (e) => {
         e.stopPropagation();
         const newStrokeType = (e.target as HTMLSelectElement).value;
-        console.log("🎯 Stroke type changed via DOM event:", newStrokeType);
 
         // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
         const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
@@ -2137,16 +1973,6 @@ export const attachSymbolizerListeners = (
         // Read current colors from DOM color buttons
         const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
         const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
-
-        console.log("🔧 Using DOM values for stroke type change:", {
-          pointType: currentPointType,
-          strokeType: newStrokeType,
-          radius: sliderVals.radius,
-          fillAlpha: sliderVals.fillAlpha,
-          strokeAlpha: sliderVals.strokeAlpha,
-          strokeWidth: sliderVals.strokeWidth,
-          rotation: sliderVals.rotation,
-        });
 
         if (item?.id) {
           // Create style - EXPLICIT GEOMETRY TYPE CHECKING like old app
@@ -2183,8 +2009,6 @@ export const attachSymbolizerListeners = (
               pointType: currentPointType,
               strokeType: newStrokeType, // Update stroke type
             };
-
-            console.log("🎯 Updating item in store with new stroke type:", { itemId: item.id, updates, style });
             updateItem(item.id, updates);
 
             // Emit event to refresh the feature on the map
@@ -2200,11 +2024,9 @@ export const attachSymbolizerListeners = (
     if (sizeSlider) {
       // 🎯 Set slider value from current state
       sizeSlider.value = currentState.radius.toString();
-      console.log("🔧 Set size slider value from state:", currentState.radius);
       const handleSizeChange = (e: Event) => {
         e.stopPropagation();
         const newRadius = parseFloat((e.target as HTMLInputElement).value);
-        console.log("🎯 Size slider changed via DOM event:", newRadius);
 
         // CRITICAL FIX: Get ALL current values from DOM to preserve all current settings
         const pointStyleSelect = symbolizerContainer.querySelector("select[name='pointSymbols']") as HTMLSelectElement;
@@ -2224,16 +2046,6 @@ export const attachSymbolizerListeners = (
         const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
         const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-        console.log("🔧 Using DOM values for size change:", {
-          pointType: currentPointType,
-          strokeType: currentStrokeType,
-          radius: newRadius,
-          fillAlpha: sliderVals.fillAlpha,
-          strokeAlpha: sliderVals.strokeAlpha,
-          strokeWidth: sliderVals.strokeWidth,
-          rotation: sliderVals.rotation,
-        });
-
         if (item?.id) {
           // Create style with ALL current DOM values
           const style = createPointStyleFromHelpers(
@@ -2252,8 +2064,6 @@ export const attachSymbolizerListeners = (
             pointType: currentPointType,
             strokeType: currentStrokeType,
           };
-
-          console.log("🎯 Updating item in store with new size:", { itemId: item.id, updates, style });
           updateItem(item.id, updates);
 
           // Emit event to refresh the feature on the map
@@ -2276,12 +2086,10 @@ export const attachSymbolizerListeners = (
     if (fillOpacitySlider) {
       // 🎯 Set fill opacity slider value from current state
       fillOpacitySlider.value = currentState.fillAlpha.toString();
-      console.log("🔧 Set fill opacity slider value from state:", currentState.fillAlpha);
 
       const handleFillOpacityChange = (e: Event) => {
         e.stopPropagation();
         const newOpacity = parseFloat((e.target as HTMLInputElement).value);
-        console.log("🎯 Fill opacity slider changed via DOM event:", newOpacity);
         if (item?.id) {
           updateSymbolizerFillOpacity(item.id, newOpacity);
         }
@@ -2302,12 +2110,10 @@ export const attachSymbolizerListeners = (
     if (strokeOpacitySlider) {
       // 🎯 Set stroke opacity slider value from current state
       strokeOpacitySlider.value = currentState.strokeAlpha.toString();
-      console.log("🔧 Set stroke opacity slider value from state:", currentState.strokeAlpha);
 
       const handleStrokeOpacityChange = (e: Event) => {
         e.stopPropagation();
         const newOpacity = parseFloat((e.target as HTMLInputElement).value);
-        console.log("🎯 Stroke opacity slider changed via DOM event:", newOpacity);
         if (item?.id) {
           updateSymbolizerStrokeOpacity(item.id, newOpacity);
         }
@@ -2328,13 +2134,10 @@ export const attachSymbolizerListeners = (
     if (strokeWidthSlider) {
       // Set stroke width slider value from current state
       strokeWidthSlider.value = currentState.strokeWidth.toString();
-      console.log("🔧 STROKE WIDTH SLIDER DEBUG - Setting slider value to:", currentState.strokeWidth, "for geometry:", item?.geometryType);
-      console.log("🔧 STROKE WIDTH SLIDER DEBUG - Slider element:", strokeWidthSlider, "Final value:", strokeWidthSlider.value);
 
       const handleStrokeWidthChange = (e: Event) => {
         e.stopPropagation();
         const newStrokeWidth = parseFloat((e.target as HTMLInputElement).value);
-        console.log("🎯 Stroke width slider changed via DOM event for", item?.geometryType, ":", newStrokeWidth);
 
         // Get current state from store/item (not DOM)
         const state = getCurrentSymbolizerState();
@@ -2357,17 +2160,6 @@ export const attachSymbolizerListeners = (
         // Read current colors from DOM color buttons
         const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
         const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
-
-        console.log("🔧 DOM values for stroke width change:", {
-          geometryType: item?.geometryType,
-          pointType: currentPointType,
-          strokeType: currentStrokeType,
-          radius: sliderVals.radius,
-          fillAlpha: sliderVals.fillAlpha,
-          strokeAlpha: sliderVals.strokeAlpha,
-          strokeWidth: newStrokeWidth,
-          rotation: sliderVals.rotation,
-        });
 
         if (item?.id) {
           // Create style - EXPLICIT GEOMETRY TYPE CHECKING like old app
@@ -2404,13 +2196,10 @@ export const attachSymbolizerListeners = (
               pointType: currentPointType,
               strokeType: currentStrokeType,
             };
-
-            console.log("🎯 Updating", item?.geometryType, "item in store with new stroke width:", { itemId: item.id, updates, style });
             updateItem(item.id, updates);
 
             // Emit event to refresh the feature on the map
             emit("mymap-style-updated", { itemId: item.id, style, strokeWidth: newStrokeWidth });
-            console.log("🔄 Emitted mymap-style-updated event for stroke width change:", item.id);
           }
         }
       };
@@ -2430,12 +2219,10 @@ export const attachSymbolizerListeners = (
     if (rotationSlider) {
       // Set rotation slider value from current state
       rotationSlider.value = currentState.rotation.toString();
-      console.log("🔧 Set rotation slider value from state:", currentState.rotation);
 
       const handleRotationChange = (e: Event) => {
         e.stopPropagation();
         const newRotation = parseFloat((e.target as HTMLInputElement).value);
-        console.log("🎯 Rotation slider changed via DOM event:", newRotation);
 
         // Get current state from store/item (not DOM)
         const state = getCurrentSymbolizerState();
@@ -2455,16 +2242,6 @@ export const attachSymbolizerListeners = (
         const currentFillColor = extractColorFromDOMButton("sc-mymaps-symbolizer-color-button");
         const currentStrokeColor = extractColorFromDOMButton("sc-mymaps-symbolizer-stroke-color-button");
 
-        console.log("🔧 Using DOM values for rotation change:", {
-          pointType: currentPointType,
-          strokeType: currentStrokeType,
-          radius: sliderVals.radius,
-          fillAlpha: sliderVals.fillAlpha,
-          strokeAlpha: sliderVals.strokeAlpha,
-          strokeWidth: sliderVals.strokeWidth,
-          rotation: newRotation,
-        });
-
         if (item?.id) {
           // Create style with ALL current DOM values and new rotation
           const style = createPointStyleFromHelpers(
@@ -2483,8 +2260,6 @@ export const attachSymbolizerListeners = (
             pointType: currentPointType,
             strokeType: currentStrokeType,
           };
-
-          console.log("🎯 Updating item in store with new rotation:", { itemId: item.id, updates, style });
           updateItem(item.id, updates);
 
           // Emit event to refresh the feature on the map
@@ -2509,12 +2284,10 @@ export const attachSymbolizerListeners = (
       const currentFillColor = currentState.fillColor;
       const fillColorHex = `rgb(${currentFillColor.r}, ${currentFillColor.g}, ${currentFillColor.b})`;
       fillColorButton.style.backgroundColor = fillColorHex;
-      console.log("🔧 Set fill color button background from state:", fillColorHex);
 
       const handleFillColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Fill color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "fill");
       };
 
@@ -2532,12 +2305,10 @@ export const attachSymbolizerListeners = (
       const currentStrokeColor = currentState.strokeColor;
       const strokeColorHex = `rgb(${currentStrokeColor.r}, ${currentStrokeColor.g}, ${currentStrokeColor.b})`;
       strokeColorButton.style.backgroundColor = strokeColorHex;
-      console.log("🔧 Set stroke color button background from state:", strokeColorHex);
 
       const handleStrokeColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Stroke color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "stroke");
       };
 
@@ -2554,7 +2325,6 @@ export const attachSymbolizerListeners = (
       const handleTextColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Text color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "textColor");
       };
 
@@ -2571,7 +2341,6 @@ export const attachSymbolizerListeners = (
       const handleLabelOutlineColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Label outline color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "labelOutlineColor");
       };
 
@@ -2598,7 +2367,7 @@ export const attachSymbolizerListeners = (
         // via innerHTML, that property is lost and the select falls back to its first
         // option. Re-hydrate the value from the store's label style so the dropdown
         // reflects the feature's actual font size on open.
-        const defaultLabelStyle = getDefaultLabelStyle(item.drawType);
+        const defaultLabelStyle = getDefaultLabelStyle();
         const mergedLabelStyle = {
           ...defaultLabelStyle,
           ...((item.labelStyle as Record<string, unknown>) || {}),
@@ -2618,7 +2387,6 @@ export const attachSymbolizerListeners = (
         const handleFontSizeChange = (e: Event) => {
           e.stopPropagation();
           const newFontSize = (e.target as HTMLSelectElement).value;
-          console.log("🎯 Font size changed via DOM event:", newFontSize);
 
           // Get the CURRENT item from store to avoid stale closure issues
           const currentItems = useMyMapsStore.getState().items;
@@ -2626,7 +2394,7 @@ export const attachSymbolizerListeners = (
           if (!currentItem) return;
 
           // Get current labelStyle from CURRENT item (not stale closure), merged with defaults
-          const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+          const defaultLabelStyle = getDefaultLabelStyle();
           const currentLabelStyle = {
             ...defaultLabelStyle,
             ...((currentItem.labelStyle as Record<string, unknown>) || {}),
@@ -2636,8 +2404,6 @@ export const attachSymbolizerListeners = (
             ...currentLabelStyle,
             textSize: newFontSize,
           };
-
-          console.log("🏷️ Updating font size via DOM event:", { newFontSize, updatedLabelStyle });
           updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
           emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
         };
@@ -2664,7 +2430,6 @@ export const attachSymbolizerListeners = (
         const handleLabelOutlineWidthChange = (e: Event) => {
           e.stopPropagation();
           const newOutlineWidth = parseFloat((e.target as HTMLInputElement).value);
-          console.log("🎯 Label outline width changed via DOM event:", newOutlineWidth);
 
           // Get the CURRENT item from store to avoid stale closure issues
           const currentItems = useMyMapsStore.getState().items;
@@ -2672,7 +2437,7 @@ export const attachSymbolizerListeners = (
           if (!currentItem) return;
 
           // Get current labelStyle from CURRENT item (not stale closure), merged with defaults
-          const defaultLabelStyle = getDefaultLabelStyle(currentItem.drawType);
+          const defaultLabelStyle = getDefaultLabelStyle();
           const currentLabelStyle = {
             ...defaultLabelStyle,
             ...((currentItem.labelStyle as Record<string, unknown>) || {}),
@@ -2682,8 +2447,6 @@ export const attachSymbolizerListeners = (
             ...currentLabelStyle,
             outlineWidth: newOutlineWidth,
           };
-
-          console.log("🏷️ Updating label outline width via DOM event:", { newOutlineWidth, updatedLabelStyle });
           updateItem(currentItem.id, { labelStyle: updatedLabelStyle });
           emit("mymap-label-style-change", { id: currentItem.id, labelStyle: updatedLabelStyle });
         };
@@ -2703,7 +2466,6 @@ export const attachSymbolizerListeners = (
       const handleCalloutBackgroundColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Callout background color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "backgroundColor");
       };
 
@@ -2720,7 +2482,6 @@ export const attachSymbolizerListeners = (
       const handleCalloutBorderColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Callout border color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "borderColor");
       };
 
@@ -2737,7 +2498,6 @@ export const attachSymbolizerListeners = (
       const handleCalloutLineColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Callout line color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "lineColor");
       };
 
@@ -2754,7 +2514,6 @@ export const attachSymbolizerListeners = (
       const handleCalloutAnchorColorClick = (e: Event) => {
         e.preventDefault();
         e.stopPropagation();
-        console.log("🎯 Callout anchor color button clicked - showing popup");
         showSymbolizerColorPicker(e as MouseEvent, "anchorColor");
       };
 

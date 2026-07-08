@@ -187,7 +187,6 @@ const translationTable: { [section: string]: Mapping } = {
       drawingOptionsToolsMenuVisibility: {
         sourceKey: "drawingOptionsToolsMenuVisibility",
         transform: (src) => {
-          // console.log("Transform drawingOptionsToolsMenuVisibility from JSON:", src);
           const typedSrc = src as { mainSidebarItems?: { drawingOptionsToolsMenuVisibility?: Record<string, boolean> } };
           return (
             typedSrc.mainSidebarItems?.drawingOptionsToolsMenuVisibility || {
@@ -207,16 +206,11 @@ const translationTable: { [section: string]: Mapping } = {
             }
           );
         },
-        reverse: (value: unknown) => {
-          console.log("Reverse drawingOptionsToolsMenuVisibility to JSON:", value);
-          return value;
-        },
+        reverse: (value: unknown) => value,
       },
     },
     // Add a reverse function for the entire MyMaps section
     reverse: (value: unknown) => {
-      console.log("Reverse mapping MyMaps section:", value);
-
       const typedValue = value as {
         hideMyMaps?: boolean;
         mailingLabelUsePartnerData?: boolean;
@@ -243,8 +237,6 @@ const translationTable: { [section: string]: Mapping } = {
       if (typedValue.mailingLabelUsePartnerData !== undefined) {
         result.mailingLabelUsePartnerData = typedValue.mailingLabelUsePartnerData;
       }
-
-      console.log("Final JSON structure for MyMaps:", result);
       return result;
     },
   },
@@ -387,7 +379,6 @@ export function JSONToSettings(src: Record<string, unknown>): SettingsType & Rec
   // First, copy all source properties that aren't handled by any mapping
   for (const key in src) {
     if (!handledKeys.has(key) && !(key in translationTable)) {
-      console.log("Unhandled key:", key); // TODO: Remove this
       result[key] = src[key];
     }
   }
@@ -505,12 +496,8 @@ function removeEmptyValues(obj: any, currentKey?: string): any {
  * @param parentKey (Optional) The key name of the parent node.
  */
 function mapObjectToSource(obj: any, mapping: Mapping, parentKey?: string): any {
-  console.log(`mapObjectToSource called with obj:`, obj, `mapping:`, mapping, `parentKey:`, parentKey);
-
   if (mapping.reverse) {
-    const result = mapping.reverse(obj);
-    console.log(`Applied reverse function for ${parentKey}, result:`, result);
-    return result;
+    return mapping.reverse(obj);
   }
   if (mapping.children) {
     const out: any = {};
@@ -519,7 +506,6 @@ function mapObjectToSource(obj: any, mapping: Mapping, parentKey?: string): any 
       const childValue = mapObjectToSource(obj ? obj[key] : undefined, childMapping, key);
       if (childMapping.sourceKey) {
         // Use the dot‑notation path from the mapping to assign the value.
-        console.log(`Setting value at path ${childMapping.sourceKey} to:`, childValue);
         setValueAtPath(out, childMapping.sourceKey, childValue);
       } else {
         out[key] = childValue;
@@ -527,14 +513,11 @@ function mapObjectToSource(obj: any, mapping: Mapping, parentKey?: string): any 
     }
     // If this node only produced one property that matches the parent key, unwrap it.
     if (parentKey && Object.keys(out).length === 1 && out[parentKey] !== undefined) {
-      console.log(`Unwrapping single property ${parentKey}`);
       return out[parentKey];
     }
-    console.log(`Returning output for ${parentKey}:`, out);
     return out;
   }
   // Leaf node: simply return its value.
-  console.log(`Returning leaf value for ${parentKey}:`, obj);
   return obj;
 }
 
@@ -548,8 +531,6 @@ function mapObjectToSource(obj: any, mapping: Mapping, parentKey?: string): any 
  * @returns A cleaned JSON configuration object
  */
 export function SettingsToJSON(settings: any): any {
-  console.log("SettingsToJSON called with:", settings);
-
   let output: any = {};
   output.mainSidebarItems = {};
 
@@ -562,9 +543,7 @@ export function SettingsToJSON(settings: any): any {
 
   // Process each top-level section defined in the translation table
   for (const section in translationTable) {
-    console.log(`Processing section: ${section}`);
     const sectionOutput = mapObjectToSource(settings[section], translationTable[section], section);
-    console.log(`Output for section ${section}:`, sectionOutput);
 
     // For Themes and Tools, we don't want a top-level key; merge their values directly
     if (section === "Themes" || section === "Tools") {
@@ -598,6 +577,5 @@ export function SettingsToJSON(settings: any): any {
 
   // Clean the final output
   output = removeEmptyValues(output) || {};
-  console.log("Final JSON output:", output);
   return output;
 }

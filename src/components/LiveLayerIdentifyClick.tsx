@@ -243,8 +243,6 @@ export default function LiveLayerIdentifyClick() {
     async (coordinate: number[]): Promise<InteractionResult[]> => {
       if (!map || checkGlobalDisable()) return [];
 
-      console.log("LiveLayerIdentify: Click at", coordinate);
-
       // Filter for visible live layers
       const visibleLiveLayers = allLayers.filter((tocLayer) => {
         if (!tocLayer.layer || !tocLayer.visible || !tocLayer.liveLayer) {
@@ -252,8 +250,6 @@ export default function LiveLayerIdentifyClick() {
         }
         return true;
       });
-
-      console.log(`LiveLayerIdentify: Found ${visibleLiveLayers.length} visible live layers`);
 
       if (visibleLiveLayers.length === 0) {
         return [];
@@ -297,8 +293,6 @@ export default function LiveLayerIdentifyClick() {
           },
         });
       });
-
-      console.log(`LiveLayerIdentify: Returning ${results.length} results`);
 
       return results;
     },

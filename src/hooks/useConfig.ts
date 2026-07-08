@@ -62,7 +62,6 @@ export function useConfig(): UseConfigReturn {
           }
           return;
         }
-        console.log(`Secured map "${err.mapId}" requires login - redirecting to sign in`);
         // Redirect to sign in with current URL as callback
         const currentUrl = typeof window !== "undefined" ? window.location.href : undefined;
         signIn("azuread", { callbackUrl: currentUrl });
@@ -90,7 +89,6 @@ export function useConfig(): UseConfigReturn {
   }, [config, loadAppConfig]);
 
   useEffect(() => {
-    console.log("Config updated:", config);
     if (config) {
       updatePageMetadata(config);
     }

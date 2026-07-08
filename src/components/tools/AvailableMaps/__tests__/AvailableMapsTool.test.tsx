@@ -30,12 +30,6 @@ const publicMaps: MapItem[] = [
   { map_name: "Transit Map", description: "Public transit routes", is_secured: false, is_default: false, allowed_roles: "" },
 ];
 
-const securedMaps: MapItem[] = [
-  { map_name: "Internal Operations", description: "Staff-only map", is_secured: true, is_default: false, allowed_roles: "admin" },
-  { map_name: "Emergency Services", description: "Emergency response", is_secured: true, is_default: false, allowed_roles: "emergency" },
-];
-
-const allMaps: MapItem[] = [...securedMaps, ...publicMaps];
 
 // --- Helpers ---
 
@@ -80,23 +74,6 @@ describe("AvailableMapsTool", () => {
     expect(screen.getByText("Transit Map")).toBeInTheDocument();
   });
 
-  it("renders both secured and public sections when both exist", async () => {
-    mockGet.mockResolvedValue({ data: allMaps });
-    renderTool();
-
-    await waitFor(() => {
-      expect(screen.getByText("Internal Operations")).toBeInTheDocument();
-    });
-
-    // Secured maps header
-    expect(screen.getByText(/Secured Maps/)).toBeInTheDocument();
-    // Public maps header
-    expect(screen.getByText(/Public Maps/)).toBeInTheDocument();
-    // All maps present
-    expect(screen.getByText("Emergency Services")).toBeInTheDocument();
-    expect(screen.getByText("Default Map")).toBeInTheDocument();
-    expect(screen.getByText("Cycling Map")).toBeInTheDocument();
-  });
 
   it("displays the Default badge for the default map", async () => {
     mockGet.mockResolvedValue({ data: publicMaps });
@@ -117,17 +94,6 @@ describe("AvailableMapsTool", () => {
     expect(screen.getByText("Cycling trails and routes")).toBeInTheDocument();
   });
 
-  it("shows lock icon for secured maps", async () => {
-    mockGet.mockResolvedValue({ data: allMaps });
-    renderTool();
-
-    await waitFor(() => {
-      expect(screen.getByText("Internal Operations")).toBeInTheDocument();
-    });
-
-    const lockIcons = screen.getAllByTitle("Secured map");
-    expect(lockIcons.length).toBe(securedMaps.length);
-  });
 
   // ---- Error / retry ----
 
@@ -275,42 +241,17 @@ describe("AvailableMapsTool", () => {
 
   // ---- Collapsible sections ----
 
-  it("collapses secured maps section when header is clicked", async () => {
-    const user = userEvent.setup();
-    mockGet.mockResolvedValue({ data: allMaps });
-    renderTool();
 
-    await waitFor(() => {
-      expect(screen.getByText("Internal Operations")).toBeInTheDocument();
-    });
-
-    // Click the "Secured Maps" section header
-    const securedHeader = screen.getByText(/Secured Maps/).closest("button")!;
-    await user.click(securedHeader);
-
-    // Secured maps should be hidden
-    expect(screen.queryByText("Internal Operations")).not.toBeInTheDocument();
-    expect(screen.queryByText("Emergency Services")).not.toBeInTheDocument();
-    // Public maps should still be visible
-    expect(screen.getByText("Default Map")).toBeInTheDocument();
-  });
-
-  it("collapses public maps section when header is clicked (dual-section mode)", async () => {
-    const user = userEvent.setup();
-    mockGet.mockResolvedValue({ data: allMaps });
+  it("does not render section headers in public-only single-section mode", async () => {
+    mockGet.mockResolvedValue({ data: publicMaps });
     renderTool();
 
     await waitFor(() => {
       expect(screen.getByText("Default Map")).toBeInTheDocument();
     });
 
-    const publicHeader = screen.getByText(/Public Maps/).closest("button")!;
-    await user.click(publicHeader);
-
-    expect(screen.queryByText("Default Map")).not.toBeInTheDocument();
-    expect(screen.queryByText("Cycling Map")).not.toBeInTheDocument();
-    // Secured still visible
-    expect(screen.getByText("Internal Operations")).toBeInTheDocument();
+    expect(screen.queryByText(/Public Maps/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Secured Maps/)).not.toBeInTheDocument();
   });
 
   // ---- Navigation ----

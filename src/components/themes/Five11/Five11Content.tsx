@@ -48,12 +48,10 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
 
   // Handle visibility changes
   const handleWazeVisibilityChange = useCallback((layerName: string, visible: boolean) => {
-    console.log(`[511 Parent] Waze visibility change: ${layerName} = ${visible}`);
     setWazeLayerStates((prev) => ({ ...prev, [layerName]: visible }));
   }, []);
 
   const handleMtoVisibilityChange = useCallback((layerName: string, visible: boolean) => {
-    console.log(`[511 Parent] MTO visibility change: ${layerName} = ${visible}`);
     setMtoLayerStates((prev) => ({ ...prev, [layerName]: visible }));
   }, []);
 
@@ -180,10 +178,9 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
   // Safety-net cleanup: remove any remaining 511 layers when the theme unmounts
   useEffect(() => {
     return () => {
-      Object.entries(layerIdsRef.current).forEach(([layerName, layerId]) => {
+      Object.entries(layerIdsRef.current).forEach(([_layerName, layerId]) => {
         if (layerId) {
           LayerManager.removeLayer(layerId);
-          console.log(`[511] Cleaned up orphan layer: ${layerName}`);
         }
       });
       layerIdsRef.current = {};

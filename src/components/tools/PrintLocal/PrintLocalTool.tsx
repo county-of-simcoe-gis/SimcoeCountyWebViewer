@@ -129,8 +129,6 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
       unsupportedLayers: 0,
     });
 
-    console.log("[PrintLocal] Generating preview:", { width, height, layout: printSizeSelected.value });
-
     try {
       // Build decorations object
       const decorations: MapDecorations = {
@@ -159,8 +157,6 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
       if (!blob || blob.size === 0) {
         throw new Error("Generated preview is empty.");
       }
-
-      console.log("[PrintLocal] Preview generated, size:", blob.size);
       setPreviewBlob(blob);
     } catch (error) {
       console.error("[PrintLocal] Preview generation failed:", error);
@@ -292,8 +288,6 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
     const isPdf = format === "pdf";
     const { width, height } = getExportDimensions();
 
-    console.log("[PrintLocal] Exporting map:", { width, height, dpi, format, layout: printSizeSelected.value });
-
     try {
       // Build decorations object
       const decorations: MapDecorations = {
@@ -322,8 +316,6 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
       if (!blob || blob.size === 0) {
         throw new Error("Generated image is empty.");
       }
-
-      console.log("[PrintLocal] Map captured, size:", blob.size);
 
       if (isPdf) {
         setPrintProgress("Creating PDF document...");
@@ -386,8 +378,6 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
         const filename = `${mapTitle.replace(/[^a-zA-Z0-9]/g, "_")}_${timestamp}.pdf`;
         doc.save(filename);
-
-        console.log("[PrintLocal] PDF download initiated");
       } else {
         // For PNG/TIF, download the blob directly
         setPrintProgress("Downloading...");
@@ -401,8 +391,6 @@ export default function PrintLocalTool({ name = "Print Local", helpLink, hideHea
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-
-        console.log("[PrintLocal] Image download initiated");
       }
     } catch (error) {
       console.error("[PrintLocal] Print failed:", error);

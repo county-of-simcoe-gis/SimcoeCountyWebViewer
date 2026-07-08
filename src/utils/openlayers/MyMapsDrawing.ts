@@ -182,7 +182,7 @@ export class MyMapsDrawingManager {
 
     // Handle Callout type - apply callout style and set label properties
     if (drawType === "Callout" && geometry?.getType() === "LineString") {
-      const defaultLabelStyle = getDefaultLabelStyle("Callout");
+      const defaultLabelStyle = getDefaultLabelStyle();
       feature.setProperties({
         ...feature.getProperties(),
         label: "Enter Callout Text",
@@ -537,7 +537,7 @@ export class MyMapsDrawingManager {
           // Special handling for Callout items - use callout style function
           if (item.drawType === "Callout") {
             // console.log("🎨 Applying Callout style function");
-            const labelStyle = item.labelStyle || getDefaultLabelStyle("Callout");
+            const labelStyle = item.labelStyle || getDefaultLabelStyle();
             const calloutStyleFn = getCalloutStyle({
               lineColor: typeof labelStyle === "object" && "lineColor" in labelStyle ? labelStyle.lineColor : undefined,
               anchorColor: typeof labelStyle === "object" && "anchorColor" in labelStyle ? labelStyle.anchorColor : undefined,
@@ -742,7 +742,7 @@ export class MyMapsDrawingManager {
 
       if (isCallout) {
         // CALLOUT: Create special style function with text box at end of line
-        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle("Callout");
+        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle();
 
         // Extract label style properties
         const textColor = labelStyle.textColor || "#000000";
@@ -822,7 +822,7 @@ export class MyMapsDrawingManager {
         feature.setStyle(calloutStyleFunction);
       } else {
         // Regular label handling - use labelStyle if available
-        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle(itemInfo.drawType || "Point");
+        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle();
         const isCallout = itemInfo.drawType === "Callout";
 
         // Extract label style properties - match source app defaults
@@ -876,7 +876,7 @@ export class MyMapsDrawingManager {
 
       if (isCallout) {
         // Reset to base callout style without text
-        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle("Callout");
+        const labelStyle = (itemInfo.labelStyle as LabelStyle) || getDefaultLabelStyle();
         const calloutStyleFn = getCalloutStyle({
           lineColor: labelStyle.lineColor,
           anchorColor: labelStyle.anchorColor,

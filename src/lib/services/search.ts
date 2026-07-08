@@ -10,10 +10,22 @@ const useESRIGeocoder = searchConfig.useESRIGeocoder;
 const useOSMSearch = searchConfig.useOSMSearch;
 
 const geocodeUrl = (limit: number, keywords: string) =>
-  `https://maps.simcoe.ca/arcgis/rest/services/SimcoeUtilities/AddressLocator/GeocodeServer/findAddressCandidates?f=json&maxLocations=${limit}&outFields=House,StreetName,SufType,City&Street=${keywords}`;
+  `https://maps.simcoe.ca/arcgis/rest/services/SimcoeUtilities/AddressLocator/GeocodeServer/findAddressCandidates?${new URLSearchParams({
+    f: "json",
+    maxLocations: String(limit),
+    outFields: "House,StreetName,SufType,City",
+    Street: keywords,
+  }).toString()}`;
 
 const osmUrlWithViewBox = (vb: string, limit: number, keywords: string) =>
-  `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&viewbox=${vb}&bounded=1&limit=${limit}&q=${keywords}`;
+  `https://nominatim.openstreetmap.org/search?${new URLSearchParams({
+    format: "json",
+    addressdetails: "1",
+    viewbox: vb,
+    bounded: "1",
+    limit: String(limit),
+    q: keywords,
+  }).toString()}`;
 
 // ── Shared interfaces ──────────────────────────────────────────────
 
@@ -37,10 +49,39 @@ function toTitleCase(str: string | undefined): string {
   return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase());
 }
 
-async function getJSON<T = unknown>(url: string): Promise<T> {
+async function getJSON<T = unknown>(url: string, init?: RequestInit): Promise<T> {
   try {
-    const response = await fetch(url);
-    return (await response.json()) as T;
+    const headers = new Headers(init?.headers);
+
+    if (!headers.has("Accept")) {
+      headers.set("Accept", "application/json");
+    }
+
+    const response = await fetch(url, {
+      ...init,
+      headers,
+    });
+
+    const body = await response.text();
+    const trimmedBody = body.trim();
+
+    if (!response.ok) {
+      console.error(`getJSON request failed (${response.status}): ${url}`);
+      return {} as T;
+    }
+
+    if (!trimmedBody) {
+      return {} as T;
+    }
+
+    const normalizedBody = trimmedBody.replace(/^\uFEFF/, "");
+
+    if (!normalizedBody.startsWith("{") && !normalizedBody.startsWith("[")) {
+      console.error(`getJSON non-JSON response from ${url}: ${normalizedBody.slice(0, 120)}`);
+      return {} as T;
+    }
+
+    return JSON.parse(normalizedBody) as T;
   } catch (error) {
     console.error("getJSON error:", error);
     return {} as T;
@@ -52,12 +93,7 @@ async function getJSON<T = unknown>(url: string): Promise<T> {
 /**
  * Main search — address + non-address + geocoder/OSM fallbacks.
  */
-export async function search(
-  keywords: string,
-  type: string | undefined,
-  muni: string | undefined,
-  limit: number = 10
-): Promise<SearchRow[]> {
+export async function search(keywords: string, type: string | undefined, muni: string | undefined, limit: number = 10): Promise<SearchRow[]> {
   try {
     if (keywords.length < 2) return [];
 
@@ -132,12 +168,7 @@ export async function getSearchTypes(): Promise<string[]> {
 
 // ── Internal queries ────────────────────────────────────────────────
 
-async function searchAddress(
-  value: string,
-  muni: string | undefined,
-  type: string | undefined,
-  limit: number = 10
-): Promise<SearchRow[]> {
+async function searchAddress(value: string, muni: string | undefined, type: string | undefined, limit: number = 10): Promise<SearchRow[]> {
   if (type === "All" || type === "undefined") type = undefined;
 
   const values: unknown[] = [value];
@@ -159,12 +190,7 @@ async function searchAddress(
   return pgTabular.selectAllWithValues<SearchRow>(sql, values);
 }
 
-async function searchNonAddress(
-  value: string,
-  type: string | undefined,
-  muni: string | undefined,
-  limit: number = 10
-): Promise<SearchRow[]> {
+async function searchNonAddress(value: string, type: string | undefined, muni: string | undefined, limit: number = 10): Promise<SearchRow[]> {
   if (type === "undefined" || type === "All") type = undefined;
   if (muni === "undefined") muni = undefined;
 
@@ -193,7 +219,12 @@ async function searchOsm(keywords: string, type: string | undefined, limit: numb
   if (type !== "All" && type !== "Open Street Map") return [];
 
   const osmUrl = osmUrlWithViewBox(viewBox, limit, keywords);
-  const osmResult = await getJSON<OsmResult[]>(osmUrl);
+  const osmResult = await getJSON<OsmResult[]>(osmUrl, {
+    headers: {
+      "User-Agent": "SimcoeCountyWebViewerNextJS",
+      "Accept-Language": "en",
+    },
+  });
   const osmPlaces: SearchRow[] = [];
 
   if (Array.isArray(osmResult) && osmResult.length > 0) {

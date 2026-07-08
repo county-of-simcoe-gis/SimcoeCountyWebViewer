@@ -175,7 +175,7 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
 
     if (isHidden) {
       // Tab is hidden - use activeContentTab to show its content without making the tab visible
-      console.log(`[sidebarStore] Tab "${tabName}" is hidden, showing content via activeContentTab.`);
+      console.log(`[sidebarStore] setActiveTabByName: tab "${tabName}" is hidden, using activeContentTab`);
       set({ activeContentTab: lookup });
       return;
     }
@@ -244,7 +244,6 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
       const needle = defaultTheme.toLowerCase();
       const theme = state.themes.find((t) => t.component?.toLowerCase() === needle || t.name.toLowerCase() === needle);
       if (theme) {
-        console.log("Activating default theme:", defaultTheme, "-> id:", theme.id);
         set({
           isOpen: true,
           activeTheme: theme.id,
@@ -267,7 +266,6 @@ export const useSidebarStore = create<SidebarState>((set, get) => ({
       const needle = defaultTool.toLowerCase();
       const tool = state.tools.find((t) => t.component?.toLowerCase() === needle || t.name.toLowerCase() === needle);
       if (tool) {
-        console.log("Activating default tool:", defaultTool, "-> id:", tool.id);
         set({
           isOpen: true,
           activeTool: tool.id,

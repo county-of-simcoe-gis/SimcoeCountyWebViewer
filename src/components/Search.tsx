@@ -671,7 +671,6 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
             onFocus={() => {
               if (searchValue.length === 0 && !justCleared) {
                 const history = loadSearchHistory();
-                console.log("Search: OnFocus loaded history:", history);
                 setSearchResults(history);
                 setShowHistory(true);
                 setIsOpen(history.length > 0);

@@ -108,7 +108,6 @@ export const MapContextMenuContainer: React.FC = () => {
     if (!map || !identifyIconLayerRef.current) return;
 
     const coordinate = coordinateRef.current;
-    console.log("Identify clicked at:", coordinate);
 
     // Clear and remove the icon layer
     const source = identifyIconLayerRef.current.getSource();
@@ -156,7 +155,6 @@ export const MapContextMenuContainer: React.FC = () => {
   }, []);
 
   const handleMore = useCallback(() => {
-    console.log("More options clicked at:", coordinateRef.current);
     // Close sidebar and open More menu anchored to the slim sidebar button
     closeSidebar();
     const { isMoreMenuOpen, toggleMoreMenuFromSidebar } = useSidebarStore.getState();
@@ -164,7 +162,6 @@ export const MapContextMenuContainer: React.FC = () => {
   }, [closeSidebar]);
 
   const handleSwitchToBasic = useCallback(() => {
-    console.log("Switch to basic mode - collapsing sidebar");
     closeSidebar();
   }, [closeSidebar]);
 

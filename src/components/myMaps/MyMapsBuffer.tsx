@@ -253,7 +253,6 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
       }
 
       // Activate the MyMaps tab to show the newly added buffer
-      console.log("Attempting to activate MyMaps tab...");
       activateTab("mymaps");
     }
   };
@@ -359,8 +358,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   const triggerBufferPreview = (distance: number, units: string) => {
     // This will directly call the buffer creation logic
     if (item?.featureGeoJSON) {
-      console.log("🎯 Triggering buffer preview:", { distance, units, item });
-
       // Import and use the buffer helpers directly
       import("@/utils/openlayers/BufferHelpers").then(({ bufferGeometry, convertToMeters }) => {
         import("@/utils/myMapsHelpers").then(({ featureFromGeoJSON }) => {
@@ -398,7 +395,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
 
                           // Get current color from color picker button
                           const currentColor = getCurrentColor();
-                          console.log("🎨 Using buffer color:", currentColor);
 
                           // Create style using selected color
                           const style = new Style({
@@ -423,8 +419,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
                               (source as any).addFeature(bufferFeature);
                             }
                           }
-
-                          console.log("✅ Buffer preview created successfully");
                         });
                       } catch (error) {
                         console.error("❌ Error creating buffer preview:", error);
@@ -441,8 +435,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   };
 
   const triggerColorChange = (event: MouseEvent) => {
-    console.log("🎯 Color change triggered - showing CompactPicker");
-
     // Remove any existing color picker
     const existingPicker = document.getElementById("sc-color-picker-container");
     if (existingPicker) {
@@ -728,8 +720,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   };
 
   const handleColorSelection = (hexColor: string) => {
-    console.log("🎯 Color selected:", hexColor);
-
     // Update the button color immediately
     const colorButton = container.querySelector("#sc-mymaps-buffer-color-button-picker") as HTMLButtonElement;
     if (colorButton) {
@@ -781,8 +771,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
               feature.setStyle(style);
             });
           }
-
-          console.log("✅ Buffer color updated successfully");
         } catch (error) {
           console.error("❌ Error updating buffer color:", error);
         }
@@ -791,43 +779,34 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   };
 
   const triggerAddBufferToMyMaps = () => {
-    console.log("🎯 Triggering add buffer to MyMaps");
-
     import("@/stores/mapStore").then(({ useMapStore }) => {
       import("@/stores/eventStore").then(({ useEventStore }) => {
         try {
           const { map } = useMapStore.getState();
           const { emit } = useEventStore.getState();
 
-          console.log("🔍 Debug - map exists:", !!map);
-          console.log("🔍 Debug - item exists:", !!item);
-          console.log("🔍 Debug - item.featureGeoJSON exists:", !!item?.featureGeoJSON);
-
           if (!map) {
-            console.log("❌ No map found");
+            console.warn("MyMapsBuffer: No map found while adding buffer to MyMaps");
             return;
           }
           if (!item?.featureGeoJSON) {
-            console.log("❌ No item or featureGeoJSON found");
+            console.warn("MyMapsBuffer: No item geometry found while adding buffer to MyMaps");
             return;
           }
 
           const bufferLayer = map.getAllLayers().find((layer) => layer.get("id") === "drawing-options-buffer-preview");
-          console.log("🔍 Debug - bufferLayer exists:", !!bufferLayer);
 
           if (!bufferLayer) {
-            console.log("❌ No buffer layer found");
+            console.warn("MyMapsBuffer: No buffer preview layer found while adding buffer to MyMaps");
             return;
           }
 
           // Get the buffer feature from the layer
           const source = bufferLayer.getSource();
-          console.log("🔍 Debug - source exists:", !!source);
 
           if (source && "getFeatures" in source) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const features = (source as any).getFeatures();
-            console.log("🔍 Debug - features found:", features.length);
 
             if (features.length > 0) {
               const bufferFeature = features[0];
@@ -837,23 +816,12 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
               const units = getCurrentUnits();
               const label = `Buffer - ${distance} ${units}`;
 
-              console.log("🎯 Adding buffer to MyMaps:", {
-                label,
-                feature: bufferFeature,
-                distance,
-                units,
-                hasStyle: !!bufferFeature.getStyle(),
-                style: bufferFeature.getStyle(),
-              });
-
               // Add the buffer feature directly to MyMaps store
               const featureStyle = bufferFeature.getStyle();
               const myMapsItem = createMyMapsItem(bufferFeature, "Buffer", label, featureStyle instanceof Style ? styleToJSON(featureStyle) : undefined);
               myMapsItem.featureGeoJSON = featureToGeoJSON(bufferFeature);
               useMyMapsStore.getState().addItem(myMapsItem);
               emit("mymap-item-created", { item: myMapsItem });
-
-              console.log("🎯 Event emitted successfully");
 
               // Hide the add message by removing the buffer preview
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -862,16 +830,13 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
               // Hide the add buffer link
               showHideAddBufferLink(false);
 
-              console.log("✅ Buffer added to MyMaps successfully");
-
               // Activate the MyMaps tab to show the newly added buffer
-              console.log("🎯 Activating MyMaps tab after buffer addition...");
               activateTab("mymaps");
             } else {
-              console.log("❌ No features found in buffer layer");
+              console.warn("MyMapsBuffer: No features found in buffer preview layer");
             }
           } else {
-            console.log("❌ Buffer layer source not found or invalid");
+            console.warn("MyMapsBuffer: Buffer layer source not found or invalid");
           }
         } catch (error) {
           console.error("❌ Error adding buffer to MyMaps:", error);
@@ -894,8 +859,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
 
   // Helper function to show/hide the add buffer link
   const showHideAddBufferLink = (show: boolean) => {
-    console.log("🔗 showHideAddBufferLink called:", { show });
-
     // Find the add link by its text content (same logic as event listener attachment)
     const allLabels = container.querySelectorAll(".sc-mymaps-buffer-container label");
     let addLink: HTMLLabelElement | null = null;
@@ -910,23 +873,19 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
       }
     }
 
-    console.log("🔗 Found add link element:", !!addLink);
-
     if (addLink) {
       if (show) {
         addLink.classList.remove("sc-hidden");
         addLink.classList.add("sc-fakeLink");
         addLink.style.display = "block";
         addLink.style.pointerEvents = "auto"; // Ensure it's clickable
-        console.log("🔗 Link shown");
       } else {
         addLink.classList.add("sc-hidden");
         addLink.classList.remove("sc-fakeLink");
         addLink.style.display = "none";
-        console.log("🔗 Link hidden");
       }
     } else {
-      console.log("❌ Could not find add buffer link element");
+      console.warn("MyMapsBuffer: Could not find add buffer link element");
     }
   };
 
@@ -943,7 +902,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
           if (source && "clear" in source) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (source as any).clear();
-            console.log("🎯 Buffer preview cleared");
           }
         }
       } catch (error) {
@@ -956,19 +914,16 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   const bufferDistanceInput = container.querySelector(".sc-mymaps-buffer-container input[type='number']") as HTMLInputElement;
   if (bufferDistanceInput) {
     const handleDistanceChange = (e: Event) => {
-      console.log("🎯 Distance changed via DOM event:", (e.target as HTMLInputElement).value);
       const newDistance = parseFloat((e.target as HTMLInputElement).value);
 
       if (!isNaN(newDistance) && newDistance > 0) {
         // Manually trigger buffer preview since React handlers are lost
-        console.log("🎯 Calling buffer preview manually");
         triggerBufferPreview(newDistance, getCurrentUnits());
 
         // Show the add link
         showHideAddBufferLink(true);
       } else {
         // Hide buffer preview and link when distance is 0 or invalid
-        console.log("🎯 Clearing buffer preview (distance <= 0)");
         clearBufferPreview();
         showHideAddBufferLink(false);
       }
@@ -987,7 +942,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   const bufferUnitsSelect = container.querySelector(".sc-mymaps-buffer-container select") as HTMLSelectElement;
   if (bufferUnitsSelect) {
     const handleUnitsChange = (e: Event) => {
-      console.log("🎯 Units changed via DOM event:", (e.target as HTMLSelectElement).value);
       const newUnits = (e.target as HTMLSelectElement).value;
       const currentDistance = getCurrentDistance();
 
@@ -1011,7 +965,6 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   const bufferColorButton = container.querySelector("#sc-mymaps-buffer-color-button-picker") as HTMLButtonElement;
   if (bufferColorButton) {
     bufferColorButton.addEventListener("click", (e) => {
-      console.log("🎯 Color button clicked via DOM event");
       e.preventDefault();
       e.stopPropagation();
       // Trigger color change manually with event for positioning
@@ -1025,35 +978,23 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
   }
 
   // Find the add buffer link by its specific text content
-  console.log("🔍 Looking for buffer add link element...");
   const allLabels = container.querySelectorAll(".sc-mymaps-buffer-container label");
-  console.log("🔍 Found labels in buffer container:", allLabels.length);
 
   let bufferAddLink: HTMLLabelElement | null = null;
   for (let index = 0; index < allLabels.length; index++) {
     const labelElement = allLabels[index] as HTMLLabelElement;
-    console.log(`🔍 Label ${index}: "${labelElement.textContent}" | classes: "${labelElement.className}"`);
     if (labelElement.textContent && labelElement.textContent.includes("Add this buffer to MyMap Items")) {
       bufferAddLink = labelElement;
-      console.log("✅ Found the correct add buffer link!");
       break;
     }
   }
 
-  console.log("🔍 Final bufferAddLink found:", !!bufferAddLink);
-
   if (bufferAddLink) {
-    console.log("🔍 bufferAddLink text content:", bufferAddLink.textContent);
-    console.log("🔍 bufferAddLink classes:", bufferAddLink.className);
-
     // Enable pointer events for the link (OL overlay interaction fix)
     bufferAddLink.style.pointerEvents = "auto";
     bufferAddLink.style.cursor = "pointer";
 
     bufferAddLink.addEventListener("click", (e: Event) => {
-      console.log("🎯 Add buffer to MyMaps clicked via DOM event!!!");
-      console.log("🎯 Event target:", e.target);
-      console.log("🎯 Event current target:", e.currentTarget);
       e.preventDefault();
       e.stopPropagation();
       // Trigger add buffer to MyMaps manually
@@ -1070,23 +1011,19 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
 
     // Initially hide the link (should only show when distance > 0)
     const currentDistance = getCurrentDistance();
-    console.log("🔍 Initial distance for link visibility:", currentDistance);
     showHideAddBufferLink(currentDistance > 0);
   } else {
-    console.log("❌ Could not find buffer add link element for event binding");
+    console.warn("MyMapsBuffer: Could not find buffer add link element for event binding");
   }
 
   // Enable interactions ONLY on specific buffer elements (targeted approach)
   // This prevents conflicts with header drag functionality
   const bufferContainer = container.querySelector(".sc-mymaps-buffer-container");
   if (bufferContainer) {
-    console.log("🔧 Enabling pointer events on specific buffer interactive elements only");
-
     // Only enable pointer events on specific interactive elements, not the container
     const specificElements = bufferContainer.querySelectorAll("input[type='number'], select, button#sc-mymaps-buffer-color-button-picker");
-    specificElements.forEach((element, index) => {
+    specificElements.forEach((element) => {
       (element as HTMLElement).style.pointerEvents = "auto";
-      console.log(`🔧 Enabled pointer events on specific element ${index}:`, element.tagName, element.id || element.className);
     });
 
     // The container itself should NOT have pointerEvents = "auto" to avoid header conflicts

@@ -28,8 +28,6 @@ export default function IdentifyQuery({ title, layerURL, layerId, where, fields,
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  console.log("IdentifyQuery mounted with:", { title, layerURL, layerId, where, fields, secured });
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -51,15 +49,12 @@ export default function IdentifyQuery({ title, layerURL, layerId, where, fields,
             return;
           }
         }
-
-        console.log("IdentifyQuery fetching URL:", queryUrl);
         const response = await fetch(queryUrl, { method: "GET", mode: "cors" });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
 
         const data = await response.json();
-        console.log("IdentifyQuery response:", data);
 
         if (data.error) {
           throw new Error(data.error.message || "ArcGIS query error");

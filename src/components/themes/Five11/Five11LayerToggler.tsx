@@ -75,7 +75,6 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
 
         // Fetch GeoJSON data - layer.apiUrl is like "/api/public/map/theme/511/..."
         // publicAxiosInstance baseURL includes /api, so strip /api prefix
-        console.log(`[511] Fetching layer: ${layer.displayName} from ${layer.apiUrl}`);
         const apiPath = layer.apiUrl.replace(/^\/api/, "");
         const response = await axiosInstance.get<FeatureCollection>(apiPath, { signal: abortController.signal });
 
@@ -91,9 +90,6 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           setIsLoading(false);
           return;
         }
-
-        const featureCount = data.features.length;
-        console.log(`[511] ${layer.displayName} has ${featureCount} features`);
 
         // Create vector source
         const vectorSource = new VectorSource({
@@ -144,7 +140,6 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
         vectorLayer.setVisible(pendingVisibleRef.current);
 
         const actualFeatureCount = vectorSource.getFeatures().length;
-        console.log(`[511] ${layer.displayName} added to map with ${actualFeatureCount} features`);
         setRecordCount(actualFeatureCount);
         onLayerIdChange(layer.layerName, layerId);
       } catch (error) {

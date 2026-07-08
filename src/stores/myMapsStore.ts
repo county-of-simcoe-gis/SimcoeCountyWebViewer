@@ -386,7 +386,6 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
 
     zoomToSelected: () => {
       // This will be implemented when we integrate with map
-      console.log("Zoom to selected items");
     },
 
     mergePolygons: () => {
@@ -945,7 +944,7 @@ export const createMyMapsItem = (feature: Feature<Geometry>, drawType: DrawType,
   // Use labelStyle from feature properties if already set (e.g. by postProcessFeature),
   // otherwise fall back to defaults
   const featureLabelStyle = feature.get("labelStyle");
-  const labelStyle = featureLabelStyle || getDefaultLabelStyle(drawType);
+  const labelStyle = featureLabelStyle || getDefaultLabelStyle();
 
   return {
     id,

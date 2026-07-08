@@ -215,19 +215,9 @@ export default function MyMapsService() {
       // Get the current draw type from store to avoid stale closures
       const currentDrawType = useMyMapsStore.getState().drawType;
 
-      console.log("🎯 MyMapsService: Feature clicked!", {
-        featureId: feature.get("id"),
-        label: feature.get("label"),
-        labelVisible: feature.get("labelVisible"),
-        drawType: feature.get("drawType"),
-        currentDrawType,
-        coordinate,
-      });
-
       const id = feature.get("id");
 
       if (currentDrawType === "Eraser") {
-        console.log("🗑️ Removing feature in eraser mode:", id);
         // Remove feature when in eraser mode
         if (id) {
           removeItem(id);
@@ -237,13 +227,6 @@ export default function MyMapsService() {
         // Show drawing options popup when feature is clicked on map
         const currentItems = useMyMapsStore.getState().items;
         const item = currentItems.find((item) => item.id === id);
-
-        console.log("🔍 Found item in store:", {
-          itemId: id,
-          itemExists: !!item,
-          itemLabel: item?.label,
-          itemLabelVisible: item?.labelVisible,
-        });
 
         if (item) {
           const liveFeatureStyle = getPopupStyleFromFeature(feature);
@@ -259,8 +242,6 @@ export default function MyMapsService() {
 
           const refreshedItem = useMyMapsStore.getState().items.find((i) => i.id === id) || item;
           const popupItem = liveFeatureStyle ? { ...refreshedItem, style: liveFeatureStyle } : refreshedItem;
-
-          console.log("✅ Emitting mymap-show-drawing-options event", { item: popupItem, coordinate });
           emit("mymap-show-drawing-options", { item: popupItem, coordinate });
         } else {
           console.warn("❌ No item found in store for clicked feature:", id);
@@ -481,7 +462,6 @@ export default function MyMapsService() {
     const handleZoomToItem = (data?: { [key: string]: unknown }) => {
       if (!data || !data.item) return;
       const item = data.item as MyMapsItemType;
-      console.log("MyMapsService: Zoom to item:", item.id);
       if (drawingManagerRef.current && item.featureGeoJSON && map) {
         try {
           // Get the feature from the drawing manager
@@ -520,12 +500,6 @@ export default function MyMapsService() {
     };
 
     const handleLabelVisibilityChange = (data?: { [key: string]: unknown }) => {
-      console.log("🎯 MyMapsService: handleLabelVisibilityChange called", {
-        data,
-        timestamp: Date.now(),
-        hasDrawingManager: !!drawingManagerRef.current,
-      });
-
       if (!data || !data.id || typeof data.visible !== "boolean") {
         console.warn("❌ MyMapsService: Invalid data for label visibility change", {
           data,
@@ -539,12 +513,6 @@ export default function MyMapsService() {
       const featureId = data.id as string;
       const visible = data.visible;
 
-      console.log("📝 MyMapsService: Updating label visibility", {
-        featureId,
-        visible,
-        timestamp: Date.now(),
-      });
-
       // Update the store item first
       updateItem(featureId, { labelVisible: visible });
 
@@ -554,22 +522,7 @@ export default function MyMapsService() {
         const currentItems = useMyMapsStore.getState().items;
         const item = currentItems.find((item) => item.id === featureId);
 
-        console.log("🔍 MyMapsService: Found item after store update", {
-          itemFound: !!item,
-          item: item
-            ? {
-                id: item.id,
-                labelVisible: item.labelVisible,
-                label: item.label,
-                labelRotation: item.labelRotation,
-              }
-            : null,
-          hasDrawingManager: !!drawingManagerRef.current,
-          timestamp: Date.now(),
-        });
-
         if (item && drawingManagerRef.current) {
-          console.log("✅ MyMapsService: Calling setFeatureLabel with updated item");
           drawingManagerRef.current.setFeatureLabel(item);
         } else {
           console.warn("❌ MyMapsService: Cannot set feature label", {
@@ -603,12 +556,6 @@ export default function MyMapsService() {
 
     // Handle label style changes (for callouts and text labels)
     const handleLabelStyleChange = (data?: { [key: string]: unknown }) => {
-      console.log("🎯 MyMapsService: handleLabelStyleChange called", {
-        data,
-        timestamp: Date.now(),
-        hasDrawingManager: !!drawingManagerRef.current,
-      });
-
       if (!data || !data.id || !data.labelStyle) {
         console.warn("❌ MyMapsService: Invalid data for label style change", {
           data,
@@ -621,12 +568,6 @@ export default function MyMapsService() {
       const featureId = data.id as string;
       const labelStyle = data.labelStyle as Record<string, unknown>;
 
-      console.log("📝 MyMapsService: Updating label style", {
-        featureId,
-        labelStyle,
-        timestamp: Date.now(),
-      });
-
       // Update the store item first
       updateItem(featureId, { labelStyle });
 
@@ -636,28 +577,13 @@ export default function MyMapsService() {
         const currentItems = useMyMapsStore.getState().items;
         const item = currentItems.find((item) => item.id === featureId);
 
-        console.log("🔍 MyMapsService: Found item after label style update", {
-          itemFound: !!item,
-          drawType: item?.drawType,
-          labelVisible: item?.labelVisible,
-          hasDrawingManager: !!drawingManagerRef.current,
-          timestamp: Date.now(),
-        });
-
         if (item && drawingManagerRef.current && item.labelVisible) {
-          console.log("✅ MyMapsService: Calling setFeatureLabel with updated label style");
           drawingManagerRef.current.setFeatureLabel(item);
         }
       }, 0);
     };
 
     const handleStyleUpdate = (data?: { [key: string]: unknown }) => {
-      console.log("🎯 MyMapsService: handleStyleUpdate called", {
-        data,
-        timestamp: Date.now(),
-        hasDrawingManager: !!drawingManagerRef.current,
-      });
-
       if (!data || !data.itemId || !data.style) {
         console.warn("❌ MyMapsService: Invalid data for style update", {
           data,
@@ -671,19 +597,10 @@ export default function MyMapsService() {
       const style = data.style; // Now using full OpenLayers style object
       const pointType = data.pointType as string;
 
-      console.log("🎨 MyMapsService: Updating feature with OpenLayers style object", {
-        featureId,
-        style,
-        pointType,
-        timestamp: Date.now(),
-      });
-
       if (drawingManagerRef.current) {
         // For now, we'll continue using the existing updateFeatureStyle method
         // but we should convert the style object to styleJSON if needed
-        console.log("🔄 MyMapsService: Converting OpenLayers style object for compatibility");
         drawingManagerRef.current.updateFeatureStyle(featureId, style, pointType);
-        console.log("✅ MyMapsService: Feature style updated successfully");
       } else {
         console.warn("❌ MyMapsService: Cannot update feature style - no drawing manager");
       }

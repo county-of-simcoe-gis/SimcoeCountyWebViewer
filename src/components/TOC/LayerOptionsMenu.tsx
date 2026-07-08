@@ -520,8 +520,6 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
       // Remove from TOC store (both LIST and FOLDER views)
       const groupName = group?.label || group?.value || "User Added";
       useTOCStore.getState().removeCustomLayer(layerInfo.name, groupName, layerInfo.id);
-
-      console.log(`🗑️ User layer "${layerInfo.tocDisplayName}" removed`);
     }
     onClose();
   };

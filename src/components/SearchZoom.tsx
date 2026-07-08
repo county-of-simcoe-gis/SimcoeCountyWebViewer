@@ -47,15 +47,7 @@ export const SearchZoom: React.FC = () => {
 
   // Initialize search layers
   const initSearchLayers = useCallback(() => {
-    // console.log("SearchZoom: initSearchLayers called", {
-    //   hasMap: !!map,
-    //   hasGeoLayer: !!searchGeoLayerRef.current,
-    //   hasIconLayer: !!searchIconLayerRef.current,
-    // });
-
     if (map && !searchGeoLayerRef.current) {
-      // console.log("SearchZoom: Creating search layers");
-
       // Layer for geometry (lines, polygons)
       const geoLayer = new VectorLayer({
         source: new VectorSource(),
@@ -98,12 +90,8 @@ export const SearchZoom: React.FC = () => {
 
       searchIconLayerRef.current = iconLayer;
       iconLayerIdRef.current = iconLayerId;
-
-      // console.log("SearchZoom: Search layers created and added to map");
     } else if (!map) {
       console.warn("SearchZoom: No map available for layer initialization");
-    } else {
-      console.log("SearchZoom: Search layers already exist");
     }
   }, [map]);
 
@@ -111,68 +99,58 @@ export const SearchZoom: React.FC = () => {
   const clearSearchLayersRef = useRef<() => void>(() => {});
 
   // Build an IdentifyResult with custom renderContent for the search popup buttons
-  const buildSearchResult = useCallback(
-    (feature: Feature, coordinates: number[], resultName: string): IdentifyResult => {
-      const result = createIdentifyResult("Search Result", `search-${Date.now()}`, { name: resultName }, feature, 99999);
+  const buildSearchResult = useCallback((feature: Feature, coordinates: number[], resultName: string): IdentifyResult => {
+    const result = createIdentifyResult("Search Result", `search-${Date.now()}`, { name: resultName }, feature, 99999);
 
-      result.renderContent = () => {
-        const handleRemoveMarkers = () => {
-          clearSearchLayersRef.current();
-          usePopupStore.getState().hide();
-        };
-
-        const handleAddToMyMaps = () => {
-          const geom = feature.getGeometry();
-          const geomType = geom?.getType() || "Point";
-          const drawType = (geomType === "LineString" || geomType === "Polygon" || geomType === "Point") ? geomType as "Point" | "LineString" | "Polygon" : "Polygon" as const;
-          const myMapsItem = createMyMapsItem(feature, drawType, resultName);
-          myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
-          useMyMapsStore.getState().addItem(myMapsItem);
-          useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
-          activateTab("mymaps");
-          useToastStore.getState().addToast("Feature added to MyMaps", "success");
-        };
-
-        const handleDirections = () => {
-          const lonLat = toLonLat(coordinates);
-          const url = `https://www.google.com/maps?saddr=Current+Location&daddr=${lonLat[1]},${lonLat[0]}`;
-          window.open(url, "_blank");
-        };
-
-        return (
-          <div className="flex flex-col gap-1">
-            <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleRemoveMarkers}>
-              Remove Markers
-            </button>
-            <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleAddToMyMaps}>
-              Add to My Maps
-            </button>
-            <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleDirections}>
-              Directions to Here
-            </button>
-          </div>
-        );
+    result.renderContent = () => {
+      const handleRemoveMarkers = () => {
+        clearSearchLayersRef.current();
+        usePopupStore.getState().hide();
       };
 
-      return result;
-    },
-    [],
-  );
+      const handleAddToMyMaps = () => {
+        const geom = feature.getGeometry();
+        const geomType = geom?.getType() || "Point";
+        const drawType = geomType === "LineString" || geomType === "Polygon" || geomType === "Point" ? (geomType as "Point" | "LineString" | "Polygon") : ("Polygon" as const);
+        const myMapsItem = createMyMapsItem(feature, drawType, resultName);
+        myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
+        useMyMapsStore.getState().addItem(myMapsItem);
+        useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
+        activateTab("mymaps");
+        useToastStore.getState().addToast("Feature added to MyMaps", "success");
+      };
+
+      const handleDirections = () => {
+        const lonLat = toLonLat(coordinates);
+        const url = `https://www.google.com/maps?saddr=Current+Location&daddr=${lonLat[1]},${lonLat[0]}`;
+        window.open(url, "_blank");
+      };
+
+      return (
+        <div className="flex flex-col gap-1">
+          <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleRemoveMarkers}>
+            Remove Markers
+          </button>
+          <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleAddToMyMaps}>
+            Add to My Maps
+          </button>
+          <button className="btn btn-sm btn-outline btn-primary w-full" onClick={handleDirections}>
+            Directions to Here
+          </button>
+        </div>
+      );
+    };
+
+    return result;
+  }, []);
 
   // Clear search layers
   const clearSearchLayers = useCallback(() => {
-    console.log("SearchZoom: clearSearchLayers called");
     if (searchGeoLayerRef.current) {
-      const geoSource = searchGeoLayerRef.current.getSource();
-      const beforeCount = geoSource?.getFeatures().length || 0;
-      geoSource?.clear();
-      console.log("SearchZoom: Cleared geo layer", { beforeCount, afterCount: geoSource?.getFeatures().length || 0 });
+      searchGeoLayerRef.current.getSource()?.clear();
     }
     if (searchIconLayerRef.current) {
-      const iconSource = searchIconLayerRef.current.getSource();
-      const beforeCount = iconSource?.getFeatures().length || 0;
-      iconSource?.clear();
-      console.log("SearchZoom: Cleared icon layer", { beforeCount, afterCount: iconSource?.getFeatures().length || 0 });
+      searchIconLayerRef.current.getSource()?.clear();
     }
   }, []);
 
@@ -188,12 +166,6 @@ export const SearchZoom: React.FC = () => {
   // Handle location-based search result with GeoJSON
   const handleLocationResult = useCallback(
     async (result: SearchResult) => {
-      console.log("SearchZoom: handleLocationResult starting", {
-        hasMap: !!map,
-        hasGeojson: !!result.geojson,
-        result,
-      });
-
       if (!map || !result.geojson) {
         console.error("SearchZoom: Missing map or geojson", { hasMap: !!map, hasGeojson: !!result.geojson });
         return;
@@ -203,33 +175,27 @@ export const SearchZoom: React.FC = () => {
       clearSearchLayers();
 
       try {
-        console.log("SearchZoom: Parsing GeoJSON", result.geojson);
         const geojsonFormat = new GeoJSON();
         const mapProjection = map.getView().getProjection();
-        console.log("SearchZoom: Map projection", mapProjection?.getCode());
 
         // Try parsing GeoJSON - the coordinates appear to already be in Web Mercator
         let features;
         try {
           // First try: assume the GeoJSON is already in the correct projection
           features = geojsonFormat.readFeatures(result.geojson);
-          console.log("SearchZoom: Parsed without projection transform");
-        } catch (error) {
-          console.log("SearchZoom: Failed without projection, trying with transform:", error);
+        } catch {
           // Fallback: try with projection transformation
           features = geojsonFormat.readFeatures(result.geojson, {
             featureProjection: mapProjection,
           });
         }
 
-        console.log("SearchZoom: Parsed features", features.length);
         if (features.length === 0) {
           console.warn("SearchZoom: No features found in GeoJSON");
           return;
         }
 
         const fullFeature = features[0];
-        console.log("SearchZoom: Main feature geometry type", fullFeature.getGeometry()?.getType());
 
         // Also try to manually calculate extent from the original GeoJSON as backup
         let manualExtent;
@@ -241,10 +207,6 @@ export const SearchZoom: React.FC = () => {
               const [x, y] = geoJsonObj.coordinates;
               if (!isNaN(x) && !isNaN(y)) {
                 manualExtent = [x, y, x, y]; // Point extent is [x, y, x, y]
-                console.log("SearchZoom: Manual extent calculation for Point", {
-                  manualExtent,
-                  point: [x, y],
-                });
               }
             } else if (geoJsonObj.coordinates[0]) {
               // For Polygon/LineString: coordinates are array of arrays
@@ -259,11 +221,6 @@ export const SearchZoom: React.FC = () => {
                   Math.max(...xCoords), // maxX
                   Math.max(...yCoords), // maxY
                 ];
-                console.log("SearchZoom: Manual extent calculation for Polygon/Line", {
-                  manualExtent,
-                  width: manualExtent[2] - manualExtent[0],
-                  height: manualExtent[3] - manualExtent[1],
-                });
               }
             }
           }
@@ -298,26 +255,8 @@ export const SearchZoom: React.FC = () => {
 
         // Add to layers
         if (searchGeoLayerRef.current && searchIconLayerRef.current) {
-          console.log("SearchZoom: Adding features to layers");
           searchGeoLayerRef.current.getSource()?.addFeature(fullFeature);
           searchIconLayerRef.current.getSource()?.addFeature(pointFeature);
-
-          console.log("SearchZoom: Features added, feature counts:", {
-            geoLayerFeatures: searchGeoLayerRef.current.getSource()?.getFeatures().length,
-            iconLayerFeatures: searchIconLayerRef.current.getSource()?.getFeatures().length,
-          });
-
-          // Debug: Check if there are multiple features that might affect zooming
-          const allGeoFeatures = searchGeoLayerRef.current.getSource()?.getFeatures() || [];
-          const allIconFeatures = searchIconLayerRef.current.getSource()?.getFeatures() || [];
-          console.log(
-            "SearchZoom: All geo features:",
-            allGeoFeatures.map((f) => f.getGeometry()?.getExtent()),
-          );
-          console.log(
-            "SearchZoom: All icon features:",
-            allIconFeatures.map((f) => f.getGeometry()?.getExtent()),
-          );
 
           // Style and zoom based on geometry type
           const geometry = fullFeature.getGeometry();
@@ -328,17 +267,8 @@ export const SearchZoom: React.FC = () => {
             // Check if we should use manual extent instead
             const isOLExtentValid = extent && extent.length === 4 && extent.every((val) => typeof val === "number" && !isNaN(val) && isFinite(val));
             if (!isOLExtentValid && manualExtent) {
-              console.log("SearchZoom: Using manual extent instead of OpenLayers extent");
               extent = manualExtent;
             }
-            console.log("SearchZoom: Geometry details", {
-              geometryType,
-              extent,
-              extentLength: extent?.length,
-              extentValues: extent,
-              extentAsString: extent?.map((val) => `${val} (${typeof val})`),
-              isValidExtent: extent && extent.length === 4 && extent.every((val) => typeof val === "number" && !isNaN(val) && isFinite(val)),
-            });
 
             // Validate extent before using it - ensure it has proper dimensions
             const isValidExtent =
@@ -346,18 +276,6 @@ export const SearchZoom: React.FC = () => {
               extent.length === 4 &&
               extent.every((val) => typeof val === "number" && !isNaN(val) && isFinite(val)) &&
               (geometryType === "Point" || (extent[2] > extent[0] && extent[3] > extent[1])); // For points, width/height can be 0
-
-            console.log("SearchZoom: Extent validation", {
-              hasExtent: !!extent,
-              length: extent?.length,
-              allNumbers: extent?.every((val) => typeof val === "number" && !isNaN(val) && isFinite(val)),
-              hasWidth: extent && extent[2] > extent[0],
-              hasHeight: extent && extent[3] > extent[1],
-              extentWidth: extent && extent[2] - extent[0],
-              extentHeight: extent && extent[3] - extent[1],
-              isPoint: geometryType === "Point",
-              isValidExtent,
-            });
 
             if (!isValidExtent) {
               console.error("SearchZoom: Invalid extent, trying fallback approach", { extent, isValidExtent });
@@ -368,7 +286,6 @@ export const SearchZoom: React.FC = () => {
                   const [minX, minY, maxX, maxY] = extent;
                   const centerX = (minX + maxX) / 2;
                   const centerY = (minY + maxY) / 2;
-                  console.log("SearchZoom: Using fallback center calculation", { centerX, centerY });
                   map.getView().setCenter([centerX, centerY]);
                   map.getView().setZoom(16);
                 } else {
@@ -387,7 +304,6 @@ export const SearchZoom: React.FC = () => {
 
               // For points, use setCenter instead of fit for more reliable zooming
               const center = [extent[0], extent[1]]; // Point coordinates
-              console.log("SearchZoom: Zooming to point with center:", center);
               try {
                 map.getView().animate({
                   center: center,
@@ -402,13 +318,11 @@ export const SearchZoom: React.FC = () => {
               const { polygon: polyStyle } = getHighlightStyles();
               fullFeature.setStyle(polyStyle);
 
-              console.log("SearchZoom: Zooming to polygon/line with extent:", extent);
               try {
                 map.getView().fit(extent, { duration: 1000 });
                 // Slightly zoom out for better context
                 setTimeout(() => {
                   const currentZoom = map.getView().getZoom();
-                  console.log("SearchZoom: Adjusting zoom after fit, current zoom:", currentZoom);
                   if (currentZoom && currentZoom > 1) {
                     map.getView().setZoom(currentZoom - 1);
                   }
@@ -434,12 +348,6 @@ export const SearchZoom: React.FC = () => {
   // Handle geocoded result (coordinates only)
   const handleGeocodedResult = useCallback(
     (result: SearchResult) => {
-      console.log("SearchZoom: handleGeocodedResult starting", {
-        hasMap: !!map,
-        hasCoords: result.x !== undefined && result.y !== undefined,
-        result,
-      });
-
       if (!map || result.x === undefined || result.y === undefined) {
         console.error("SearchZoom: Missing map or coordinates", {
           hasMap: !!map,
@@ -568,26 +476,9 @@ export const SearchZoom: React.FC = () => {
 
   // Expose the handler functions through the window object
   useEffect(() => {
-    // console.log("SearchZoom: Exposing handlers to window object", { map: !!map });
     (window as unknown as Record<string, unknown>).searchZoomHandlers = {
       handleLocationResult,
       handleGeocodedResult,
-      clearSearchLayers,
-    };
-
-    // Also log when handlers are called
-    const originalHandleLocationResult = handleLocationResult;
-    const originalHandleGeocodedResult = handleGeocodedResult;
-
-    (window as unknown as Record<string, unknown>).searchZoomHandlers = {
-      handleLocationResult: async (result: SearchResult) => {
-        console.log("SearchZoom: handleLocationResult called", result);
-        return originalHandleLocationResult(result);
-      },
-      handleGeocodedResult: (result: SearchResult) => {
-        console.log("SearchZoom: handleGeocodedResult called", result);
-        return originalHandleGeocodedResult(result);
-      },
       clearSearchLayers,
     };
   }, [handleLocationResult, handleGeocodedResult, clearSearchLayers, map]);

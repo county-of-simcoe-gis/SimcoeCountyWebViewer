@@ -88,13 +88,6 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
   const { requiredRoles = [], redirectOnUnauthenticated = false, callbackUrl } = options;
   const { data: session, status } = useSession();
 
-  // Debug logging
-  // console.log("[useRequireAuth] Session status:", status);
-  // console.log("[useRequireAuth] Session data:", session);
-  // console.log("[useRequireAuth] Session user:", session?.user);
-  // console.log("[useRequireAuth] User roles from session:", session?.user?.roles);
-  // console.log("[useRequireAuth] Required roles:", requiredRoles);
-
   const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated" && !!session;
 
@@ -139,21 +132,13 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
 
   // Check if user has access based on required roles
   const hasAccess = useMemo(() => {
-    // console.log("[useRequireAuth] Checking hasAccess:");
-    // console.log("[useRequireAuth] - isAuthenticated:", isAuthenticated);
-    // console.log("[useRequireAuth] - requiredRoles:", requiredRoles);
-    // console.log("[useRequireAuth] - user roles:", roles);
-
     if (!isAuthenticated) {
-      // console.log("[useRequireAuth] - Result: false (not authenticated)");
       return false;
     }
     if (requiredRoles.length === 0) {
-      // console.log("[useRequireAuth] - Result: true (no specific roles required)");
       return true; // No specific roles required, just authentication
     }
     const result = hasAnyRole(requiredRoles);
-    // console.log("[useRequireAuth] - hasAnyRole result:", result);
     return result;
   }, [isAuthenticated, requiredRoles, hasAnyRole]);
 

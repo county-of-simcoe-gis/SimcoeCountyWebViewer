@@ -336,8 +336,6 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
 
     // Mouseover handler - disable ALL interactions and track active ones
     const handleMouseOver = () => {
-      // console.log("🔒 Mouse over popup - disabling interactions");
-
       // Clear previous activeIds and rebuild (like old app)
       activeInteractionIdsRef.current = [];
 
@@ -346,30 +344,24 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
           // Store the ol_uid for precise restoration
           activeInteractionIdsRef.current.push((interaction as unknown as { ol_uid: number }).ol_uid);
           interaction.setActive(false);
-          // console.log("🔒 Disabled interaction:", interaction.constructor.name);
         }
       });
 
       // Set global popup active flag
       (window as unknown as { popupActive: boolean }).popupActive = true;
-      console.log("🔒 Global popupActive set to TRUE");
     };
 
     // Mouseout handler - restore only previously active interactions
     const handleMouseOut = () => {
-      // console.log("🔓 Mouse out of popup - re-enabling interactions");
-
       map.getInteractions().forEach((interaction) => {
         const interactionUid = (interaction as unknown as { ol_uid: number }).ol_uid;
         if (activeInteractionIdsRef.current.includes(interactionUid)) {
           interaction.setActive(true);
-          // console.log("🔓 Re-enabled interaction:", interaction.constructor.name);
         }
       });
 
       // Clear global popup active flag
       (window as unknown as { popupActive: boolean }).popupActive = false;
-      console.log("🔓 Global popupActive set to FALSE");
     };
 
     // Use native DOM events exactly like old app
@@ -392,8 +384,6 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
   useEffect(() => {
     // When popup closes, restore interactions if they were disabled
     if (!isOpen && map && activeInteractionIdsRef.current.length > 0) {
-      console.log("🔓 Popup closed - restoring interactions");
-
       map.getInteractions().forEach((interaction) => {
         const interactionUid = (interaction as unknown as { ol_uid: number }).ol_uid;
         if (activeInteractionIdsRef.current.includes(interactionUid)) {
@@ -404,7 +394,6 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
       // Clear the active interactions list and popup active flag
       activeInteractionIdsRef.current = [];
       (window as unknown as { popupActive: boolean }).popupActive = false;
-      console.log("🔓 Global popupActive set to FALSE on popup close");
     }
   }, [isOpen, map]);
 
@@ -439,7 +428,6 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
         target.id === "sc-mymaps-symbolizer-stroke-color-button" ||
         target.matches("input, select, button, label")
       ) {
-        console.log("🚫 Drag blocked - click on tool element:", target.tagName, target.id || target.className);
         return;
       }
 
@@ -509,11 +497,9 @@ const DrawingOptionsPopup: React.FC<DrawingOptionsPopupProps> = ({
     };
 
     headerElement.addEventListener("mousedown", handleMouseDown);
-    console.log("🎯 Drag functionality attached to header");
 
     return () => {
       headerElement.removeEventListener("mousedown", handleMouseDown);
-      console.log("🎯 Drag functionality cleaned up");
     };
   }, [map, isOpen, itemId, activeTool]); // Include activeTool to re-attach when buffer tool opens/closes
 

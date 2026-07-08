@@ -22,10 +22,11 @@ An interactive web mapping application for exploring geographic data, property i
 - [More Menu](#more-menu)
 - [Map Legend](#map-legend)
 - [Printing](#printing)
-- [Drawing & Annotation](#drawing-annotation)
+- [Drawing & Annotation](#drawing--annotation)
 - [Signing In](#signing-in)
 - [URL Sharing & Deep Linking](#url-sharing--deep-linking)
 - [Developer Guide](#developer-guide)
+- [Revision History](#revision-history)
 
 ---
 
@@ -364,3 +365,21 @@ npm run dev
 - Tests run in JSDOM.
 - Global test setup lives in `src/test/setup.ts` with MSW support in `src/test/testServer.ts`.
 - The `@/*` path alias is available in both the app and tests.
+
+---
+
+## Revision History
+
+### v2.0.0 (2026-07-07)
+
+Major upgrade from the legacy viewer to the Next.js platform.
+
+- Delivered a fully upgraded [Attribute Table](#attribute-table) experience with multi-layer tabs, map-linked row selection, better filtering workflows, and CSV export support.
+- Added stronger Attribute Table data handling across service types, including both WFS and ArcGIS-backed layers where configured.
+- Introduced a **unified map interaction and popup handler** so click results and popup behavior are more consistent across identify, parcel, and tool-driven map interactions. ![Map Click Results](images/documentation/map-results-popup.gif)
+- Expanded right-click and map action workflows, including cleaner handoff from context actions to Reports and My Maps.
+- Improved **URL sharing and deep linking** so shared links more reliably restore map extent, visible layers, basemap, and active app context. ![Share Map](images/documentation/share-map.gif)
+- Enhanced mobile and tablet workflows with responsive layouts and touch-friendly behavior for side panels and map-first tasks.
+- Expanded core map workflow coverage with modern automated testing to improve release stability across tools, layers, and reporting flows.
+- Modernized the application foundation to support continued feature growth across the viewer, tools, themes, and reporting experiences.
+- Added **dark mode** and user theme preference toggle ![Dark Mode](images/documentation/dark-mode.gif)

@@ -18,6 +18,7 @@ export interface AppConfig {
   useMapConfigApi: boolean;
   mapId: string;
   headerLogoImageName: string;
+  logoOverlayText?: string;
   title: string;
   description?: string;
   favicon: string;

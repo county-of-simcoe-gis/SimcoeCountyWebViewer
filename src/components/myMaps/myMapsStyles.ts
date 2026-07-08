@@ -171,14 +171,12 @@ export interface LabelStyleOptions {
   anchorColor: string;
 }
 
-export const getDefaultLabelStyle = (drawType?: string): LabelStyleOptions => {
-  const isCallout = drawType === "Callout";
-
+export const getDefaultLabelStyle = (): LabelStyleOptions => {
   return {
-    textColor: isCallout ? "#000000" : "#ffffff",
+    textColor: "#ffffff",
     textSize: "14px",
     outlineColor: "#000000",
-    outlineWidth: isCallout ? 1 : 2,
+    outlineWidth: 2,
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderColor: "#333333",
     lineColor: "#333333",

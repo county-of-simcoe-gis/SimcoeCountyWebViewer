@@ -21,15 +21,11 @@ type TabName = "layers" | "tools" | "mymaps" | "themes" | "reports";
  * @param tabName - The name of the tab to activate ('layers', 'tools', 'mymaps', 'themes', 'reports')
  */
 export function activateTab(tabName: TabName): void {
-  console.log(`activateTab called with: ${tabName}`);
-
   const { openSidebar, setActiveTabByName } = useSidebarStore.getState();
 
   // Open sidebar and activate the tab by name (uses absolute indices)
   openSidebar();
   setActiveTabByName(tabName);
-
-  console.log(`Tab activation completed for: ${tabName}`);
 }
 
 /**
@@ -45,7 +41,7 @@ export function activateTabDelayed(tabName: TabName): void {
  * Show message (placeholder - can be enhanced with UI library)
  */
 export function showMessage(title: string, message: string, type: "info" | "error" | "warning" | "success" = "info", timeout = 2000): void {
-  console.log(`${type.toUpperCase()}: ${title} - ${message}`);
+  console.log(`${type.toUpperCase()}: ${title}: ${message}`);
   useToastStore.getState().addToast(`${title}: ${message}`, type, timeout);
 }
 

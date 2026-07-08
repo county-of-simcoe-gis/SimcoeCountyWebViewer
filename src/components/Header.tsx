@@ -67,8 +67,13 @@ export default function Header() {
       </div>
 
       {/* Logo */}
-      <div className={`flex items-center mr-2.5 shrink-0 max-[770px]:hidden ${config?.draft ? "sc-draft-header" : ""}`}>
+      <div className={`relative flex items-center mr-2.5 shrink-0 max-[770px]:hidden ${config?.draft ? "sc-draft-header" : ""}`}>
         <AppImage src={getLogoImage()} alt={config?.title || "Simcoe County"} height={50} className="h-[50px] object-contain" />
+        {config?.logoOverlayText && (
+          <span className="absolute top-2 left-[-6px] text-[10px] font-bold leading-none px-1.5 py-0.5 bg-primary text-primary-content opacity-90 pointer-events-none select-none -rotate-12 shadow-sm">
+            {config.logoOverlayText}
+          </span>
+        )}
       </div>
 
       {/* Search Container - takes remaining space */}

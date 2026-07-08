@@ -111,49 +111,38 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
   // Query layers for features
   const refreshLayers = useCallback(async () => {
     if (!map) {
-      console.log("Identify: No map available");
       return;
     }
 
-    console.log("Identify: Starting layer refresh");
     setLayers([]);
     setIsLoading(true);
 
     const allManagedLayers = getAllLayers();
-    console.log("Identify: Total managed layers:", allManagedLayers.length);
 
     let olLayers = allManagedLayers
       .filter((ml) => ml.category === "TOC" || ml.category === "Themes") // Query TOC and Theme layers
       .map((ml) => ml.layer);
 
-    console.log("Identify: Queryable layers found:", olLayers.length);
-
     // Filter by specific layer if provided
     if (layerFilter) {
       olLayers = olLayers.filter((layer) => layer.get("displayName") === layerFilter);
-      console.log("Identify: Layers after filter:", olLayers.length);
     }
 
     const layerList: IdentifyResult[] = [];
-    let queriedCount = 0;
 
     for (const layer of olLayers) {
       const layerName = layer.get("name");
       const isVisible = layer.getVisible();
       const queryable = layer.get("queryable");
 
-      console.log(`Identify: Checking layer "${layerName}": visible=${isVisible}, queryable=${queryable}`);
-
       // Only query visible or filtered layers
       if (!isVisible && !layerFilter) {
-        console.log(`Identify: Skipping "${layerName}" - not visible`);
         continue;
       }
 
       // Only skip if explicitly set to false (queryable === false means disabled)
       // By default, all WMS layers support GetFeatureInfo
       if (queryable === false) {
-        console.log(`Identify: Skipping "${layerName}" - explicitly disabled (queryable=false)`);
         continue;
       }
 
@@ -196,7 +185,6 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       // Try WFS query for non-Point geometries
       if (wfsUrl && useGeometryQuery) {
         try {
-          queriedCount++;
           let queryUrl = wfsUrl;
 
           if (isArcGISLayer) {
@@ -257,12 +245,8 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
             queryUrl = `${baseUrl}?${params.toString()}`;
           }
 
-          console.log(`Identify: Querying "${layerName}" with WFS at URL:`, queryUrl);
-
           const axiosClient = getAxiosClient(queryUrl);
           const response = await axiosClient.get(queryUrl, { ...axiosConfig });
-
-          console.log(`Identify: WFS Response from "${layerName}":`, response.data);
 
           let result = response.data;
 
@@ -271,7 +255,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
             try {
               result = JSON.parse(result);
             } catch {
-              console.log(`Identify: Failed to parse WFS response from "${layerName}"`);
+              console.warn(`Identify: Failed to parse WFS response from "${layerName}"`);
             }
           }
 
@@ -314,8 +298,6 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
               featureList = new GeoJSON().readFeatures(result);
             }
 
-            console.log(`Identify: Found ${featureList.length} features in "${layerName}" via ${isArcGISLayer ? "ArcGIS Identify" : "WFS"}`);
-
             if (featureList.length > 0) {
               // Inject attachmentUrl onto each feature (matching old app behavior)
               const hasAttachments = layer.get("hasAttachments");
@@ -355,34 +337,27 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
 
       // Fallback to WMS GetFeatureInfo query
       if (!source) {
-        console.log(`Identify: Skipping "${layerName}" - no source`);
         continue;
       }
 
       if (!source.getFeatureInfoUrl || typeof source.getFeatureInfoUrl !== "function") {
-        console.log(`Identify: Skipping "${layerName}" - source doesn't have getFeatureInfoUrl method`);
         continue;
       }
 
       try {
-        queriedCount++;
         const infoFormat = layer.get("INFO_FORMAT") || "application/json";
         const getInfoOption = { INFO_FORMAT: infoFormat };
 
         const url = source.getFeatureInfoUrl(queryPoint.getCoordinates(), map.getView().getResolution()!, "EPSG:3857", getInfoOption);
 
         if (!url) {
-          console.log(`Identify: No URL generated for "${layerName}"`);
           continue;
         }
 
         const fullUrl = `${url}&feature_count=1000000`;
-        console.log(`Identify: Querying "${layerName}" with WMS at URL:`, fullUrl);
 
         const axiosClient = getAxiosClient(fullUrl);
         const response = await axiosClient.get(fullUrl, { ...axiosConfig });
-
-        console.log(`Identify: Response from "${layerName}":`, response.data);
 
         let result = response.data;
 
@@ -391,15 +366,13 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
           try {
             result = JSON.parse(result);
           } catch {
-            console.log(`Identify: Failed to parse response from "${layerName}"`);
+            console.warn(`Identify: Failed to parse response from "${layerName}"`);
             continue;
           }
         }
 
         // Parse GeoJSON features
         const featureList = new GeoJSON().readFeatures(result);
-
-        console.log(`Identify: Found ${featureList.length} features in "${layerName}"`);
 
         if (featureList.length === 0) continue;
 
@@ -435,7 +408,6 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       }
     }
 
-    console.log(`Identify: Queried ${queriedCount} layers, found results in ${layerList.length} layers`);
     setLayers(layerList);
     setIsLoading(false);
   }, [map, geometry, queryPoint, layerFilter, getAllLayers, getDisplayNameFromFeature, generateWKT, generateEsriJSON]);

@@ -50,6 +50,10 @@ const UrlParameterContext = createContext<UseUrlParametersReturn | null>(null);
 type UrlParams = Record<string, string>;
 type HandlerFn = (value: string, params: UrlParams) => Promise<void> | void;
 
+function hasParameterName(config: { name?: unknown }): config is { name: string } {
+  return typeof config.name === "string" && config.name.length > 0;
+}
+
 // ============================================================================
 // Provider Component
 // ============================================================================
@@ -101,23 +105,16 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
    * Handlers are created lazily to avoid initialization issues.
    */
   const getHandler = useCallback((paramName: string): HandlerFn | null => {
-    // console.log(`[getHandler] Looking for handler: "${paramName}"`);
-
     // Return cached handler if available
     if (paramName in handlersRef.current) {
-      console.log(`[getHandler] Found cached handler for: "${paramName}"`);
       return handlersRef.current[paramName];
     }
 
     // Create handler based on parameter config
-    // const config = getParameterConfig(paramName);
-    // console.log(`[getHandler] Config lookup for "${paramName}":`, config ? `Found (name=${config.name})` : "NOT FOUND");
-
     // Always create a lazy handler — even for unknown params, the default case
     // in createLazyHandler will check sidebarShortcutParams from config.
     const handler = createLazyHandler(paramName);
     handlersRef.current[paramName] = handler;
-    // console.log(`[getHandler] Created lazy handler for: "${paramName}"`);
     return handler;
   }, []);
 
@@ -132,13 +129,11 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     async (paramName: string, value: string, allParams: UrlParams): Promise<boolean> => {
       const handler = getHandler(paramName);
       if (!handler) {
-        // console.log(`[UrlParameterProvider] No handler for: ${paramName}`);
         skippedParamsRef.current.push(paramName);
         return false;
       }
 
       try {
-        // console.log(`[UrlParameterProvider] Executing handler for: ${paramName}=${value}`);
         await handler(value, allParams);
         completedParamsRef.current.push(paramName);
         return true;
@@ -161,7 +156,6 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     // DEBUG: Set a window property so we can verify from browser console
     // @ts-expect-error - Adding debug property to window
     window._urlParamDebug = { status: "processing started" };
-    // console.log("[UrlParameterProvider] processUrlParameters called!");
 
     const searchParams = new URLSearchParams(window.location.search);
     const params: UrlParams = {};
@@ -171,11 +165,8 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
     const paramCount = Object.keys(params).length;
     if (paramCount === 0) {
-      // console.log("[UrlParameterProvider] No URL parameters to process");
       return;
     }
-
-    // console.log(`[UrlParameterProvider] Processing ${paramCount} URL parameters:`, params);
 
     isProcessingRef.current = true;
     setIsProcessing(true);
@@ -192,6 +183,11 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
     let featureHandled = false;
     for (const config of sortedFeatureParams) {
+      if (!hasParameterName(config)) {
+        console.warn("[UrlParameterProvider] Skipping feature selection config with no name:", config);
+        continue;
+      }
+
       const paramValue = params[config.name.toUpperCase()];
       if (paramValue !== undefined && !featureHandled) {
         await processParameter(config.name, paramValue, params);
@@ -202,6 +198,11 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
     // Process standard parameters in order of dependencies
     for (const config of standardParameters) {
+      if (!hasParameterName(config)) {
+        console.warn("[UrlParameterProvider] Skipping standard config with no name:", config);
+        continue;
+      }
+
       const paramValue = params[config.name.toUpperCase()];
       if (paramValue !== undefined) {
         // Check dependencies are met
@@ -210,7 +211,6 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
         if (depsReady) {
           await processParameter(config.name, paramValue, params);
         } else {
-          // console.log(`[UrlParameterProvider] Skipping ${config.name} - dependencies not ready`);
           skippedParamsRef.current.push(config.name);
         }
       }
@@ -218,7 +218,10 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
     // Process any remaining URL params not in standard or feature configs
     // These may match sidebarShortcutParams from config (e.g. "room" → Campus theme)
-    const knownParamNames = new Set([...featureSelectionParameters.map((p) => p.name.toUpperCase()), ...standardParameters.map((p) => p.name.toUpperCase())]);
+    const knownParamNames = new Set([
+      ...featureSelectionParameters.filter(hasParameterName).map((p) => p.name.toUpperCase()),
+      ...standardParameters.filter(hasParameterName).map((p) => p.name.toUpperCase()),
+    ]);
     for (const [key, value] of Object.entries(params)) {
       if (!knownParamNames.has(key)) {
         await processParameter(key, value, params);
@@ -228,12 +231,6 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
     // Done processing
     isProcessingRef.current = false;
     setIsProcessing(false);
-
-    // console.log("[UrlParameterProvider] URL parameter processing complete", {
-    //   completed: completedParamsRef.current,
-    //   failed: failedParamsRef.current,
-    //   skipped: skippedParamsRef.current,
-    // });
   }, [processParameter]);
 
   // -------------------------------------------------------------------------
@@ -243,7 +240,6 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
   const registerComponentReady = useCallback(
     (componentName: ComponentDependency) => {
       componentReadinessRef.current[componentName] = true;
-      // console.log(`[UrlParameterProvider] Component ready: ${componentName}`);
 
       // Notify any waiting callbacks
       const callbacks = waitingCallbacksRef.current.get(componentName) || [];
@@ -252,11 +248,9 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 
       // Process URL params when map is ready (deferred)
       if (componentName === "map" && !hasProcessedRef.current) {
-        // console.log(`[UrlParameterProvider] Map is ready, scheduling URL parameter processing in 200ms`);
         hasProcessedRef.current = true;
         // Use setTimeout to defer processing and let the app stabilize
         setTimeout(() => {
-          // console.log(`[UrlParameterProvider] Starting URL parameter processing now`);
           processUrlParameters();
         }, 200);
       }
@@ -334,8 +328,6 @@ function createLazyHandler(paramName: string): HandlerFn {
     // Use let so we can refresh the state reference in the wait loops
     let sidebarState = useSidebarStore.getState();
 
-    // console.log(`[createLazyHandler] Executing handler for param: "${paramName}", value: "${value}"`);
-
     switch (paramName.toUpperCase()) {
       case "X":
       case "Y":
@@ -345,7 +337,6 @@ function createLazyHandler(paramName: string): HandlerFn {
         // to avoid duplicate handlers causing race conditions. MapContainer runs first (100ms delay)
         // and handles coordinate transformation (SR param) and marker placement (ID param).
         // This case is kept as a no-op to prevent "unhandled parameter" warnings.
-        console.log(`[Handler] Coordinate param "${paramName}" - handled by MapContainer.tsx`);
         break;
       }
 
@@ -354,14 +345,6 @@ function createLazyHandler(paramName: string): HandlerFn {
         // 1. Open the sidebar
         // 2. Set active tab to themes (index 3)
         // 3. Activate the theme by name
-        console.log(`[Handler] THEME handler called with value: "${value}"`);
-        console.log(`[Handler] Initial themes count: ${sidebarState.themes.length}`);
-
-        // DEBUG: Use alert to confirm handler is being called
-        if (typeof window !== "undefined") {
-          console.log("[Handler] THEME handler is executing - check browser console!");
-        }
-
         // Wait for themes to be loaded (max 5 seconds)
         const maxWait = 5000;
         const checkInterval = 100;
@@ -372,29 +355,18 @@ function createLazyHandler(paramName: string): HandlerFn {
           waited += checkInterval;
           // Refresh state reference
           sidebarState = useSidebarStore.getState();
-          if (waited % 500 === 0) {
-            console.log(`[Handler] Waiting for themes... ${waited}ms elapsed, count: ${sidebarState.themes.length}`);
-          }
         }
-
-        console.log(`[Handler] After wait - themes count: ${sidebarState.themes.length}, waited: ${waited}ms`);
-        console.log(
-          `[Handler] Available themes:`,
-          sidebarState.themes.map((t) => ({ id: t.id, name: t.name })),
-        );
 
         // Find the theme by name (case-insensitive)
         const theme = sidebarState.themes.find((t) => t.name.toUpperCase() === value.toUpperCase() || t.id.toUpperCase() === value.toUpperCase());
 
         if (theme) {
-          console.log(`[Handler] Found theme: ${theme.name} (id: ${theme.id})`);
           // Open sidebar and switch to themes tab
           sidebarState.openSidebar();
           sidebarState.setActiveTab(3); // 3 = themes tab
 
           // Activate the theme
           sidebarState.activateSidebarItem(theme.id, "themes");
-          console.log(`[Handler] Theme "${theme.name}" activated successfully`);
         } else {
           console.warn(
             `[Handler] Theme "${value}" not found. Available themes:`,
@@ -406,8 +378,6 @@ function createLazyHandler(paramName: string): HandlerFn {
 
       case "TOOL": {
         // Enable a specific tool
-        console.log(`[Handler] Enabling tool: ${value}`);
-
         // Wait for tools to be loaded (max 5 seconds)
         const maxWaitTool = 5000;
         const checkIntervalTool = 100;
@@ -430,7 +400,6 @@ function createLazyHandler(paramName: string): HandlerFn {
 
           // Activate the tool
           sidebarState.activateSidebarItem(tool.id, "tools");
-          console.log(`[Handler] Tool "${tool.name}" activated successfully`);
         } else {
           console.warn(
             `[Handler] Tool "${value}" not found. Available tools:`,
@@ -444,20 +413,17 @@ function createLazyHandler(paramName: string): HandlerFn {
         // Municipality is handled directly by Search.tsx from the app store's urlParameters.
         // This no-op prevents the sidebarShortcutParams default handler from incorrectly
         // emitting a "searchItem" event for this parameter.
-        console.log(`[Handler] MUNI param "${value}" stored — Search component will use it as a filter`);
         break;
       }
 
       case "BASEMAP": {
         // Change basemap
-        console.log(`[Handler] Setting basemap: ${value}`);
         // TODO: Basemap handling - need to implement basemap store/method
         break;
       }
 
       case "SEARCH": {
         // Perform a search
-        console.log(`[Handler] Executing search: ${value}`);
         // TODO: Search handling - trigger search component
         break;
       }
@@ -465,7 +431,6 @@ function createLazyHandler(paramName: string): HandlerFn {
       case "MYMAPS":
       case "LOAD_MYMAPS": {
         // Load a saved MyMaps configuration
-        console.log(`[Handler] Loading MyMaps: ${value}`);
         // TODO: MyMaps loading logic
         break;
       }
@@ -495,8 +460,6 @@ function createLazyHandler(paramName: string): HandlerFn {
         });
 
         if (shortcut) {
-          console.log(`[Handler] Matched sidebarShortcutParam: ${shortcut.url_param} → ${shortcut.type}/${shortcut.component}`);
-
           if (shortcut.type === "search") {
             // Set a pending search for the Search component to pick up
             const { useSearchStore } = await import("@/stores/searchStore");
@@ -524,16 +487,12 @@ function createLazyHandler(paramName: string): HandlerFn {
               const tabIndex = shortcut.type === "themes" ? 3 : 1;
               sidebarStateShortcut.setActiveTab(tabIndex);
               sidebarStateShortcut.activateSidebarItem(item.id, shortcut.type);
-              console.log(`[Handler] Shortcut activated: ${item.name}`);
             } else {
               console.warn(`[Handler] Shortcut component "${shortcut.component}" not found in ${shortcut.type}`);
             }
           } else if (shortcut.type === "MYMAPS") {
             // TODO: Load MyMaps configuration
-            console.log(`[Handler] MyMaps shortcut: ${shortcut.component}, value: ${value}`);
           }
-        } else {
-          console.log(`[Handler] No specific handler for: ${paramName}, value: ${value}`);
         }
         break;
       }

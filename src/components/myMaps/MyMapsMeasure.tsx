@@ -111,12 +111,10 @@ const MyMapsMeasure: React.FC<MyMapsMeasureProps> = ({ visible, item }) => {
     if (!visible) return;
 
     const handleUnitsUpdate = (event: CustomEvent) => {
-      console.log("🎯 Received units update:", event.detail.units);
       setUnits(event.detail.units);
     };
 
     const handleAutoFormatUpdate = (event: CustomEvent) => {
-      console.log("🎯 Received auto-format update:", event.detail.autoFormat);
       setAutoFormat(event.detail.autoFormat);
     };
 
@@ -256,7 +254,6 @@ export const attachMeasureListeners = (container: HTMLElement, item: MyMapsItem)
     unitsSelects.forEach((unitsSelect, _index) => {
       if (unitsSelect) {
         const handleUnitsChange = (e: Event) => {
-          console.log("🎯 Measure units changed via DOM event:", (e.target as HTMLSelectElement).value);
           const newUnits = (e.target as HTMLSelectElement).value;
 
           // Dispatch custom event that will bubble up to document
@@ -298,7 +295,6 @@ export const attachMeasureListeners = (container: HTMLElement, item: MyMapsItem)
                       const resultInput = measureContainer.querySelector(".sc-mymaps-measure-result") as HTMLInputElement;
                       if (resultInput) {
                         resultInput.value = newResult;
-                        console.log("🎯 Updated overlay result directly:", newResult);
                       }
                     }
                   } catch (error) {
@@ -326,7 +322,6 @@ export const attachMeasureListeners = (container: HTMLElement, item: MyMapsItem)
     const autoFormatCheckbox = measureContainer.querySelector("input[type='checkbox']") as HTMLInputElement;
     if (autoFormatCheckbox) {
       const handleAutoFormatChange = (e: Event) => {
-        console.log("🎯 Measure auto-format changed via DOM event:", (e.target as HTMLInputElement).checked);
         const newAutoFormat = (e.target as HTMLInputElement).checked;
 
         // Dispatch custom event that will bubble up to document
@@ -371,7 +366,6 @@ export const attachMeasureListeners = (container: HTMLElement, item: MyMapsItem)
                     const resultInput = measureContainer.querySelector(".sc-mymaps-measure-result") as HTMLInputElement;
                     if (resultInput) {
                       resultInput.value = newResult;
-                      console.log("🎯 Updated overlay result for auto-format:", newResult);
                     }
                   }
                 } catch (error) {

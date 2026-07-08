@@ -42,7 +42,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const [isReportProblemModalOpen, setIsReportProblemModalOpen] = useState(false);
 
   // Store hooks
-  const { drawType, drawColor, isEditing, items, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, hasItems, saveToApi, importFromApi } = useMyMapsStore();
+  const { drawType, drawColor, isEditing, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, hasItems, saveToApi, importFromApi } = useMyMapsStore();
   const { map } = useMapStore();
   const { config } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -53,8 +53,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   // Handle showing item options popup
   const handleShowItemOptions = useCallback((item: MyMapsItemType, event?: React.MouseEvent) => {
-    console.log("MyMaps: Show options for item", item.id);
-
     let x = 0;
     let y = 0;
 
@@ -99,7 +97,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleBuffer = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Buffer feature:", item.id);
       emit("mymap-buffer", { item });
     },
     [emit],
@@ -107,7 +104,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleSymbolize = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Symbolize feature:", item.id);
       emit("mymap-symbolize", { item });
     },
     [emit],
@@ -115,7 +111,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleMeasure = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Measure feature:", item.id);
       emit("mymap-measure", { item });
     },
     [emit],
@@ -123,7 +118,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleZoomTo = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Zoom to item:", item.id);
       // Emit event for the service to handle the zoom operation
       emit("mymap-zoom-to", { item });
     },
@@ -132,7 +126,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleDeleteFromPopup = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Delete item from popup:", item.id);
       removeItem(item.id);
       handleClosePopup();
       emit("mymap-item-deleted", { id: item.id });
@@ -142,8 +135,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleShowGeometry = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Show geometry for item:", item.id);
-
       // Check if is_open_data allows showing coordinates (like the old app)
       try {
         const feature = JSON.parse(item.featureGeoJSON || "{}");
@@ -151,7 +142,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
         // If is_open_data is false, don't show geometry
         if (showCoordinates === false) {
-          console.log("Geometry viewing not allowed for this feature");
           return;
         }
       } catch (error) {
@@ -180,8 +170,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleIdentify = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Identify feature:", item.id);
-
       try {
         // Parse the GeoJSON to get the feature
         const geoJsonFormat = new GeoJSON({
@@ -230,8 +218,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   const handleReportProblem = useCallback(
     async (item: MyMapsItemType) => {
-      console.log("Report problem for feature:", item.id);
-
       if (!map || !config) {
         console.error("Map or config not available");
         return;
@@ -280,7 +266,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         toast.error("Error occurred while preparing the report. Please try again.");
       }
     },
-    [map, config, saveToApi, emit],
+    [map, config, saveToApi, emit, toast],
   );
 
   const handleCloseReportProblemModal = useCallback(() => {
@@ -383,7 +369,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
     (title: string, message: string, isError = false) => {
       // This is a simplified version - in a real app you might want to use a toast library
       // or integrate with your existing notification system
-      console.log(`${title}: ${message}`);
       if (isError) {
         toast.error(`${title}: ${message}`);
       }
@@ -431,10 +416,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         showMessage("MyMaps Import", "Error occurred while importing MyMaps. Please try again.", true);
       }
     }
-    // `items` is intentionally omitted from deps – reading it via the store avoids
-    // re-creating this callback (and re-firing the effect) on every item change,
-    // which would otherwise re-trigger the URL-param import loop.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlParameters, importFromApi, showMessage, handleMyMapsImport, getFeatureFromGeoJSON, zoomToFeature]);
 
   // Handle URL parameters after component is loaded
@@ -454,7 +435,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
     try {
       const result = exportToFile(format);
       if (result.success) {
-        console.log(`MyMaps: Successfully exported ${result.count} features to ${format}`);
       } else {
         toast.error(result.message || `Unable to export to ${format}. Please ensure you have visible features to export.`);
       }
@@ -488,8 +468,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       case "merge-polygons":
         const result = mergePolygons();
         if (result.success) {
-          console.log("MyMaps: Successfully merged polygons");
-          // Show success message or notification here if needed
         } else {
           toast.warning(result.message || "Unable to merge polygons. Please ensure you have at least 2 visible polygon features.");
         }
@@ -505,7 +483,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         break;
       case "zoom-to-selected":
         zoomToSelected();
-        console.log("MyMaps: Zoom to selected items");
         break;
       case "export-kml":
         exportToFormat("KML");
@@ -516,8 +493,6 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
       case "export-geo-json":
         exportToFormat("GeoJSON");
         break;
-      default:
-        console.log("MyMaps: Additional tool action", action);
     }
 
     emit("mymap-additional-tool-action", { action });

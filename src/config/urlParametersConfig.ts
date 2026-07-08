@@ -1,20 +1,15 @@
 /**
  * URL Parameters Configuration
- * 
+ *
  * Central configuration for all supported URL parameters.
  * Defines parameter metadata, execution phases, dependencies,
  * notification settings, and feature selection priority.
- * 
+ *
  * SERVICE URLS: Each feature selection parameter requires a full serviceUrl.
  * Update these URLs to match your deployment's GeoServer/service endpoints.
  */
 
-import {
-  type UrlParameterConfig,
-  type FeatureSelectionConfig,
-  UrlParamPhase,
-  URL_PARAMS,
-} from '@/types/urlParameters';
+import { type UrlParameterConfig, type FeatureSelectionConfig, UrlParamPhase, URL_PARAMS } from "@/types/urlParameters";
 
 // ============================================================================
 // Standard Parameters Configuration
@@ -30,10 +25,10 @@ export const standardParameters: UrlParameterConfig[] = [
   // -------------------------------------------------------------------------
   {
     name: URL_PARAMS.ANALYTICS,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.ANALYTICS,
     dependencies: [],
-    handlerKey: 'handleAnalytics',
+    handlerKey: "handleAnalytics",
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
@@ -43,30 +38,30 @@ export const standardParameters: UrlParameterConfig[] = [
   // -------------------------------------------------------------------------
   {
     name: URL_PARAMS.BASEMAP,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.BASEMAP,
-    dependencies: ['map'],
-    handlerKey: 'handleBasemap',
+    dependencies: ["map"],
+    handlerKey: "handleBasemap",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to set basemap',
+    failureMessagePrefix: "Failed to set basemap",
   },
   {
     name: URL_PARAMS.NAME,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.BASEMAP,
-    dependencies: ['map'],
-    handlerKey: 'handleBasemapName',
+    dependencies: ["map"],
+    handlerKey: "handleBasemapName",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to set basemap layer',
+    failureMessagePrefix: "Failed to set basemap layer",
   },
   {
     name: URL_PARAMS.SLIDER_OPEN,
-    type: 'boolean',
+    type: "boolean",
     phase: UrlParamPhase.BASEMAP,
-    dependencies: ['map'],
-    handlerKey: 'handleSliderOpen',
+    dependencies: ["map"],
+    handlerKey: "handleSliderOpen",
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
@@ -76,40 +71,40 @@ export const standardParameters: UrlParameterConfig[] = [
   // -------------------------------------------------------------------------
   {
     name: URL_PARAMS.TOCTYPE,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.LAYERS,
-    dependencies: ['toc'],
-    handlerKey: 'handleTocType',
+    dependencies: ["toc"],
+    handlerKey: "handleTocType",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to set TOC type',
+    failureMessagePrefix: "Failed to set TOC type",
   },
   {
     name: URL_PARAMS.GROUP,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.LAYERS,
-    dependencies: ['toc'],
-    handlerKey: 'handleGroup',
+    dependencies: ["toc"],
+    handlerKey: "handleGroup",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to activate layer group',
+    failureMessagePrefix: "Failed to activate layer group",
   },
   {
     name: URL_PARAMS.LAYERS,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.LAYERS,
-    dependencies: ['toc'],
-    handlerKey: 'handleLayers',
+    dependencies: ["toc"],
+    handlerKey: "handleLayers",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to toggle layers',
+    failureMessagePrefix: "Failed to toggle layers",
   },
   {
     name: URL_PARAMS.EXPAND_LEGEND,
-    type: 'boolean',
+    type: "boolean",
     phase: UrlParamPhase.LAYERS,
-    dependencies: ['toc'],
-    handlerKey: 'handleExpandLegend',
+    dependencies: ["toc"],
+    handlerKey: "handleExpandLegend",
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
@@ -119,23 +114,23 @@ export const standardParameters: UrlParameterConfig[] = [
   // -------------------------------------------------------------------------
   {
     name: URL_PARAMS.THEME,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.LAYERS, // Load themes in layer phase
-    dependencies: ['map'], // Only need map for themes
-    handlerKey: 'handleTheme',
+    dependencies: ["map"], // Only need map for themes
+    handlerKey: "handleTheme",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Theme not found',
+    failureMessagePrefix: "Theme not found",
   },
   {
     name: URL_PARAMS.TOOL,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.LAYERS,
-    dependencies: ['map'],
-    handlerKey: 'handleTool',
+    dependencies: ["map"],
+    handlerKey: "handleTool",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Tool not found',
+    failureMessagePrefix: "Tool not found",
   },
 
   // -------------------------------------------------------------------------
@@ -144,76 +139,76 @@ export const standardParameters: UrlParameterConfig[] = [
   // Note: X, Y, and SR are handled together as a group
   {
     name: URL_PARAMS.X,
-    type: 'coordinates',
+    type: "coordinates",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleCoordinates',
+    dependencies: ["map"],
+    handlerKey: "handleCoordinates",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to zoom to coordinates',
+    failureMessagePrefix: "Failed to zoom to coordinates",
   },
   {
     name: URL_PARAMS.Y,
-    type: 'coordinates',
+    type: "coordinates",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleCoordinates', // Same handler as X - they work together
+    dependencies: ["map"],
+    handlerKey: "handleCoordinates", // Same handler as X - they work together
     notifyOnSuccess: false,
     notifyOnFailure: true,
   },
   {
     name: URL_PARAMS.SR,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleCoordinates', // Part of coordinate handling
+    dependencies: ["map"],
+    handlerKey: "handleCoordinates", // Part of coordinate handling
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
   {
     name: URL_PARAMS.ZOOM,
-    type: 'number',
+    type: "number",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleZoom',
+    dependencies: ["map"],
+    handlerKey: "handleZoom",
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
   // Extent parameters (XMIN, YMIN, XMAX, YMAX handled together)
   {
     name: URL_PARAMS.XMIN,
-    type: 'coordinates',
+    type: "coordinates",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleExtent',
+    dependencies: ["map"],
+    handlerKey: "handleExtent",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to zoom to extent',
+    failureMessagePrefix: "Failed to zoom to extent",
   },
   {
     name: URL_PARAMS.YMIN,
-    type: 'coordinates',
+    type: "coordinates",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleExtent',
+    dependencies: ["map"],
+    handlerKey: "handleExtent",
     notifyOnSuccess: false,
     notifyOnFailure: true,
   },
   {
     name: URL_PARAMS.XMAX,
-    type: 'coordinates',
+    type: "coordinates",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleExtent',
+    dependencies: ["map"],
+    handlerKey: "handleExtent",
     notifyOnSuccess: false,
     notifyOnFailure: true,
   },
   {
     name: URL_PARAMS.YMAX,
-    type: 'coordinates',
+    type: "coordinates",
     phase: UrlParamPhase.LOCATION,
-    dependencies: ['map'],
-    handlerKey: 'handleExtent',
+    dependencies: ["map"],
+    handlerKey: "handleExtent",
     notifyOnSuccess: false,
     notifyOnFailure: true,
   },
@@ -223,96 +218,43 @@ export const standardParameters: UrlParameterConfig[] = [
   // -------------------------------------------------------------------------
   {
     name: URL_PARAMS.MUNI,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.SEARCH_UI,
     dependencies: [],
-    handlerKey: 'handleMunicipality',
+    handlerKey: "handleMunicipality",
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
   {
     name: URL_PARAMS.Q,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.SEARCH_UI,
-    dependencies: ['search'],
-    handlerKey: 'handleSearchQuery',
+    dependencies: ["search"],
+    handlerKey: "handleSearchQuery",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Search failed',
+    failureMessagePrefix: "Search failed",
   },
   {
     name: URL_PARAMS.QT,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.SEARCH_UI,
-    dependencies: ['search'],
-    handlerKey: 'handleSearchType',
+    dependencies: ["search"],
+    handlerKey: "handleSearchType",
     notifyOnSuccess: false,
     notifyOnFailure: false,
   },
   {
     name: URL_PARAMS.TAB,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.SEARCH_UI,
     dependencies: [],
-    handlerKey: 'handleTab',
+    handlerKey: "handleTab",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to activate tab',
+    failureMessagePrefix: "Failed to activate tab",
   },
 
-  // -------------------------------------------------------------------------
-  // Phase 6: MyMaps & AVL (Secured Features)
-  // -------------------------------------------------------------------------
-  {
-    name: URL_PARAMS.MY_MAPS_ID,
-    type: 'string',
-    phase: UrlParamPhase.FEATURES,
-    dependencies: ['auth', 'myMaps'],
-    handlerKey: 'handleMyMapsId',
-    notifyOnSuccess: true,
-    notifyOnFailure: true,
-    successMessage: 'MyMaps loaded successfully',
-    failureMessagePrefix: 'Failed to load MyMaps',
-  },
-  {
-    name: URL_PARAMS.MY_MAPS_FEATURE_ID,
-    type: 'string',
-    phase: UrlParamPhase.FEATURES,
-    dependencies: ['auth', 'myMaps'],
-    handlerKey: 'handleMyMapsFeatureId',
-    notifyOnSuccess: false,
-    notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to select MyMaps feature',
-  },
-  {
-    name: URL_PARAMS.VEHICLEID,
-    type: 'string',
-    phase: UrlParamPhase.FEATURES,
-    dependencies: ['auth', 'avl'],
-    handlerKey: 'handleVehicleId',
-    notifyOnSuccess: false,
-    notifyOnFailure: true,
-    failureMessagePrefix: 'Failed to load vehicle',
-  },
-  {
-    name: URL_PARAMS.STARTDATE,
-    type: 'string',
-    phase: UrlParamPhase.FEATURES,
-    dependencies: ['auth', 'avl'],
-    handlerKey: 'handleDateRange',
-    notifyOnSuccess: false,
-    notifyOnFailure: true,
-    failureMessagePrefix: 'Invalid date range',
-  },
-  {
-    name: URL_PARAMS.ENDDATE,
-    type: 'string',
-    phase: UrlParamPhase.FEATURES,
-    dependencies: ['auth', 'avl'],
-    handlerKey: 'handleDateRange',
-    notifyOnSuccess: false,
-    notifyOnFailure: true,
-  },
 ];
 
 // ============================================================================
@@ -321,76 +263,76 @@ export const standardParameters: UrlParameterConfig[] = [
 
 /**
  * Feature selection parameters
- * 
+ *
  * These are mutually exclusive - if multiple are provided in the URL,
  * only the highest priority (lowest priority number) will be applied.
  * Others will be skipped (and optionally notified based on notifyIfIgnored).
- * 
+ *
  * IMPORTANT: Update serviceUrl values to match your GeoServer deployment!
  */
 export const featureSelectionParameters: FeatureSelectionConfig[] = [
   {
     name: URL_PARAMS.NG911ID,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.FEATURES,
-    dependencies: ['map'],
-    handlerKey: 'handleNG911ID',
+    dependencies: ["map"],
+    handlerKey: "handleNG911ID",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: '911 Address not found',
+    failureMessagePrefix: "911 Address not found",
     priority: 1, // Highest priority
     notifyIfIgnored: false,
     autoOpenPopup: false,
     // UPDATE THIS URL for your deployment
-    serviceUrl: 'https://opengis.simcoe.ca/geoserver/ows',
-    layerName: 'simcoe:Civic_Address_Point_Lookup',
-    cqlField: 'NGUID',
+    serviceUrl: "https://opengis.simcoe.ca/geoserver/ows",
+    layerName: "simcoe:Civic_Address_Point_Lookup",
+    cqlField: "NGUID",
   },
   {
     name: URL_PARAMS.ARN,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.FEATURES,
-    dependencies: ['map'],
-    handlerKey: 'handleARN',
+    dependencies: ["map"],
+    handlerKey: "handleARN",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Property not found',
+    failureMessagePrefix: "Property not found",
     priority: 2,
     notifyIfIgnored: false,
     autoOpenPopup: false,
     // UPDATE THIS URL for your deployment
-    serviceUrl: 'https://opengis.simcoe.ca/geoserver/ows',
-    layerName: 'simcoe:Assessment_Parcels',
-    cqlField: 'ARN',
+    serviceUrl: "https://opengis.simcoe.ca/geoserver/ows",
+    layerName: "simcoe:Assessment_Parcels",
+    cqlField: "ARN",
   },
   {
     name: URL_PARAMS.LOCATIONID,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.FEATURES,
-    dependencies: ['map', 'search'],
-    handlerKey: 'handleLocationId',
+    dependencies: ["map", "search"],
+    handlerKey: "handleLocationId",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Location not found',
+    failureMessagePrefix: "Location not found",
     priority: 3,
     notifyIfIgnored: false,
     autoOpenPopup: false,
     // UPDATE THIS URL for your deployment
-    serviceUrl: 'https://opengis.simcoe.ca/api/search',
+    serviceUrl: "https://opengis.simcoe.ca/api/search",
   },
   {
     name: URL_PARAMS.PROPERTYLINK,
-    type: 'string',
+    type: "string",
     phase: UrlParamPhase.FEATURES,
-    dependencies: ['map'],
-    handlerKey: 'handlePropertyLink',
+    dependencies: ["map"],
+    handlerKey: "handlePropertyLink",
     notifyOnSuccess: false,
     notifyOnFailure: true,
-    failureMessagePrefix: 'Invalid property link',
+    failureMessagePrefix: "Invalid property link",
     priority: 4, // Lowest priority
     notifyIfIgnored: false,
     autoOpenPopup: false,
-    serviceUrl: '', // Not used for property link - it's a URL itself
+    serviceUrl: "", // Not used for property link - it's a URL itself
   },
 ];
 
@@ -405,26 +347,20 @@ export const featureSelectionParameters: FeatureSelectionConfig[] = [
  */
 export function getParameterConfig(paramName: string): UrlParameterConfig | FeatureSelectionConfig | undefined {
   const normalizedName = paramName.toUpperCase();
-  
+
   // Check feature selection parameters first
-  const featureParam = featureSelectionParameters.find(
-    p => p.name.toUpperCase() === normalizedName
-  );
+  const featureParam = featureSelectionParameters.find((p) => p.name.toUpperCase() === normalizedName);
   if (featureParam) return featureParam;
-  
+
   // Check standard parameters
-  return standardParameters.find(
-    p => p.name.toUpperCase() === normalizedName
-  );
+  return standardParameters.find((p) => p.name.toUpperCase() === normalizedName);
 }
 
 /**
  * Check if a parameter is a feature selection parameter
  */
 export function isFeatureSelectionParam(paramName: string): boolean {
-  return featureSelectionParameters.some(
-    p => p.name.toUpperCase() === paramName.toUpperCase()
-  );
+  return featureSelectionParameters.some((p) => p.name.toUpperCase() === paramName.toUpperCase());
 }
 
 /**
@@ -432,13 +368,13 @@ export function isFeatureSelectionParam(paramName: string): boolean {
  */
 export function getParametersByPhase(): Map<UrlParamPhase, UrlParameterConfig[]> {
   const grouped = new Map<UrlParamPhase, UrlParameterConfig[]>();
-  
+
   for (const param of standardParameters) {
     const existing = grouped.get(param.phase) || [];
     existing.push(param);
     grouped.set(param.phase, existing);
   }
-  
+
   return grouped;
 }
 
@@ -446,10 +382,7 @@ export function getParametersByPhase(): Map<UrlParamPhase, UrlParameterConfig[]>
  * Get all supported parameter names
  */
 export function getAllParameterNames(): string[] {
-  return [
-    ...standardParameters.map(p => p.name),
-    ...featureSelectionParameters.map(p => p.name),
-  ];
+  return [...standardParameters.map((p) => p.name), ...featureSelectionParameters.map((p) => p.name)];
 }
 
 /**
@@ -464,8 +397,6 @@ export const parameterGroups: Record<string, string[]> = {
   [URL_PARAMS.YMIN]: [URL_PARAMS.XMIN, URL_PARAMS.YMIN, URL_PARAMS.XMAX, URL_PARAMS.YMAX],
   [URL_PARAMS.XMAX]: [URL_PARAMS.XMIN, URL_PARAMS.YMIN, URL_PARAMS.XMAX, URL_PARAMS.YMAX],
   [URL_PARAMS.YMAX]: [URL_PARAMS.XMIN, URL_PARAMS.YMIN, URL_PARAMS.XMAX, URL_PARAMS.YMAX],
-  [URL_PARAMS.STARTDATE]: [URL_PARAMS.STARTDATE, URL_PARAMS.ENDDATE],
-  [URL_PARAMS.ENDDATE]: [URL_PARAMS.STARTDATE, URL_PARAMS.ENDDATE],
   [URL_PARAMS.Q]: [URL_PARAMS.Q, URL_PARAMS.QT],
   [URL_PARAMS.QT]: [URL_PARAMS.Q, URL_PARAMS.QT],
 };
@@ -481,9 +412,6 @@ export function getPrimaryParam(paramName: string): string {
   }
   if ([URL_PARAMS.XMIN, URL_PARAMS.YMIN, URL_PARAMS.XMAX, URL_PARAMS.YMAX].includes(upper as typeof URL_PARAMS.XMIN)) {
     return URL_PARAMS.XMIN;
-  }
-  if ([URL_PARAMS.STARTDATE, URL_PARAMS.ENDDATE].includes(upper as typeof URL_PARAMS.STARTDATE)) {
-    return URL_PARAMS.STARTDATE;
   }
   if ([URL_PARAMS.Q, URL_PARAMS.QT].includes(upper as typeof URL_PARAMS.Q)) {
     return URL_PARAMS.Q;

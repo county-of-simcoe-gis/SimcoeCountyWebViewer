@@ -66,9 +66,6 @@ export default function GlobalDrawingOptionsPopup() {
         const currentItems = state.items;
         const updatedItem = currentItems.find((i) => i.id === drawingOptionsItemId);
         if (updatedItem && JSON.stringify(updatedItem) !== JSON.stringify(drawingOptionsItem)) {
-          console.log("🔄 GlobalDrawingOptionsPopup: Detected item change in store, updating local state.", {
-            newItem: updatedItem,
-          });
           setDrawingOptionsItemId(updatedItem.id);
         }
       }
@@ -249,59 +246,45 @@ export default function GlobalDrawingOptionsPopup() {
   // Buffer handler for MyMaps list (should open Drawing Options popup)
   const handleBufferFromMyMapsList = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Opening buffer tool for item from MyMaps list:", item.id);
-
       // For Drawing Options popup, we need map coordinates, not screen coordinates
       // Try to get the feature's map coordinates first, fallback to map center
       let coordinate = [0, 0];
 
       if (item.featureGeoJSON) {
         try {
-          console.log("Raw featureGeoJSON for item:", item.id, ":", item.featureGeoJSON);
           const feature = JSON.parse(item.featureGeoJSON);
-          console.log("Parsed feature:", feature);
 
           // Handle GeoJSON Feature format
           const geometry = feature.type === "Feature" ? feature.geometry : feature;
-          console.log("Extracted geometry:", geometry);
 
           if (geometry && geometry.coordinates) {
             // Calculate center coordinates for each geometry type
             switch (geometry.type) {
               case "Point":
                 coordinate = geometry.coordinates;
-                console.log("Point coordinates extracted:", coordinate);
                 break;
               case "LineString":
                 // Find point at 50% distance along the line
                 coordinate = calculateLineStringMidpoint(geometry.coordinates);
-                console.log("LineString 50% distance point extracted:", coordinate);
                 break;
               case "Polygon":
                 // Calculate proper centroid of polygon
                 coordinate = calculatePolygonCentroid(geometry.coordinates[0]); // Use outer ring
-                console.log("Polygon centroid coordinates extracted:", coordinate);
                 break;
               default:
-                console.log("Unknown geometry type:", geometry.type);
                 coordinate = [0, 0];
             }
           } else {
-            console.log("No coordinates found in geometry");
             coordinate = [0, 0];
           }
         } catch (error) {
           console.error("Error parsing geometry for buffer positioning:", error);
           coordinate = [0, 0];
         }
-      } else {
-        console.log("No featureGeoJSON found for item:", item.id);
       }
 
       // If coordinates are invalid (0,0 or undefined), use map center as fallback
       if (!coordinate || coordinate.length < 2 || (coordinate[0] === 0 && coordinate[1] === 0)) {
-        console.log("Invalid/zero coordinates detected, using map center as fallback");
-
         // Try to get map center with a slight delay to ensure map is ready
         setTimeout(() => {
           if (map) {
@@ -309,7 +292,6 @@ export default function GlobalDrawingOptionsPopup() {
             const center = view.getCenter();
             if (center) {
               coordinate = center;
-              console.log("Using delayed map center coordinate:", coordinate);
 
               // Open drawing options popup with buffer tool active
               setDrawingOptionsItemId(item.id);
@@ -321,7 +303,6 @@ export default function GlobalDrawingOptionsPopup() {
           }
 
           // Fallback if map center still not available
-          console.log("Using fallback coordinate");
           coordinate = [-8500000, 5600000]; // Approximate Ontario center in Web Mercator
 
           setDrawingOptionsItemId(item.id);
@@ -332,8 +313,6 @@ export default function GlobalDrawingOptionsPopup() {
 
         return; // Exit early, popup will open in setTimeout
       }
-
-      console.log("Using valid feature coordinate:", coordinate);
 
       // Open drawing options popup with buffer tool active immediately
       setDrawingOptionsItemId(item.id);
@@ -347,59 +326,45 @@ export default function GlobalDrawingOptionsPopup() {
   // Symbolize handler for MyMaps list (should open Drawing Options popup)
   const handleSymbolizeFromMyMapsList = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Opening symbolize tool for item from MyMaps list:", item.id);
-
       // For Drawing Options popup, we need map coordinates, not screen coordinates
       // Try to get the feature's map coordinates first, fallback to map center
       let coordinate = [0, 0];
 
       if (item.featureGeoJSON) {
         try {
-          console.log("Raw featureGeoJSON for item:", item.id, ":", item.featureGeoJSON);
           const feature = JSON.parse(item.featureGeoJSON);
-          console.log("Parsed feature:", feature);
 
           // Handle GeoJSON Feature format
           const geometry = feature.type === "Feature" ? feature.geometry : feature;
-          console.log("Extracted geometry:", geometry);
 
           if (geometry && geometry.coordinates) {
             // Calculate center coordinates for each geometry type
             switch (geometry.type) {
               case "Point":
                 coordinate = geometry.coordinates;
-                console.log("Point coordinates extracted:", coordinate);
                 break;
               case "LineString":
                 // Find point at 50% distance along the line
                 coordinate = calculateLineStringMidpoint(geometry.coordinates);
-                console.log("LineString 50% distance point extracted:", coordinate);
                 break;
               case "Polygon":
                 // Calculate proper centroid of polygon
                 coordinate = calculatePolygonCentroid(geometry.coordinates[0]); // Use outer ring
-                console.log("Polygon centroid coordinates extracted:", coordinate);
                 break;
               default:
-                console.log("Unknown geometry type:", geometry.type);
                 coordinate = [0, 0];
             }
           } else {
-            console.log("No coordinates found in geometry");
             coordinate = [0, 0];
           }
         } catch (error) {
           console.error("Error parsing geometry for symbolize positioning:", error);
           coordinate = [0, 0];
         }
-      } else {
-        console.log("No featureGeoJSON found for item:", item.id);
       }
 
       // If coordinates are invalid (0,0 or undefined), use map center as fallback
       if (!coordinate || coordinate.length < 2 || (coordinate[0] === 0 && coordinate[1] === 0)) {
-        console.log("Invalid/zero coordinates detected, using map center as fallback");
-
         // Try to get map center with a slight delay to ensure map is ready
         setTimeout(() => {
           if (map) {
@@ -407,7 +372,6 @@ export default function GlobalDrawingOptionsPopup() {
             const center = view.getCenter();
             if (center) {
               coordinate = center;
-              console.log("Using delayed map center coordinate:", coordinate);
 
               // Open drawing options popup with symbolize tool active
               setDrawingOptionsItemId(item.id);
@@ -419,7 +383,6 @@ export default function GlobalDrawingOptionsPopup() {
           }
 
           // Fallback if map center still not available
-          console.log("Using fallback coordinate");
           coordinate = [-8500000, 5600000]; // Approximate Ontario center in Web Mercator
 
           setDrawingOptionsItemId(item.id);
@@ -430,8 +393,6 @@ export default function GlobalDrawingOptionsPopup() {
 
         return; // Exit early, popup will open in setTimeout
       }
-
-      console.log("Using valid feature coordinate:", coordinate);
 
       // Open drawing options popup with symbolize tool active immediately
       setDrawingOptionsItemId(item.id);
@@ -445,59 +406,45 @@ export default function GlobalDrawingOptionsPopup() {
   // Measure handler for MyMaps list (should open Drawing Options popup)
   const handleMeasureFromMyMapsList = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Opening measure tool for item from MyMaps list:", item.id);
-
       // For Drawing Options popup, we need map coordinates, not screen coordinates
       // Try to get the feature's map coordinates first, fallback to map center
       let coordinate = [0, 0];
 
       if (item.featureGeoJSON) {
         try {
-          console.log("Raw featureGeoJSON for item:", item.id, ":", item.featureGeoJSON);
           const feature = JSON.parse(item.featureGeoJSON);
-          console.log("Parsed feature:", feature);
 
           // Handle GeoJSON Feature format
           const geometry = feature.type === "Feature" ? feature.geometry : feature;
-          console.log("Extracted geometry:", geometry);
 
           if (geometry && geometry.coordinates) {
             // Calculate center coordinates for each geometry type
             switch (geometry.type) {
               case "Point":
                 coordinate = geometry.coordinates;
-                console.log("Point coordinates extracted:", coordinate);
                 break;
               case "LineString":
                 // Find point at 50% distance along the line
                 coordinate = calculateLineStringMidpoint(geometry.coordinates);
-                console.log("LineString 50% distance point extracted:", coordinate);
                 break;
               case "Polygon":
                 // Calculate proper centroid of polygon
                 coordinate = calculatePolygonCentroid(geometry.coordinates[0]); // Use outer ring
-                console.log("Polygon centroid coordinates extracted:", coordinate);
                 break;
               default:
-                console.log("Unknown geometry type:", geometry.type);
                 coordinate = [0, 0];
             }
           } else {
-            console.log("No coordinates found in geometry");
             coordinate = [0, 0];
           }
         } catch (error) {
           console.error("Error parsing geometry for measure positioning:", error);
           coordinate = [0, 0];
         }
-      } else {
-        console.log("No featureGeoJSON found for item:", item.id);
       }
 
       // If coordinates are invalid (0,0 or undefined), use map center as fallback
       if (!coordinate || coordinate.length < 2 || (coordinate[0] === 0 && coordinate[1] === 0)) {
-        console.log("Invalid/zero coordinates detected, using map center as fallback");
-
         // Try to get map center with a slight delay to ensure map is ready
         setTimeout(() => {
           if (map) {
@@ -505,7 +452,6 @@ export default function GlobalDrawingOptionsPopup() {
             const center = view.getCenter();
             if (center) {
               coordinate = center;
-              console.log("Using delayed map center coordinate:", coordinate);
 
               // Open drawing options popup with measure tool active
               setDrawingOptionsItemId(item.id);
@@ -517,7 +463,6 @@ export default function GlobalDrawingOptionsPopup() {
           }
 
           // Fallback if map center still not available
-          console.log("Using fallback coordinate");
           coordinate = [-8500000, 5600000]; // Approximate Ontario center in Web Mercator
 
           setDrawingOptionsItemId(item.id);
@@ -528,8 +473,6 @@ export default function GlobalDrawingOptionsPopup() {
 
         return; // Exit early, popup will open in setTimeout
       }
-
-      console.log("Using valid feature coordinate:", coordinate);
 
       // Open drawing options popup with measure tool active immediately
       setDrawingOptionsItemId(item.id);
@@ -542,9 +485,7 @@ export default function GlobalDrawingOptionsPopup() {
 
   // Buffer handler for Drawing Options tools popup (should just activate buffer tool)
   const handleBufferFromDrawingOptions = useCallback(
-    (item: MyMapsItemType) => {
-      console.log("Activating buffer tool for item from Drawing Options:", item.id);
-
+    (_item: MyMapsItemType) => {
       // Close the tools popup
       handleToolsPopupClose();
 
@@ -556,7 +497,6 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleSymbolize = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Symbolize feature:", item.id);
       emit("mymap-symbolize", { item });
       handleToolsPopupClose();
 
@@ -568,7 +508,6 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleMeasure = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Measure feature:", item.id);
       emit("mymap-measure", { item });
       handleToolsPopupClose();
 
@@ -580,7 +519,6 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleZoomTo = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Zoom to item:", item.id);
       emit("mymap-zoom-to", { item });
       handleToolsPopupClose();
     },
@@ -598,8 +536,6 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleShowGeometry = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Show geometry for item:", item.id);
-
       // Check if is_open_data allows showing coordinates (like the old app)
       try {
         const feature = JSON.parse(item.featureGeoJSON || "{}");
@@ -607,7 +543,6 @@ export default function GlobalDrawingOptionsPopup() {
 
         // If is_open_data is false, don't show geometry
         if (showCoordinates === false) {
-          console.log("Geometry viewing not allowed for this feature");
           return;
         }
       } catch (error) {
@@ -637,8 +572,6 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleIdentify = useCallback(
     (item: MyMapsItemType) => {
-      console.log("Identify feature:", item.id);
-
       try {
         // Parse the GeoJSON to get the feature
         const geoJsonFormat = new GeoJSON({
@@ -689,8 +622,6 @@ export default function GlobalDrawingOptionsPopup() {
 
   const handleReportProblem = useCallback(
     async (item: MyMapsItemType) => {
-      console.log("Report problem for feature:", item.id);
-
       if (!map || !config) {
         console.error("Map or config not available");
         return;
@@ -722,7 +653,7 @@ export default function GlobalDrawingOptionsPopup() {
         toast.error("Error occurred while preparing the report. Please try again.");
       }
     },
-    [map, config, saveToApi, emit, handleToolsPopupClose],
+    [map, config, saveToApi, emit, handleToolsPopupClose, toast],
   );
 
   // Listen for requests to show the drawing options popup and buffer events
@@ -737,11 +668,6 @@ export default function GlobalDrawingOptionsPopup() {
         setIsDrawingOptionsOpen(true);
         // ✅ CRITICAL: Reset activeTool when switching to a new feature
         setActiveTool(undefined);
-
-        console.log("🔄 Switching to new feature - reset activeTool to default popup", {
-          newFeatureId: item.id,
-          previousTool: activeTool,
-        });
       } else {
         console.warn("❌ Invalid data received for drawing options:", {
           hasData: !!data,

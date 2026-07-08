@@ -604,13 +604,12 @@ export interface LabelStyle {
 }
 
 // Get default label style based on draw type (matching original app)
-export const getDefaultLabelStyle = (drawType: string): LabelStyle => {
-  const isCallout = drawType === "Callout";
+export const getDefaultLabelStyle = (): LabelStyle => {
   return {
-    textColor: isCallout ? "#000000" : "#ffffff",
+    textColor: "#ffffff",
     textSize: "14px",
     outlineColor: "#000000",
-    outlineWidth: isCallout ? 1 : 2,
+    outlineWidth: 2,
     // Callout-specific properties
     backgroundColor: "rgba(255, 255, 255, 0.95)",
     borderColor: "#333333",
