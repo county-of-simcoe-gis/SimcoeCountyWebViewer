@@ -126,6 +126,7 @@ export interface TOCSource {
   projection?: string;
   groups?: string[];
   descriptionOverride?: string;
+  appToken?: boolean; // When true, use server-side ArcGIS app token for REST requests
 }
 
 interface TOCState {

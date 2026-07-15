@@ -5,6 +5,7 @@ import { OL_DATA_TYPES, LayerOptions } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import type { Layer as OpenLayersLayer } from "ol/layer";
 import { buildAuthFetchOptions, getAccessToken } from "@/utils/auth";
+import { apiUrl } from "@/lib/axiosInstance";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 
 // Types for WMS Capabilities parsing
@@ -394,13 +395,16 @@ function isDuplicate(layerList: TOCLayer[], newLayerName: string): boolean {
  * For secured ArcGIS services, appends ?token= from the arcgisTokenStore
  * (NOT a Bearer header — ArcGIS REST uses query-param tokens).
  */
-export async function fetchArcGISService(url: string, secured: boolean = false): Promise<Record<string, unknown>> {
+export async function fetchArcGISService(url: string, secured: boolean = false, tokenParam?: string): Promise<Record<string, unknown>> {
   let serviceUrl = url.endsWith("?f=json") ? url : `${url}?f=json`;
   console.debug("Fetching ArcGIS service", { url, secured });
 
   try {
-    // For secured ArcGIS endpoints, append the user token as a query param
-    if (secured) {
+    // Prefer an explicit tokenParam (app token) when provided; otherwise fall
+    // back to the user token store when the endpoint is secured.
+    if (tokenParam) {
+      serviceUrl += `&token=${tokenParam}`;
+    } else if (secured) {
       const token = await useArcGISTokenStore.getState().getValidToken();
       if (token) {
         serviceUrl += `&token=${token}`;
@@ -425,9 +429,11 @@ export async function fetchArcGISService(url: string, secured: boolean = false):
 /**
  * Fetch ArcGIS legend info from the /legend endpoint.
  */
-async function fetchArcGISLegend(rootUrl: string, secured: boolean = false): Promise<Record<number, ArcGISLegendEntry>> {
+async function fetchArcGISLegend(rootUrl: string, secured: boolean = false, tokenParam?: string): Promise<Record<number, ArcGISLegendEntry>> {
   let legendUrl = `${rootUrl}/legend?f=json`;
-  if (secured) {
+  if (tokenParam) {
+    legendUrl += `&token=${tokenParam}`;
+  } else if (secured) {
     const token = await useArcGISTokenStore.getState().getValidToken();
     if (token) legendUrl += `&token=${token}`;
   }
@@ -480,9 +486,24 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
     const secured = source.secure || false;
     const rootUrl = source.layerUrl;
 
-    // Build the ArcGIS token query param once
+    // Build the ArcGIS token query param once. Prefer server app token when
+    // the source explicitly requests it (source.appToken). Otherwise fall
+    // back to the user token store for secured services.
     let tokenParam = "";
-    if (secured) {
+    if ((source as any).appToken) {
+      try {
+        const resp = await fetch(apiUrl("/api/secure/arcgis/token"), { method: "POST", credentials: "same-origin" });
+        if (resp.ok) {
+          const data = await resp.json();
+          tokenParam = data?.access_token || data?.token || data?.accessToken || "";
+          if (!tokenParam) console.warn("[TOC] App token endpoint returned no token");
+        } else {
+          console.warn("[TOC] Failed to fetch app token:", resp.status, resp.statusText);
+        }
+      } catch (err) {
+        console.warn("[TOC] Error fetching app token:", err);
+      }
+    } else if (secured) {
       const token = await useArcGISTokenStore.getState().getValidToken();
       if (token) tokenParam = token;
     }
@@ -503,8 +524,8 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
       return [];
     }
 
-    // Fetch legend data
-    const legendMap = await fetchArcGISLegend(rootUrl, secured);
+    // Fetch legend data (pass tokenParam so legend endpoint uses app token when available)
+    const legendMap = await fetchArcGISLegend(rootUrl, secured, tokenParam);
 
     // Parse each leaf layer and group by category
     const groupsObj: Record<string, TOCLayerGroup & { rawLayers: BuildESRILayerOptions["layer"][] }> = {};
