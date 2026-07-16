@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
+import moment from "moment";
 import { InfoRow, InfoRowValue } from "@/components/common/InfoRow";
 
 // Mock CSS
@@ -118,11 +119,19 @@ describe("InfoRow", () => {
     expect(link).toHaveAttribute("rel", "noopener noreferrer");
   });
 
-  it("formats date values correctly", () => {
-    render(<InfoRow label="Test Label" value="2024-03-15T10:30:00.000Z" />);
+  it("formats date-only values correctly", () => {
+    render(<InfoRow label="Test Label" value="2024-03-15" />);
 
-    // Should format as YYYY-MM-DD
+    // Should format as YYYY-MM-DD (no time in source value)
     expect(screen.getByText("2024-03-15")).toBeInTheDocument();
+  });
+
+  it("formats date/time values correctly, including the time", () => {
+    const value = "2024-03-15T10:30:00.000Z";
+    render(<InfoRow label="Test Label" value={value} />);
+
+    // Should format as YYYY-MM-DD HH:mm:ss (local time), preserving the time component
+    expect(screen.getByText(moment(value).format("YYYY-MM-DD HH:mm:ss"))).toBeInTheDocument();
   });
 
   it("does not format dates for NUMBER fields", () => {

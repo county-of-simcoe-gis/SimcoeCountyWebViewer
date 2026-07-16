@@ -1,7 +1,7 @@
 "use client";
 
 import { FaExternalLinkAlt } from "react-icons/fa";
-import { isExcludedKey } from "@/utils/identifyHelpers";
+import { formatIdentifyDateValue, isExcludedKey } from "@/utils/identifyHelpers";
 import AppImage from "@/components/shared/AppImage";
 import { showURLWindow } from "@/utils/helpersUI";
 import type { ReactNode } from "react";
@@ -48,7 +48,7 @@ export default function ThemePopupContent({ properties, moreInfoUrlFieldName, po
         {displayEntries.map(([key, value]) => (
           <div key={key} className="flex gap-2 py-1 border-b border-base-200 last:border-0">
             <span className="font-medium text-xs text-base-content/70 min-w-[80px]">{formatLabel(key)}:</span>
-            <span className="text-sm text-base-content flex-1 min-w-0 break-words">{formatValue(value)}</span>
+            <span className="text-sm text-base-content flex-1 min-w-0 break-words">{formatValue(key, value)}</span>
           </div>
         ))}
       </div>
@@ -75,7 +75,7 @@ function formatLabel(key: string): string {
 }
 
 // Helper to format values for display
-function formatValue(value: unknown): ReactNode {
+function formatValue(key: string, value: unknown): ReactNode {
   if (value === null || value === undefined) {
     return "-";
   }
@@ -86,6 +86,13 @@ function formatValue(value: unknown): ReactNode {
     return JSON.stringify(value);
   }
   const str = String(value);
+
+  // Detect strict ISO 8601 date/time strings; includes time-of-day when present
+  const dateValue = formatIdentifyDateValue(key, str);
+  if (dateValue !== null) {
+    return dateValue;
+  }
+
   if (/^https?:\/\//i.test(str)) {
     return (
       <button className="link link-primary text-sm" onClick={() => showURLWindow(str, false, "normal", false, false, "Information")}>

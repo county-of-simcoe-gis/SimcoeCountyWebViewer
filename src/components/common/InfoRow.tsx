@@ -1,6 +1,7 @@
 "use client";
 
 import React, { ReactNode } from "react";
+import { formatIdentifyDateValue } from "@/utils/identifyHelpers";
 import Attachments from "./Attachments";
 
 export interface InfoRowProps {
@@ -60,19 +61,11 @@ export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", 
       </a>
     );
   }
-  // Handle date formatting — only strict ISO 8601 strings (e.g. "2024-03-15T10:30:00.000Z")
-  else if (
-    valueStr &&
-    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(valueStr) &&
-    !["NUMBER", "BYLAW", "WASTE COLLECTION DAY"].some((word) => label.toUpperCase().includes(word))
-  ) {
-    const date = new Date(valueStr);
-    if (!isNaN(date.getTime())) {
-      // Valid date - format as YYYY-MM-DD
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      displayValue = `${year}-${month}-${day}`;
+  // Handle date/time formatting — strict ISO 8601 detection; includes time-of-day when present
+  else if (valueStr) {
+    const dateValue = formatIdentifyDateValue(label, valueStr);
+    if (dateValue !== null) {
+      displayValue = dateValue;
     }
   }
 
@@ -112,19 +105,3 @@ export const InfoRowValue: React.FC<InfoRowValueProps> = ({ value, className = "
 };
 
 export default InfoRow;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

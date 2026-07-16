@@ -1,6 +1,53 @@
 import { prisma } from "@/lib/prisma";
 import type { MapItem, MapConfig, User, CallbackResult } from "@/types/mapSettings";
-import { checkUserAccess } from "@/types/mapSettings";
+import { checkUserAccess, COUNTY_OF_SIMCOE_LOCATION } from "@/types/mapSettings";
+
+/**
+ * Split a comma-separated allowed_roles string into a clean list of role/location
+ * names, trimming whitespace and dropping empty entries (handles null, "", and
+ * malformed values like "," consistently).
+ */
+function parseAllowedRoles(allowedRoles: string | null | undefined): string[] {
+  if (!allowedRoles) return [];
+  return allowedRoles
+    .split(",")
+    .map((role) => role.trim())
+    .filter((role) => role.length > 0);
+}
+
+/**
+ * True if the user has the County of Simcoe location (case-insensitive).
+ */
+function hasCountyLocationAccess(user: User): boolean {
+  return (user.locations ?? []).some((location) => location.toLowerCase() === COUNTY_OF_SIMCOE_LOCATION.toLowerCase());
+}
+
+/**
+ * Central authorization rule for a single map item/config.
+ * - Non-secured items are always accessible.
+ * - Secured items with explicit allowed_roles require a matching role or location.
+ * - Secured items with no allowed_roles configured are restricted to County of
+ *   Simcoe users only (rather than being open to anyone, which was the bug).
+ */
+function canAccessSecuredItem(user: User, isSecured: boolean, allowedRoles: string | null | undefined): boolean {
+  if (!isSecured) return true;
+
+  const roles = parseAllowedRoles(allowedRoles);
+  if (roles.length > 0) {
+    return checkUserAccess(user, roles, true);
+  }
+
+  return hasCountyLocationAccess(user);
+}
+
+/**
+ * Whether the user has enough context (a role or a location) to warrant
+ * considering secured content at all. Locations must count here too, so
+ * location-only county users aren't silently excluded from secured maps.
+ */
+function needsSecuredContent(user: User): boolean {
+  return (user.roles?.length ?? 0) > 0 || (user.locations?.length ?? 0) > 0;
+}
 
 export const mapSettings = {
   /**
@@ -10,8 +57,8 @@ export const mapSettings = {
     try {
       console.log("Executing getAllMaps query using stored procedure");
 
-      // Determine if user needs secured maps based on roles
-      const isAuthenticated = user.roles && user.roles.length > 0;
+      // Determine if user needs secured maps based on roles or locations
+      const isAuthenticated = needsSecuredContent(user);
 
       // The stored procedure filters by is_secured flag exactly, so
       // usp_get_all_maps(false) returns only public maps and
@@ -55,14 +102,7 @@ export const mapSettings = {
             is_default: item.is_default,
           };
 
-          if (mapItem.is_secured && mapItem.allowed_roles) {
-            // Check user access using session roles
-            const hasAccess = checkUserAccess(user, mapItem.allowed_roles.split(","), false);
-            if (hasAccess) {
-              allowedMaps.push(mapItem);
-            }
-          } else {
-            // Non-secured maps or maps without roles are allowed
+          if (canAccessSecuredItem(user, mapItem.is_secured, mapItem.allowed_roles)) {
             allowedMaps.push(mapItem);
           }
 
@@ -91,8 +131,8 @@ export const mapSettings = {
     try {
       console.log("Get Map Settings using stored procedure for map:", mapName);
 
-      // Determine if user needs secured maps based on roles
-      const isSecured = user.roles && user.roles.length > 0;
+      // Determine if user needs secured maps based on roles or locations
+      const isSecured = needsSecuredContent(user);
 
       // Call stored procedure to get map settings
       console.log("Calling stored procedure to get map settings for map:", mapName, isSecured);
@@ -117,17 +157,7 @@ export const mapSettings = {
         published: map.published,
       };
 
-      if (mapResult.is_secured && mapResult.allowed_roles) {
-        // Check user access using session roles
-        const hasAccess = checkUserAccess(user, mapResult.allowed_roles.split(","), false);
-        if (hasAccess) {
-          return mapResult;
-        } else {
-          return undefined;
-        }
-      } else {
-        return mapResult;
-      }
+      return canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : undefined;
     } catch (error) {
       console.error("Error in getMap function:", error);
       throw new Error("Internal server error while retrieving map");
@@ -141,8 +171,8 @@ export const mapSettings = {
     try {
       console.log("Get Map Version Settings using stored procedure for map:", mapName, "version:", version);
 
-      // Determine if user needs secured maps based on roles
-      const isSecured = user.roles && user.roles.length > 0;
+      // Determine if user needs secured maps based on roles or locations
+      const isSecured = needsSecuredContent(user);
 
       // Call stored procedure to get map settings with specific version
       const mapResults = await prisma.$queryRaw<
@@ -166,17 +196,7 @@ export const mapSettings = {
         published: map.published,
       };
 
-      if (mapResult.is_secured && mapResult.allowed_roles) {
-        // Check user access using session roles
-        const hasAccess = checkUserAccess(user, mapResult.allowed_roles.split(","), false);
-        if (hasAccess) {
-          callback(mapResult);
-        } else {
-          callback(undefined);
-        }
-      } else {
-        callback(mapResult);
-      }
+      callback(canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : undefined);
     } catch (error) {
       console.error("Error in getMapVersion function:", error);
       callback({ error: "Internal server error while retrieving map version" });
@@ -190,8 +210,8 @@ export const mapSettings = {
     try {
       console.log("Get Default Map Settings using stored procedure");
 
-      // Determine if user needs secured maps based on roles
-      const isSecured = user.roles && user.roles.length > 0;
+      // Determine if user needs secured maps based on roles or locations
+      const isSecured = needsSecuredContent(user);
 
       // Call stored procedure to get default map (null map_name means get default)
       const mapResults = await prisma.$queryRaw<
@@ -215,17 +235,7 @@ export const mapSettings = {
         published: map.published,
       };
 
-      if (mapResult.allowed_roles) {
-        // Check user access using session roles (any role allowed for default map)
-        const hasAccess = checkUserAccess(user, mapResult.allowed_roles.split(","), true);
-        if (hasAccess) {
-          callback(mapResult);
-        } else {
-          callback(undefined);
-        }
-      } else {
-        callback(mapResult);
-      }
+      callback(canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : undefined);
     } catch (error) {
       console.error("Error in getDefaultMap function:", error);
       callback({ error: "Internal server error while retrieving default map" });

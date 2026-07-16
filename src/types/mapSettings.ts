@@ -42,20 +42,17 @@ export interface ApiErrorResponse {
 }
 
 export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
-
-// The "County of Simcoe" location grants access to all location-gated maps.
-const COUNTY_LOCATION = "county of simcoe";
+// Canonical location name for internal County of Simcoe staff. Used as the
+// fallback authorization requirement for secured items that don't specify
+// any allowed_roles (see canAccessSecuredItem in src/lib/mapSettings.ts).
+export const COUNTY_OF_SIMCOE_LOCATION = "COUNTY OF SIMCOE";
 
 // Role and location checking utility function.
 // Combines user roles and locations into a single list so that access
 // requirements can be satisfied by either a role OR a location.
-// Users with the "COUNTY OF SIMCOE" location bypass all location checks.
 export function checkUserAccess(user: User, allowedRoles: string[], anyRole: boolean = false): boolean {
   const userRoles = (user.roles ?? []).map((r) => r.toLowerCase());
   const userLocations = (user.locations ?? []).map((l) => l.toLowerCase());
-
-  // County of Simcoe users can see maps for every location
-  const isCountyUser = userLocations.includes(COUNTY_LOCATION);
 
   const combinedAccess = [...userRoles, ...userLocations];
 
@@ -64,14 +61,6 @@ export function checkUserAccess(user: User, allowedRoles: string[], anyRole: boo
   }
 
   const requiredRoles = allowedRoles.map((role) => role.toLowerCase());
-
-  if (isCountyUser) {
-    // County users satisfy any location-based requirement.
-    // Still require role-based entries to be matched normally.
-    // If at least one required entry is a role the user has, or any entry is
-    // a location (which county users always satisfy), grant access.
-    return requiredRoles.some((role) => combinedAccess.includes(role) || !userRoles.includes(role));
-  }
 
   if (anyRole) {
     // User needs at least one of the allowed roles/locations

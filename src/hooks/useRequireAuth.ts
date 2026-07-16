@@ -2,6 +2,7 @@
 
 import { useSession, signIn } from "next-auth/react";
 import { useCallback, useMemo } from "react";
+import { checkUserAccess } from "@/types/mapSettings";
 
 interface UseRequireAuthOptions {
   /**
@@ -103,31 +104,22 @@ export function useRequireAuth(options: UseRequireAuthOptions = {}): UseRequireA
     return session.user.locations;
   }, [session]);
 
-  // "County of Simcoe" location grants access to all location-gated content.
-  const isCountyUser = useMemo(() => locations.some((l) => l.toLowerCase() === "county of simcoe"), [locations]);
-
-  // Combined roles + locations for access checks (matches legacy behaviour
-  // where a requirement can be satisfied by either a role or a location).
-  const combinedAccess = useMemo(() => [...roles, ...locations], [roles, locations]);
-
   // Check if user has a specific role or location (case-insensitive).
-  // County users automatically satisfy any location-based requirement.
+  // Delegates to the shared checkUserAccess utility so role/location matching
+  // semantics stay consistent with the server-side mapSettings authorization.
   const hasRole = useCallback(
     (role: string): boolean => {
-      if (isCountyUser) return true;
-      return combinedAccess.some((r) => r.toLowerCase() === role.toLowerCase());
+      return checkUserAccess({ roles, locations }, [role], true);
     },
-    [combinedAccess, isCountyUser],
+    [roles, locations],
   );
 
   // Check if user has any of the specified roles or locations (case-insensitive).
-  // County users automatically satisfy any location-based requirement.
   const hasAnyRole = useCallback(
     (checkRoles: string[]): boolean => {
-      if (isCountyUser) return true;
-      return checkRoles.some((role) => combinedAccess.some((r) => r.toLowerCase() === role.toLowerCase()));
+      return checkUserAccess({ roles, locations }, checkRoles, true);
     },
-    [combinedAccess, isCountyUser],
+    [roles, locations],
   );
 
   // Check if user has access based on required roles

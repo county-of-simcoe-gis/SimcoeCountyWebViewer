@@ -251,8 +251,11 @@ export const authOptions: NextAuthOptions = {
         if (authorization && authorization.roles.includes("gis_internal") && extendedToken.email?.endsWith("@simcoe.ca") && !authorization.locations.includes("COUNTY OF SIMCOE")) {
           authorization.locations.push("COUNTY OF SIMCOE");
         }
+
+        //To Test roles and locations, override the returned roles and locations here. This is for testing purposes only.
         extendedToken.roles = authorization.roles;
         extendedToken.locations = authorization.locations;
+
         console.log("[NextAuth JWT] Final token roles:", extendedToken.roles);
         console.log("[NextAuth JWT] Final token locations:", extendedToken.locations);
 
@@ -289,7 +292,7 @@ export const authOptions: NextAuthOptions = {
       // Read access token from in-memory cache (populated by the jwt callback).
       // Never refresh here — only the jwt callback can persist a rotated
       // refresh token back to the cookie.
-      const accessToken = extendedToken.oid ? getAccessToken(extendedToken.oid) ?? undefined : undefined;
+      const accessToken = extendedToken.oid ? (getAccessToken(extendedToken.oid) ?? undefined) : undefined;
 
       return {
         ...session,
