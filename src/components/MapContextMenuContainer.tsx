@@ -148,6 +148,7 @@ export const MapContextMenuContainer: React.FC = () => {
     setActiveTabByName("reports");
   }, [map, setReport, openSidebar, setActiveTabByName]);
 
+
   const handleGoogleMaps = useCallback(() => {
     const lonLat = toLonLat(coordinateRef.current);
     const url = `https://www.google.com/maps?q=${lonLat[1]},${lonLat[0]}`;
