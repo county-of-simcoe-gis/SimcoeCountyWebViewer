@@ -13,6 +13,7 @@ import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import ThemePopupContent from "@/components/themes/shared/ThemePopupContent";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
+import VectorSource from "ol/source/Vector";
 import type Layer from "ol/layer/Layer";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
@@ -125,8 +126,29 @@ export default function LiveLayerClick() {
       }
 
       const viewResolution = map.getView().getResolution();
-      const source = layer.getSource() as TileWMS | ImageWMS;
+      const source = layer.getSource();
       const isArcGISLayer = layer.get("isArcGIS") || false;
+
+      // Vector layers with already-loaded features (e.g. Road Closures' Blocks/Closures/Detours
+      // layers, populated once from ArcGIS GeoJSON — see RoadClosuresLayers.tsx) have no
+      // server-side identify endpoint to call; hit-test the already-loaded features at the
+      // clicked pixel locally instead of making a network request.
+      if (source instanceof VectorSource) {
+        const pixel = map.getPixelFromCoordinate(coordinate);
+        if (!pixel) return [];
+
+        const hitFeatures: Feature<Geometry>[] = [];
+        map.forEachFeatureAtPixel(
+          pixel,
+          (feature) => {
+            hitFeatures.push(feature as Feature<Geometry>);
+          },
+          { layerFilter: (candidateLayer) => candidateLayer === layer, hitTolerance: 6 },
+        );
+
+        hitFeatures.forEach((feature) => feature.setProperties({ layerDisplayName: displayName }));
+        return hitFeatures;
+      }
 
       // Get layer properties
       const secured = layer.get("secured");
@@ -165,11 +187,12 @@ export default function LiveLayerClick() {
           .replace("#RESOLUTION#", arcgisResolution);
       } else {
         // WMS GetFeatureInfo
-        if (!source || !source.getFeatureInfoUrl) {
+        const wmsSource = source as TileWMS | ImageWMS;
+        if (!wmsSource || !wmsSource.getFeatureInfoUrl) {
           return [];
         }
 
-        url = source.getFeatureInfoUrl(coordinate, viewResolution!, "EPSG:3857", {
+        url = wmsSource.getFeatureInfoUrl(coordinate, viewResolution!, "EPSG:3857", {
           INFO_FORMAT: "application/json",
           FEATURE_COUNT: 50,
         });
@@ -296,7 +319,22 @@ export default function LiveLayerClick() {
           popupLogoImage: typeof managedLayer.metadata?.popupLogoImage === "string" ? managedLayer.metadata.popupLogoImage : undefined,
         }));
 
-      const identifyCandidates = [...liveLayerCandidates, ...themeLayerCandidates];
+      // Non-theme tool-added layers (e.g. Road Closures' Blocks/Closures/Detours/Road Network,
+      // see RoadClosuresLayers.tsx) that explicitly opt in via `clickable: true`. Deliberately NOT
+      // marked isThemeLayer so they render through the generic InfoRow popup instead of
+      // ThemePopupContent.
+      const toolLayerCandidates: IdentifyCandidate[] = layerManagerState
+        .getLayersByCategory("Tools")
+        .filter((managedLayer) => managedLayer.visible && managedLayer.clickable)
+        .map((managedLayer) => ({
+          name: managedLayer.name,
+          layer: managedLayer.layer as Layer,
+          layerId: managedLayer.id,
+          layerZIndex: managedLayer.zIndex,
+          displayFieldName: String(managedLayer.layer.get("displayFieldName") || "") || undefined,
+        }));
+
+      const identifyCandidates = [...liveLayerCandidates, ...themeLayerCandidates, ...toolLayerCandidates];
 
       // Query all candidates in parallel.
       const results: LiveLayerResult[] = [];
