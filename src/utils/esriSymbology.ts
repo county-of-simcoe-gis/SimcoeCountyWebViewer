@@ -27,20 +27,20 @@ import { fetchArcGISService } from "@/utils/tocHelpers";
 
 type EsriColor = number[]; // [r, g, b, a?] (a is 0-255)
 
-interface EsriSimpleLineSymbol {
+export interface EsriSimpleLineSymbol {
   type: "esriSLS";
   style?: string;
   color: EsriColor;
   width: number;
 }
 
-interface EsriSimpleFillSymbol {
+export interface EsriSimpleFillSymbol {
   type: "esriSFS";
   color: EsriColor;
   outline?: EsriSimpleLineSymbol;
 }
 
-interface EsriSimpleMarkerSymbol {
+export interface EsriSimpleMarkerSymbol {
   type: "esriSMS";
   style?: string;
   color: EsriColor;
@@ -48,7 +48,7 @@ interface EsriSimpleMarkerSymbol {
   outline?: { color: EsriColor; width: number };
 }
 
-interface EsriPictureMarkerSymbol {
+export interface EsriPictureMarkerSymbol {
   type: "esriPMS";
   imageData: string;
   contentType?: string;
@@ -59,7 +59,7 @@ interface EsriPictureMarkerSymbol {
   yoffset?: number;
 }
 
-type EsriSymbol = EsriSimpleLineSymbol | EsriSimpleFillSymbol | EsriSimpleMarkerSymbol | EsriPictureMarkerSymbol;
+export type EsriSymbol = EsriSimpleLineSymbol | EsriSimpleFillSymbol | EsriSimpleMarkerSymbol | EsriPictureMarkerSymbol;
 
 interface EsriSizeStop {
   size: number;
@@ -73,19 +73,19 @@ interface EsriSizeInfoVisualVariable {
 
 type EsriVisualVariable = EsriSizeInfoVisualVariable | { type: string };
 
-interface EsriSimpleRenderer {
+export interface EsriSimpleRenderer {
   type: "simple";
   symbol: EsriSymbol;
   visualVariables?: EsriVisualVariable[];
 }
 
-interface EsriUniqueValueInfo {
+export interface EsriUniqueValueInfo {
   value: string;
   label?: string;
   symbol: EsriSymbol;
 }
 
-interface EsriUniqueValueRenderer {
+export interface EsriUniqueValueRenderer {
   type: "uniqueValue";
   field1: string;
   field2?: string;
@@ -113,16 +113,16 @@ export function getUniqueValueOptions(renderer: EsriRenderer | null | undefined,
   return renderer.uniqueValueInfos.map((info) => ({ value: info.value, label: info.label || info.value }));
 }
 
-function esriColorToRgba(color?: EsriColor): string {
+export function esriColorToRgba(color?: EsriColor): string {
   if (!color || color.length < 3) return "rgba(255,0,0,1)";
   const [r, g, b, a = 255] = color;
   return `rgba(${r},${g},${b},${a / 255})`;
 }
 
-function esriLineDash(style?: string, width = 1): number[] | undefined {
+export function esriLineDash(style?: string, width = 1): number[] | undefined {
   switch (style) {
     case "esriSLSDash":
-      return [4 * width, 3 * width];
+      return [6 * width, 5 * width];
     case "esriSLSDashDot":
       return [4 * width, 2 * width, 1, 2 * width];
     case "esriSLSDot":

@@ -741,4 +741,132 @@ describe("layerManagerStore", () => {
       expect(result).toBe(false);
     });
   });
+
+  describe("Layer Extent (ArcGIS)", () => {
+    it("reprojects a stored ArcGIS extent (UTM 17N / EPSG:26917) to Web Mercator", () => {
+      const managedLayer = {
+        id: "TOC_ArcGIS_Layer",
+        name: "ArcGIS Layer",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        addedAt: new Date(),
+        metadata: {
+          isArcGIS: true,
+          extent: [590000, 4900000, 620000, 4930000],
+          extentWkid: 26917,
+          arcgisMetadataUrl: "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/3?f=json",
+        },
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const extent = useLayerManagerStore.getState().getLayerExtent("TOC_ArcGIS_Layer");
+
+      expect(Array.isArray(extent)).toBe(true);
+      const [minX, minY, maxX, maxY] = extent as number[];
+      // Reprojected Web Mercator coordinates should be far outside the raw UTM values
+      // and stay within valid Web Mercator bounds.
+      expect(minX).toBeLessThan(maxX);
+      expect(minY).toBeLessThan(maxY);
+      expect(Math.abs(minX)).toBeLessThan(20037508.34);
+      expect(Math.abs(maxY)).toBeLessThan(20037508.34);
+    });
+
+    it("returns a stored ArcGIS extent as-is when already in Web Mercator", () => {
+      const managedLayer = {
+        id: "TOC_ArcGIS_WebMercator",
+        name: "ArcGIS Layer (Web Mercator)",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        addedAt: new Date(),
+        metadata: {
+          isArcGIS: true,
+          extent: [-8876000, 5510000, -8620000, 5680000],
+          extentWkid: 102100,
+          arcgisMetadataUrl: "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/3?f=json",
+        },
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const extent = useLayerManagerStore.getState().getLayerExtent("TOC_ArcGIS_WebMercator");
+      expect(extent).toEqual([-8876000, 5510000, -8620000, 5680000]);
+    });
+
+    it("returns a needsArcGISExtent marker when no extent is stored for an ArcGIS layer", () => {
+      const managedLayer = {
+        id: "TOC_ArcGIS_NoExtent",
+        name: "ArcGIS Layer (No Extent)",
+        category: "TOC" as LayerCategory,
+        layer: mockLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        addedAt: new Date(),
+        metadata: {
+          isArcGIS: true,
+          arcgisMetadataUrl: "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/3?f=json",
+        },
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const extent = useLayerManagerStore.getState().getLayerExtent("TOC_ArcGIS_NoExtent");
+      expect(extent).toEqual({
+        needsArcGISExtent: true,
+        metadataUrl: "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/3?f=json",
+      });
+    });
+
+    it("never returns a WMS needsCapabilities marker for ArcGIS layers", () => {
+      // Simulates the bug: a source exposing getParams()/getUrl() (like ImageArcGISRest)
+      // must not be mistaken for a WMS source when metadata.isArcGIS is set.
+      const arcgisLikeSource = {
+        getParams: vi.fn(() => ({ LAYERS: "SHOW:3" })),
+        getUrl: vi.fn(() => "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer"),
+      };
+      const arcgisLikeLayer = {
+        ...mockLayer,
+        getSource: vi.fn(() => arcgisLikeSource),
+      };
+
+      const managedLayer = {
+        id: "TOC_ArcGIS_NoExtent_WithSource",
+        name: "ArcGIS Layer (No Extent, Real Source)",
+        category: "TOC" as LayerCategory,
+        layer: arcgisLikeLayer as any,
+        zIndex: 100,
+        visible: true,
+        opacity: 1,
+        addedAt: new Date(),
+        metadata: {
+          isArcGIS: true,
+          arcgisMetadataUrl: "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/3?f=json",
+        },
+      };
+
+      useLayerManagerStore.setState((state) => {
+        state.layers.TOC = [managedLayer];
+      });
+
+      const extent = useLayerManagerStore.getState().getLayerExtent("TOC_ArcGIS_NoExtent_WithSource");
+      expect(extent).toEqual({
+        needsArcGISExtent: true,
+        metadataUrl: "https://maps.simcoe.ca/arcgis/rest/services/Public/MapServer/3?f=json",
+      });
+      expect(extent).not.toHaveProperty("needsCapabilities");
+    });
+  });
 });

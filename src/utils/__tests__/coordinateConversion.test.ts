@@ -10,6 +10,7 @@ import {
   convertExtentObject,
   webMercatorToLatLong,
   parseCoordinate,
+  reprojectExtentToWebMercator,
 } from "@/utils/coordinateConversion";
 
 describe("coordinateConversion", () => {
@@ -222,6 +223,52 @@ describe("coordinateConversion", () => {
 
     it("trims whitespace", () => {
       expect(parseCoordinate("  44.3  ")).toBeCloseTo(44.3);
+    });
+  });
+
+  describe("reprojectExtentToWebMercator", () => {
+    it("returns the extent unchanged when wkid is omitted", () => {
+      const extent = [-8876000, 5510000, -8620000, 5680000];
+      expect(reprojectExtentToWebMercator(extent)).toEqual(extent);
+    });
+
+    it("returns the extent unchanged for wkid 3857", () => {
+      const extent = [-8876000, 5510000, -8620000, 5680000];
+      expect(reprojectExtentToWebMercator(extent, 3857)).toEqual(extent);
+    });
+
+    it("returns the extent unchanged for Esri's wkid 102100 (Web Mercator)", () => {
+      const extent = [-8876000, 5510000, -8620000, 5680000];
+      expect(reprojectExtentToWebMercator(extent, 102100)).toEqual(extent);
+    });
+
+    it("reprojects a UTM 17N (EPSG:26917) extent to Web Mercator", () => {
+      const result = reprojectExtentToWebMercator([590000, 4900000, 620000, 4930000], 26917);
+
+      expect(result).not.toBeNull();
+      const [minX, minY, maxX, maxY] = result as number[];
+      expect(minX).toBeLessThan(maxX);
+      expect(minY).toBeLessThan(maxY);
+      expect(Math.abs(minX)).toBeLessThan(20037508.34);
+      expect(Math.abs(maxY)).toBeLessThan(20037508.34);
+    });
+
+    it("reprojects a geographic (EPSG:4326) extent to Web Mercator", () => {
+      const result = reprojectExtentToWebMercator([-79.8, 44.1, -77.5, 45.6], 4326);
+      expect(result).not.toBeNull();
+
+      const expected = convertExtent(-79.8, 44.1, -77.5, 45.6, "4326");
+      expect(result).toEqual(expected);
+    });
+
+    it("returns null for an unrecognized wkid instead of silently assuming WGS84", () => {
+      expect(reprojectExtentToWebMercator([590000, 4900000, 620000, 4930000], 3979)).toBeNull();
+    });
+
+    it("returns null for a malformed extent", () => {
+      expect(reprojectExtentToWebMercator([1, 2, 3] as unknown as number[], 26917)).toBeNull();
+      expect(reprojectExtentToWebMercator(undefined, 26917)).toBeNull();
+      expect(reprojectExtentToWebMercator([1, 2, Infinity, 4], 26917)).toBeNull();
     });
   });
 });

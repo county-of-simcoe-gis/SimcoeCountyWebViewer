@@ -6,7 +6,8 @@
  * Used by URL parameter handlers for feature selection (NG911ID, ARN, etc.)
  */
 
-import { getAccessToken, isSecuredUrl } from "@/utils/auth";
+import { getAccessToken, isSecuredUrl, fetchWithAuth } from "@/utils/auth";
+import { reprojectExtentToWebMercator } from "@/utils/coordinateConversion";
 
 // GeoJSON types (inline to avoid dependency on geojson package)
 interface GeoJsonGeometry {
@@ -608,4 +609,147 @@ export async function queryFeaturesByAttribute(options: AttributeQueryOptions): 
     ...(outputFormat && { outputFormat }),
     ...(srsName && { srsName }),
   });
+}
+
+// ============================================================================
+// WMS Capabilities / Extent Helpers
+// ============================================================================
+
+/**
+ * GeoServer WMS layer names are qualified as "workspace:layerName". Split that out so callers
+ * can target GeoServer's per-layer "virtual service" endpoint instead of the global one.
+ */
+export function splitWorkspaceLayerName(fullName: string): { workspace: string | null; layerName: string } {
+  const colonIndex = fullName.indexOf(":");
+  if (colonIndex <= 0) {
+    return { workspace: null, layerName: fullName };
+  }
+  return { workspace: fullName.slice(0, colonIndex), layerName: fullName.slice(colonIndex + 1) };
+}
+
+/**
+ * Resolve the true GeoServer root (e.g. "https://host/geoserver") from a WMS URL that may
+ * already be scoped to a workspace/layer-group virtual service, e.g.
+ * "https://host/geoserver/simcoe/Popular/ows?...". Naively stripping only a trailing
+ * "/wms" or "/ows" segment would leave the "simcoe/Popular" virtual-service path in place,
+ * producing an invalid doubled-up path when a workspace/layer is appended.
+ */
+function getGeoserverRoot(url: string): string {
+  const withoutQuery = url.split("?")[0];
+  const marker = "/geoserver/";
+  const markerIndex = withoutQuery.indexOf(marker);
+
+  if (markerIndex !== -1) {
+    return withoutQuery.slice(0, markerIndex) + "/geoserver";
+  }
+
+  // Fallback for URLs that don't contain "/geoserver/" (e.g. a custom geoserverPath): just
+  // strip a trailing "/wms" or "/ows" service segment.
+  return withoutQuery.replace(/\/(wms|ows)\/?$/i, "");
+}
+
+/**
+ * Build a WMS GetCapabilities URL scoped to a single workspace + layer using GeoServer's
+ * "virtual service" endpoint (`.../geoserver/<workspace>/<layer>/wms`) instead of the global
+ * `.../geoserver/wms` endpoint. Scoping the request this way returns capabilities for just the
+ * one layer, avoiding a slow full-server capabilities document on GeoServer instances hosting
+ * many layers/workspaces.
+ *
+ * Falls back to a GetCapabilities request against `baseWmsUrl` unchanged when the layer name
+ * has no workspace prefix (unexpected, but keeps the previous global-endpoint behavior as a
+ * safety net).
+ */
+export function buildLayerScopedCapabilitiesUrl(baseWmsUrl: string, fullLayerName: string): string {
+  const { workspace, layerName } = splitWorkspaceLayerName(fullLayerName);
+
+  if (!workspace) {
+    return `${baseWmsUrl}?service=WMS&version=1.3.0&request=GetCapabilities`;
+  }
+
+  const geoserverRoot = getGeoserverRoot(baseWmsUrl);
+
+  return `${geoserverRoot}/${encodeURIComponent(workspace)}/${encodeURIComponent(layerName)}/wms?service=WMS&version=1.3.0&request=GetCapabilities`;
+}
+
+/**
+ * Extract a layer's bounding box (as an EPSG:3857 extent) from a parsed WMS GetCapabilities
+ * document, matching either the full "workspace:layer" name or the unprefixed layer name (a
+ * layer-scoped virtual service may report the name either way).
+ */
+function extractLayerExtentFromCapabilities(xmlDoc: Document, fullLayerName: string, unprefixedLayerName: string): number[] | null {
+  const layers = xmlDoc.getElementsByTagName("Layer");
+
+  for (let i = 0; i < layers.length; i++) {
+    const layer = layers[i];
+    const nameEl = layer.getElementsByTagName("Name")[0];
+    if (!nameEl || (nameEl.textContent !== fullLayerName && nameEl.textContent !== unprefixedLayerName)) {
+      continue;
+    }
+
+    // Prefer the geographic bounding box (always present per the WMS spec) and reproject it.
+    const geoBounds = layer.getElementsByTagName("EX_GeographicBoundingBox")[0];
+    if (geoBounds) {
+      const westBound = geoBounds.getElementsByTagName("westBoundLongitude")[0]?.textContent;
+      const eastBound = geoBounds.getElementsByTagName("eastBoundLongitude")[0]?.textContent;
+      const southBound = geoBounds.getElementsByTagName("southBoundLatitude")[0]?.textContent;
+      const northBound = geoBounds.getElementsByTagName("northBoundLatitude")[0]?.textContent;
+
+      if (westBound && eastBound && southBound && northBound) {
+        const reprojected = reprojectExtentToWebMercator([parseFloat(westBound), parseFloat(southBound), parseFloat(eastBound), parseFloat(northBound)], 4326);
+        if (reprojected) return reprojected;
+      }
+    }
+
+    // Fall back to a CRS-specific BoundingBox that's already in Web Mercator.
+    const bboxes = layer.getElementsByTagName("BoundingBox");
+    for (let j = 0; j < bboxes.length; j++) {
+      const bbox = bboxes[j];
+      const crs = bbox.getAttribute("CRS") || bbox.getAttribute("SRS");
+
+      if (crs === "EPSG:3857" || crs === "EPSG:900913") {
+        const minx = parseFloat(bbox.getAttribute("minx") || "0");
+        const miny = parseFloat(bbox.getAttribute("miny") || "0");
+        const maxx = parseFloat(bbox.getAttribute("maxx") || "0");
+        const maxy = parseFloat(bbox.getAttribute("maxy") || "0");
+
+        if (minx && miny && maxx && maxy && minx < maxx && miny < maxy) {
+          return [minx, miny, maxx, maxy];
+        }
+      }
+    }
+
+    // Matched the layer but found no usable bounding box - stop searching.
+    break;
+  }
+
+  return null;
+}
+
+/**
+ * Fetch a WMS layer's extent (as an EPSG:3857 bounding box) from GeoServer's GetCapabilities,
+ * scoped to the layer's own workspace/layer virtual service endpoint for speed (see
+ * `buildLayerScopedCapabilitiesUrl`). Automatically attaches a bearer token for secured
+ * GeoServer endpoints (`opengis2.simcoe.ca`) via `fetchWithAuth`.
+ *
+ * @param wmsUrl - Base WMS URL (global `.../geoserver/wms`, or an already workspace/group
+ *   scoped virtual-service URL such as `.../geoserver/<ws>/<group>/ows`).
+ * @param fullLayerName - The workspace-qualified layer name, e.g. "simcoe:Assessment Parcel".
+ * @returns The layer's extent in EPSG:3857, or null if it couldn't be determined.
+ */
+export async function fetchWmsLayerExtent(wmsUrl: string, fullLayerName: string): Promise<number[] | null> {
+  const capabilitiesUrl = buildLayerScopedCapabilitiesUrl(wmsUrl, fullLayerName);
+  const { layerName: unprefixedLayerName } = splitWorkspaceLayerName(fullLayerName);
+
+  try {
+    const response = await fetchWithAuth(capabilitiesUrl);
+    const capabilitiesText = await response.text();
+
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(capabilitiesText, "text/xml");
+
+    return extractLayerExtentFromCapabilities(xmlDoc, fullLayerName, unprefixedLayerName);
+  } catch (error) {
+    console.warn("[GeoServerClient] Failed to fetch WMS layer extent:", error);
+    return null;
+  }
 }

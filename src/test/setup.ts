@@ -41,6 +41,7 @@ vi.mock("react-icons/fa", () => ({
   FaEnvelope: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "envelope-icon" }, "Envelope"),
 
   // TOC related icons
+  FaGripVertical: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "grip-vertical-icon" }, "GripVertical"),
   FaPaperclip: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "paperclip-icon" }, "Paperclip"),
   FaInfoCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "info-circle-icon" }, "InfoCircle"),
   FaDownload: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "download-icon" }, "Download"),
@@ -235,12 +236,13 @@ global.ResizeObserver = vi.fn().mockImplementation(() => ({
   disconnect: vi.fn(),
 }));
 
-// Mock IntersectionObserver
-global.IntersectionObserver = vi.fn().mockImplementation(() => ({
-  observe: vi.fn(),
-  unobserve: vi.fn(),
-  disconnect: vi.fn(),
-}));
+// Mock IntersectionObserver (must be constructible for components that use `new IntersectionObserver`)
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
 
 // Mock URL.createObjectURL
 Object.defineProperty(window.URL, "createObjectURL", {

@@ -107,6 +107,13 @@ export function parseArcGISFeature(featureInfo: ArcGISFeatureInfo): LayerInfoDat
 
   if (spatialReference.wkt === undefined && spatialReference.latestWkid) {
     nativeCRS.$ = `EPSG:${spatialReference.latestWkid}`;
+    // Standard EPSG geodetic 2D (geographic) CRSs are numbered 4000-4999
+    // (e.g. 4326 WGS84, 4269 NAD83, 4267 NAD27). ArcGIS services rarely
+    // include a WKT string for common EPSG codes, so classify based on
+    // this well-known numbering convention instead of defaulting to Projected.
+    if (spatialReference.latestWkid >= 4000 && spatialReference.latestWkid < 5000) {
+      nativeCRS["@class"] = "Geographic";
+    }
   } else if (spatialReference.wkt) {
     if (spatialReference.wkt.indexOf("GEOGCS") !== -1) {
       nativeCRS["@class"] = "Geographic";
@@ -145,11 +152,31 @@ export function parseArcGISFeature(featureInfo: ArcGISFeatureInfo): LayerInfoDat
 
 /**
  * Parses ESRI description HTML
+ *
+ * ESRI layer descriptions often embed key/value metadata tags, e.g.:
+ * "#Category=Clerk_and_Administration #Description= This feature class
+ * displays the new 2022 Ward Boundaries. #LiveLayer=true #LegendCategory=..."
+ * When a "#Description=" tag is present, only its value is returned. If
+ * other metadata tags are present (e.g. "#Category=..." "#LegendGroup=...")
+ * but there is no "#Description=" tag, nothing is displayed. Otherwise
+ * (no tags at all), the full cleaned text is returned as-is.
  */
 export function parseESRIDescription(description: string): { description: string } {
   // Remove HTML tags
   const text = description.replace(/<[^>]*>/g, "");
-  return { description: text };
+
+  const descriptionTagMatch = text.match(/#Description=\s*(.*?)\s*(?=#\w+=|$)/i);
+  if (descriptionTagMatch) {
+    return { description: descriptionTagMatch[1] };
+  }
+
+  // Other ESRI metadata tags (e.g. #Category=, #LegendGroup=) without a
+  // #Description= tag mean there's nothing meaningful to display.
+  if (/#\w+=/.test(text)) {
+    return { description: "" };
+  }
+
+  return { description: text.trim() };
 }
 
 /**
@@ -172,10 +199,15 @@ export function getFormattedProjection(layerInfo: LayerInfoData): string {
   let proj = "Undefined";
   if (typeof layerInfo.nativeCRS === "string") {
     const projArray = layerInfo.nativeCRS.split('"');
-    proj = toTitleCase(projClass) + " - " + (projArray[1] || "Unknown");
+    // A quoted WKT name (e.g. PROJCS["NAD83_UTM_Zone_17N"]) yields a second
+    // array element; plain values (e.g. "EPSG:3857") don't, so fall back to
+    // displaying the raw CRS value instead of "Unknown".
+    const name = projArray.length > 1 ? projArray[1] : layerInfo.nativeCRS;
+    proj = toTitleCase(projClass) + " - " + (name || "Unknown");
   } else if (layerInfo.nativeCRS.$) {
     const projArray = layerInfo.nativeCRS.$.split('"');
-    proj = toTitleCase(projClass) + " - " + (projArray[1] || "Unknown");
+    const name = projArray.length > 1 ? projArray[1] : layerInfo.nativeCRS.$;
+    proj = toTitleCase(projClass) + " - " + (name || "Unknown");
   }
 
   return proj;

@@ -578,6 +578,10 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
         legend: legendMap[item.id] || undefined,
         sourceSpatialReference: item.sourceSpatialReference,
         extent: item.extent ? [item.extent.xmin, item.extent.ymin, item.extent.xmax, item.extent.ymax] : undefined,
+        // Use the extent's own spatialReference, NOT item.sourceSpatialReference - ArcGIS
+        // services commonly report `extent` in Web Mercator even when the layer's native
+        // storage SR (sourceSpatialReference) is something else (e.g. UTM 17N/26917).
+        extentSpatialReference: item.extent?.spatialReference,
       };
 
       // Group by category
@@ -1132,6 +1136,11 @@ interface BuildESRILayerOptions {
     layers?: unknown[];
     grouped?: boolean;
     extent?: number[];
+    // The extent's own spatial reference, as reported by the ArcGIS service. This can differ
+    // from `sourceSpatialReference` below (e.g. a layer's native storage SR is UTM 17N/26917,
+    // but its reported `extent` is already in Web Mercator/102100) - always use this one to
+    // reproject `extent`, never `sourceSpatialReference`.
+    extentSpatialReference?: { wkid?: number; latestWkid?: number };
     sourceSpatialReference?: { latestWkid?: number };
   };
   layerIndex: number;
@@ -1297,6 +1306,18 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
           groupUrl: group.url,
           secured: secured,
           drawIndex: layerIndex,
+          // ArcGIS-specific extent info so "Zoom to Layer" (getLayerExtent) can fit the real
+          // bounding box instead of misfiring the WMS GetCapabilities path — ImageArcGISRest
+          // sources also implement getParams()/getUrl(), which getLayerExtent otherwise treats
+          // as a WMS signal.
+          isArcGIS: true,
+          extent: layer.extent,
+          // Use the extent's own spatial reference (may differ from the layer's native/storage
+          // sourceSpatialReference - e.g. extent reported in Web Mercator/102100 while the data
+          // itself is stored in UTM 17N/26917). Falling back to sourceSpatialReference here was
+          // the cause of "Zoom to Layer" reprojecting to bogus coordinates for such layers.
+          extentWkid: layer.extentSpatialReference?.latestWkid ?? layer.extentSpatialReference?.wkid,
+          arcgisMetadataUrl: metadataUrl,
         },
       });
 

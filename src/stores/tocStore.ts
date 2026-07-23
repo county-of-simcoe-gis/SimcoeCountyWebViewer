@@ -160,6 +160,7 @@ interface TOCState {
 
   // Loading state
   isLoading: boolean;
+  hasInitialized: boolean;
 
   // Layer count
   layerCount: number;
@@ -178,6 +179,7 @@ interface TOCState {
   setSearchText: (text: string) => void;
   setSortAlpha: (sort: boolean) => void;
   setIsLoading: (loading: boolean) => void;
+  setHasInitialized: (initialized: boolean) => void;
   setLayerCount: (count: number) => void;
   setHelpLink: (link: string) => void;
   setSources: (sources: TOCSource[]) => void;
@@ -296,6 +298,7 @@ export const useTOCStore = create<TOCState>()(
     searchText: "",
     sortAlpha: false,
     isLoading: false,
+    hasInitialized: false,
     layerCount: 0,
     helpLink: "",
     sources: [],
@@ -822,6 +825,12 @@ export const useTOCStore = create<TOCState>()(
     setIsLoading: (loading) => {
       set((state) => {
         state.isLoading = loading;
+      });
+    },
+
+    setHasInitialized: (initialized) => {
+      set((state) => {
+        state.hasInitialized = initialized;
       });
     },
 
@@ -1826,6 +1835,10 @@ export const useTOCStore = create<TOCState>()(
     // Layer loading (now implemented with actual geoserver calls)
     loadLayersFromSources: async () => {
       const state = get();
+
+      // Mark that layer loading has started so the loading screen stays
+      // visible until the first TOC load completes.
+      state.setHasInitialized(true);
 
       // Prevent multiple simultaneous calls
       if (state.isLoading) {

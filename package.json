@@ -1,6 +1,6 @@
 {
   "name": "simcoecountywebviewernextjs",
-  "version": "2.0.0-rc20260720.1",
+  "version": "2.0.0-rc20260723.2",
   "private": true,
   "scripts": {
     "dev": "node scripts/copy-readme.js && cross-env NODE_EXTRA_CA_CERTS=certs/netskope-ca.pem next dev",
@@ -28,6 +28,7 @@
     "adm-zip": "^0.5.16",
     "axios": "^1.17.0",
     "canvas": "^3.2.0",
+    "dompurify": "^3.4.12",
     "fast-xml-parser": "^4.3.9",
     "geist": "^1.7.0",
     "geojson": "^0.5.0",

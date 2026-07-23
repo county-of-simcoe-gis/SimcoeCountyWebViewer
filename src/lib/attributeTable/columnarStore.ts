@@ -207,6 +207,11 @@ export class ColumnarStore {
       case "date": {
         if (raw instanceof Date) {
           c.values[row] = raw.getTime();
+        } else if (typeof raw === "number") {
+          // ArcGIS/EsriJSON date fields arrive as raw epoch-millisecond
+          // numbers (not ISO strings) — use directly rather than routing
+          // through Date.parse(), which can't parse a bare numeric string.
+          c.values[row] = Number.isFinite(raw) ? raw : NULL_NUM;
         } else {
           const t = Date.parse(String(raw));
           c.values[row] = Number.isFinite(t) ? t : NULL_NUM;

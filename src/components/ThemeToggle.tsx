@@ -23,7 +23,7 @@ export default function ThemeToggle() {
         <label className="inline-flex items-center gap-2 cursor-pointer">
           <input type="radio" checked={theme === "system"} onChange={() => setTheme("system")} className="radio radio-sm radio-primary" />
           <FaLaptop className="h-4 w-4 text-base-content/60" />
-          <span className="text-sm text-base-content">System ({effectiveTheme === "dark" ? "Dark" : "Light"})</span>
+          <span className="text-sm text-base-content">System</span>
         </label>
       </div>
     </div>

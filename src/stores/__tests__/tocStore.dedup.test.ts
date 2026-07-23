@@ -23,6 +23,7 @@ describe("tocStore - LIST view deduplication", () => {
       searchText: "",
       sortAlpha: false,
       isLoading: false,
+      hasInitialized: false,
       layerCount: 0,
       helpLink: "",
       sources: [],

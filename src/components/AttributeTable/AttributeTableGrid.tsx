@@ -22,6 +22,9 @@ import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tan
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { FaSortUp, FaSortDown, FaSort, FaSearchPlus, FaTimes, FaPaperclip } from "react-icons/fa";
 import { useAttributeTableStore, type AttributeTableTab } from "@/stores/attributeTableStore";
+import type { ColumnType } from "@/lib/attributeTable/columnarStore";
+import { formatFieldValue, formatFieldName, formatFieldValueAsText } from "@/utils/identifyHelpers";
+import { isExcludedKey } from "@/utils/identifyHelpers";
 import { syncHighlight, zoomToFeature, setHoverFeature, clearHover } from "@/lib/attributeTable/mapIntegration";
 import AttributeTableAttachmentsDialog from "./AttributeTableAttachmentsDialog";
 
@@ -171,15 +174,18 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
     ];
 
     for (const col of tab.schema) {
+      // Skip system/internal fields like objectid, geometry, shape_area, etc.
+      if (isExcludedKey(col.name)) continue;
+
       out.push({
         id: col.name,
-        header: col.name,
+        header: formatFieldName(col.name),
         size: 160,
         cell: ({ row }) => {
           const v = tab.store!.getCell(row.original.index, col.name);
-          if (v === null || v === undefined) return <span className="opacity-40">—</span>;
-          if (col.type === "date" && typeof v === "number") return <span>{new Date(v).toISOString().slice(0, 19).replace("T", " ")}</span>;
-          return <span>{String(v)}</span>;
+          const formattedValue = formatFieldValue(col.name, v, col.type);
+          if (formattedValue === null) return <span className="opacity-40">—</span>;
+          return <span>{formattedValue}</span>;
         },
       });
     }
@@ -190,14 +196,21 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
 
   // Build an array of active column filters for the client-side pass.
   const activeFilters = useMemo(() => {
-    const entries: Array<{ field: string; lower: string; isNumber: boolean }> = [];
+    const entries: Array<{ field: string; normalized: string }> = [];
     for (const [field, value] of Object.entries(tab.filters)) {
       if (!value) continue;
-      const col = tab.schema?.find((c) => c.name === field);
-      entries.push({ field, lower: value.toLowerCase(), isNumber: col?.type === "number" });
+      entries.push({ field, normalized: value.toLowerCase() });
     }
     return entries;
-  }, [tab.filters, tab.schema]);
+  }, [tab.filters]);
+
+  // Lookup of column name -> declared type, so filter matching can format
+  // cells the same way (and via the same code path) as the on-screen cells.
+  const schemaTypeByField = useMemo(() => {
+    const m = new Map<string, ColumnType>();
+    if (tab.schema) for (const c of tab.schema) m.set(c.name, c.type);
+    return m;
+  }, [tab.schema]);
 
   const rows = useMemo<RowRef[]>(() => {
     // An array of `{ index }` is cheap (~40 bytes/row) and allows us to use
@@ -208,26 +221,16 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
     for (let i = 0; i < tab.loadedCount; i++) {
       // Selection-only filter
       if (tab.selectionOnly && !tab.selection.has(store.fids[i])) continue;
-      // Client-side text/number column filters
+      // Client-side text/number column filters: match against formatted display values
       if (activeFilters.length > 0) {
         let match = true;
         for (const f of activeFilters) {
           const cell = store.getCell(i, f.field);
-          if (cell === null) {
+          // Format the cell value the same way it displays, then filter
+          const displayed = formatFieldValueAsText(f.field, cell, schemaTypeByField.get(f.field)).toLowerCase();
+          if (!displayed.includes(f.normalized)) {
             match = false;
             break;
-          }
-          if (f.isNumber) {
-            const n = Number(f.lower);
-            if (Number.isFinite(n) && cell !== n) {
-              match = false;
-              break;
-            }
-          } else {
-            if (!String(cell).toLowerCase().includes(f.lower)) {
-              match = false;
-              break;
-            }
           }
         }
         if (!match) continue;
@@ -235,7 +238,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
       out.push({ index: i });
     }
     return out;
-  }, [tab.loadedCount, tab.selectionOnly, tab.selection, tab.store, activeFilters]);
+  }, [tab.loadedCount, tab.selectionOnly, tab.selection, tab.store, activeFilters, schemaTypeByField]);
 
   const table = useReactTable<RowRef>({
     data: rows,
@@ -406,7 +409,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
                   return (
                     <div
                       key={cell.id}
-                      className={`${isUtil ? "px-0 justify-center" : "px-2"} py-1 border-r border-base-200 truncate flex items-center`}
+                      className={`${isUtil ? "px-0 justify-center" : "px-2"} py-1 border-r border-base-200 truncate flex items-center [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline`}
                       style={{ width: cell.column.columnDef.size ?? 160, minWidth: cell.column.columnDef.size ?? 160 }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

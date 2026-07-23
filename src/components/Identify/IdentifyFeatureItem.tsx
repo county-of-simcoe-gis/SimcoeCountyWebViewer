@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
 import { filterFeatureKeys } from "./IdentifyLayer";
 import { useMapStore } from "@/stores/mapStore";
+import { formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 import { useMyMapsStore, createMyMapsItem, type DrawType } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
@@ -45,7 +46,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
   const handleAddToMyMaps = useCallback(() => {
     const geom = feature.getGeometry();
     const geomType = geom?.getType() || "Point";
-    const drawType: DrawType = (geomType === "LineString" || geomType === "Polygon" || geomType === "Point") ? geomType : "Polygon";
+    const drawType: DrawType = geomType === "LineString" || geomType === "Polygon" || geomType === "Point" ? geomType : "Polygon";
     const label = feature.get(displayName) || layerName || "Identified Feature";
     const myMapsItem = createMyMapsItem(feature, drawType, String(label));
     myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
@@ -54,17 +55,6 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     activateTab("mymaps");
     useToastStore.getState().addToast("Feature added to MyMaps", "success");
   }, [feature, displayName, layerName]);
-
-  const formatFieldName = (fieldName: string): string => {
-    // Convert field name to title case and replace underscores with spaces
-    return fieldName.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
-  };
-
-  const formatFieldValue = (value: unknown): string => {
-    if (value === null || value === undefined) return "N/A";
-    if (typeof value === "object") return JSON.stringify(value);
-    return String(value);
-  };
 
   const renderFeatureContent = () => {
     const props = feature.getProperties();
@@ -79,12 +69,17 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
       <div className="flex flex-col gap-2">
         {keys
           .filter((k) => k !== "attachmentUrl")
-          .map((key) => (
-            <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-base-200 last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
-              <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
-              <div className="text-base-content break-words max-[768px]:text-[11px] max-[768px]:pl-2.5">{formatFieldValue(props[key])}</div>
-            </div>
-          ))}
+          .map((key) => {
+            const formattedValue = formatFieldValue(key, props[key]);
+            return (
+              <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-base-200 last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
+                <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
+                <div className="text-base-content break-words max-[768px]:text-[11px] max-[768px]:pl-2.5 [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline">
+                  {formattedValue !== null ? formattedValue : "N/A"}
+                </div>
+              </div>
+            );
+          })}
         {attachmentUrl && (
           <div className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-base-200 last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
             <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">Attachments:</div>
@@ -107,11 +102,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
           {formatFieldName(displayName)}: {featureName}
         </div>
         <div className="flex gap-2 items-center">
-          <span
-            className="text-primary text-[10px] cursor-pointer no-underline hover:underline whitespace-nowrap select-none"
-            onClick={handleAddToMyMaps}
-            title="Add to My Maps"
-          >
+          <span className="text-primary text-[10px] cursor-pointer no-underline hover:underline whitespace-nowrap select-none" onClick={handleAddToMyMaps} title="Add to My Maps">
             [Add to My Maps]
           </span>
           {hasGeom && (

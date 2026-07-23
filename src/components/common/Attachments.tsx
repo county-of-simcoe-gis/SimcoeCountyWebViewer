@@ -121,6 +121,14 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
     return <span className="text-xs text-gray-400 italic">No attachments available.</span>;
   }
 
+  if (attachments.length === 1 && attachments[0].contentType.includes("image")) {
+    return (
+      <span className="text-xs text-gray-400 italic">
+        <img src={getAttachmentUrl(attachments[0].url)} alt={attachments[0].name} />
+      </span>
+    );
+  }
+
   return (
     <>
       <div className="flex flex-col gap-0.5">

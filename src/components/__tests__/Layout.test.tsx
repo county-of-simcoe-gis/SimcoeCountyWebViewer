@@ -105,6 +105,7 @@ const mockAppStoreState = {
   sidebarLoading: false,
   headerLoading: false,
   configLoading: false,
+  layersLoading: false,
   config: null as any,
   urlParameters: {} as Record<string, string>,
   setConfig: vi.fn(),
@@ -113,6 +114,7 @@ const mockAppStoreState = {
   setHeaderLoading: vi.fn(),
   setSidebarLoading: vi.fn(),
   setMapLoading: vi.fn(),
+  setLayersLoading: vi.fn(),
   // Permissions API helpers used by usePermissions
   setPermissionState: vi.fn(),
   permissions: {},

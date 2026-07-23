@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useAppStore } from "@/stores/appStore";
+import { useTOCStore } from "@/stores/tocStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useConfig } from "@/hooks/useConfig";
@@ -35,6 +36,8 @@ export default function Layout({ children }: LayoutProps) {
   const sidebarLoading = useAppStore((s) => s.sidebarLoading);
   const headerLoading = useAppStore((s) => s.headerLoading);
   const appConfigLoading = useAppStore((s) => s.configLoading);
+  const layersLoading = useTOCStore((s) => s.isLoading);
+  const tocHasInitialized = useTOCStore((s) => s.hasInitialized);
   const setConfig = useAppStore((s) => s.setConfig);
   const setConfigLoading = useAppStore((s) => s.setConfigLoading);
   const setConfigError = useAppStore((s) => s.setConfigError);
@@ -173,7 +176,7 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [config]);
 
-  const isLoading = mapLoading || sidebarLoading || headerLoading || appConfigLoading;
+  const isLoading = mapLoading || sidebarLoading || headerLoading || appConfigLoading || !tocHasInitialized || layersLoading;
 
   return (
     <div id="app-root" className="relative w-full h-screen overflow-hidden print:hidden">

@@ -74,8 +74,14 @@ export default function AttributeTableMapSelect({ tab }: Props) {
           setSelection(tab.layerId, []);
         }
       } else if (fids.length === 1) {
-        // Single feature — toggle or replace
-        toggleSelection(tab.layerId, fids[0], additive);
+        // Single feature — replace selection unless a modifier is held
+        if (additive) {
+          // Toggle/add the single feature
+          toggleSelection(tab.layerId, fids[0], true);
+        } else {
+          // Replace selection with the single clicked feature
+          setSelection(tab.layerId, [fids[0]]);
+        }
       } else {
         // Multiple features at click point — select all (additive merges)
         if (additive) {

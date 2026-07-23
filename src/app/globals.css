@@ -178,5 +178,17 @@ body {
   opacity: 0.8;
   pointer-events: none;
   z-index: 1;
-  text-shadow: -1px -1px 0 #444, 1px -1px 0 #444, -1px 1px 0 #444, 1px 1px 0 #444;
+  text-shadow:
+    -1px -1px 0 #444,
+    1px -1px 0 #444,
+    -1px 1px 0 #444,
+    1px 1px 0 #444;
+}
+
+/* Utility: clamp text to 2 lines with ellipsis (cross-browser fallback) */
+.sc-line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

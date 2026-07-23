@@ -176,7 +176,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
 
           <input id={`sc-toc-item-checkbox-${layerInfo.id}`} className="inline-flex ml-[5px] scale-110" type="checkbox" onChange={onCheckboxChange} checked={currentLayerData.visible} />
 
-          <span className="inline-block align-middle min-w-0 max-w-[calc(100%-16px)] overflow-hidden text-ellipsis whitespace-nowrap ml-2" title={layerInfo.tocDisplayName}>
+          <span className="flex-1 min-w-0 ml-2" title={layerInfo.tocDisplayName} style={{ display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
             {highlightText(displayName, searchText)}
           </span>
         </label>

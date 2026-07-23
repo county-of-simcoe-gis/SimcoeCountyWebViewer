@@ -125,6 +125,20 @@ describe("layerInfo", () => {
     it("preserves plain text", () => {
       expect(parseESRIDescription("This is a layer")).toEqual({ description: "This is a layer" });
     });
+
+    it("extracts only the #Description tag value when present", () => {
+      const input = "#Category=Clerk_and_Administration #Description= This feature class displays the new 2022 Ward Boundaries. #LiveLayer=true #LegendCategory=Clerk_and_Administration";
+      expect(parseESRIDescription(input)).toEqual({ description: "This feature class displays the new 2022 Ward Boundaries." });
+    });
+
+    it("extracts #Description tag value with no trailing tags", () => {
+      expect(parseESRIDescription("#Description=Some text")).toEqual({ description: "Some text" });
+    });
+
+    it("returns empty description when tags are present but there is no #Description tag", () => {
+      const input = "#Category=Parks_and_Properties #LegendGroup=Parks_and_Properties";
+      expect(parseESRIDescription(input)).toEqual({ description: "" });
+    });
   });
 
   describe("parseArcGISFeature", () => {
@@ -166,6 +180,24 @@ describe("layerInfo", () => {
     it("uses latestWkid for CRS when no WKT", () => {
       const result = parseArcGISFeature(baseFeatureInfo);
       expect(result.nativeCRS.$).toBe("EPSG:4326");
+    });
+
+    it("classifies latestWkid 4000-4999 as Geographic when no WKT", () => {
+      const result = parseArcGISFeature(baseFeatureInfo);
+      expect(result.nativeCRS["@class"]).toBe("Geographic");
+    });
+
+    it("classifies latestWkid outside 4000-4999 as Projected when no WKT", () => {
+      const info: ArcGISFeatureInfo = {
+        ...baseFeatureInfo,
+        extent: {
+          ...baseFeatureInfo.extent,
+          spatialReference: { latestWkid: 3857 },
+        },
+      };
+      const result = parseArcGISFeature(info);
+      expect(result.nativeCRS["@class"]).toBe("Projected");
+      expect(result.nativeCRS.$).toBe("EPSG:3857");
     });
 
     it("uses WKT for CRS when available", () => {
@@ -256,6 +288,28 @@ describe("layerInfo", () => {
         attributes: { attribute: [] },
       };
       expect(getFormattedProjection(info)).toBe("Geographic - GCS_WGS_1984");
+    });
+
+    it("falls back to raw EPSG code when no WKT quoted name is available (Projected)", () => {
+      const info: LayerInfoData = {
+        name: "test",
+        title: "test",
+        nativeCRS: { "@class": "Projected", $: "EPSG:3857" },
+        nativeBoundingBox: { minx: 0, maxx: 1, miny: 0, maxy: 1, crs: { "@class": "projected", $: "" } },
+        attributes: { attribute: [] },
+      };
+      expect(getFormattedProjection(info)).toBe("Projected - EPSG:3857");
+    });
+
+    it("falls back to raw EPSG code when no WKT quoted name is available (Geographic)", () => {
+      const info: LayerInfoData = {
+        name: "test",
+        title: "test",
+        nativeCRS: { "@class": "Geographic", $: "EPSG:4326" },
+        nativeBoundingBox: { minx: 0, maxx: 1, miny: 0, maxy: 1, crs: { "@class": "projected", $: "" } },
+        attributes: { attribute: [] },
+      };
+      expect(getFormattedProjection(info)).toBe("Geographic - EPSG:4326");
     });
   });
 

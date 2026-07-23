@@ -74,10 +74,9 @@ export const ATTRIBUTE_FIELD_MAP: Record<ClosureType, Record<string, string>> = 
     startTime: "starttime",
     endTime: "endtime",
     url: "url",
-    activeIncident: "activeincid",
     streetOverride: "streetoverride",
-    // Links this Block back to its parent Closures record; auto-populated/enforced client-side
-    // by RoadClosuresTool (never rendered as a user-editable form field).
+    // Links this Block back to its parent Closures record; auto-populated client-side by
+    // RoadClosuresTool when a parent is selected (never rendered as a user-editable form field).
     closureId: "closureglobalid",
   },
   Closures: {
@@ -94,7 +93,6 @@ export const ATTRIBUTE_FIELD_MAP: Record<ClosureType, Record<string, string>> = 
     contactName: "pocname",
     contactEmail: "pocemail",
     contactPhone: "pocphone",
-    activeIncident: "activeincid",
     streetOverride: "streetoverride",
   },
   Detours: {
@@ -103,8 +101,8 @@ export const ATTRIBUTE_FIELD_MAP: Record<ClosureType, Record<string, string>> = 
     startTime: "starttime",
     endTime: "endtime",
     url: "url",
-    activeIncident: "activeincid",
-    // Links this Detour back to its parent Closures record; see note on Blocks above.
+    // Links this Detour back to its parent Closures record; auto-populated client-side by
+    // RoadClosuresTool when a parent is selected (never rendered as a user-editable form field).
     closureId: "closureglobalid",
   },
 };

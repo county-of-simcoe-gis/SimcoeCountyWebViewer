@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
-import { FaEllipsisV, FaFolder, FaFolderOpen } from "react-icons/fa";
+import { FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
-import { MenuList, MenuItem, MenuHeading } from "@/components/ui/MenuList";
 
 interface GroupItemProps {
   id: string;
@@ -41,9 +40,7 @@ export default function GroupItem({
   const [panelOpen, setPanelOpen] = useState(() => getFolderOpenState(group.value) ?? propsPanelOpen);
   const [userPanelOpen, setUserPanelOpen] = useState(() => getFolderOpenState(group.value) ?? propsPanelOpen);
   const [activeLayerCount, setActiveLayerCount] = useState(0);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
-  const menuRef = useRef<HTMLDivElement>(null);
+  const groupCheckboxRef = useRef<HTMLInputElement>(null);
 
   // Calculate active layer count using fresh store data
   const calculateActiveLayerCount = useCallback(() => {
@@ -74,36 +71,27 @@ export default function GroupItem({
     }
   }, [propsPanelOpen, group.value, getFolderOpenState, setFolderOpenState]);
 
-  // Close menu on outside click
+  // Group visibility checkbox
+  // Compute group visibility checkbox state from all layers in the group
+  const groupLayerIds = useMemo(() => new Set(group.layers.map((l) => l.id)), [group.layers]);
+  const groupLayers = allLayers.filter((layer) => groupLayerIds.has(layer.id));
+  const visibleGroupLayers = groupLayers.filter((layer) => layer.visible);
+  const allVisible = groupLayers.length > 0 && visibleGroupLayers.length === groupLayers.length;
+  const someVisible = visibleGroupLayers.length > 0 && visibleGroupLayers.length < groupLayers.length;
+
+  // Keep the checkbox indeterminate state in sync with partial visibility
   useEffect(() => {
-    if (!menuOpen) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [menuOpen]);
+    if (groupCheckboxRef.current) {
+      groupCheckboxRef.current.indeterminate = someVisible;
+    }
+  }, [someVisible]);
 
-  // Group options menu
-  const onGroupOptionsClick = useCallback((evt: React.MouseEvent) => {
-    evt.stopPropagation();
-    const rect = (evt.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPosition({ top: rect.bottom, left: rect.left });
-    setMenuOpen((prev) => !prev);
-  }, []);
-
-  const onMenuItemClick = useCallback(
-    (action: string) => {
-      setMenuOpen(false);
-      if (action === "enable-layers") {
-        onLayerVisibilityGroup(group, true);
-      } else if (action === "disable-layers") {
-        onLayerVisibilityGroup(group, false);
-      }
+  const onGroupVisibilityChange = useCallback(
+    (evt: React.ChangeEvent<HTMLInputElement>) => {
+      evt.stopPropagation();
+      onLayerVisibilityGroup(group, !allVisible);
     },
-    [group, onLayerVisibilityGroup],
+    [group, allVisible, onLayerVisibilityGroup],
   );
 
   // Filter layers based on search text
@@ -162,22 +150,18 @@ export default function GroupItem({
             <FaFolder size={16} className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
           )}
         </div>
+        <input
+          ref={groupCheckboxRef}
+          id={`sc-toc-group-checkbox-${group.value}`}
+          type="checkbox"
+          className="inline-flex scale-110 mr-2"
+          checked={allVisible}
+          onChange={onGroupVisibilityChange}
+          onClick={(evt) => evt.stopPropagation()}
+          title="Turn all layers in this group on/off"
+        />
         <div className="w-[310px] ml-[5px]">{`${group.label} - (${activeLayerCount}/${group.layers.length})`}</div>
       </div>
-
-      <div className="absolute right-2 -mt-[18px] cursor-pointer" title="Group Options" onClick={onGroupOptionsClick}>
-        <FaEllipsisV size={16} className="text-base-content/70" />
-      </div>
-
-      {menuOpen && (
-        <div ref={menuRef} className="fixed z-[100000]" style={{ top: menuPosition.top, left: menuPosition.left }}>
-          <MenuList>
-            <MenuHeading>{`Options - ${group.label}`}</MenuHeading>
-            <MenuItem onClick={() => onMenuItemClick("enable-layers")}>Turn On All Layers</MenuItem>
-            <MenuItem onClick={() => onMenuItemClick("disable-layers")}>Turn Off All Layers</MenuItem>
-          </MenuList>
-        </div>
-      )}
 
       <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "relative pl-5 border-l-2 border-dotted border-base-300 ml-2.5" : "hidden"} key={`${id}-sc-toc-group-list-item-container`}>
         {getSortedLayers().map((layer, index) => (

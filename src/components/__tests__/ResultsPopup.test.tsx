@@ -464,11 +464,12 @@ describe("ResultsPopup", () => {
         const attrs = container.querySelector('[data-testid="result-attributes"]');
         expect(attrs).toBeInTheDocument();
 
-        // Check for attribute keys (rendered as InfoRow labels with colons)
-        expect(screen.getByText("name:")).toBeInTheDocument();
-        expect(screen.getByText("type:")).toBeInTheDocument();
-        expect(screen.getByText("elevation:")).toBeInTheDocument();
-        expect(screen.getByText("status:")).toBeInTheDocument();
+        // Check for attribute keys (rendered as InfoRow labels with colons,
+        // title-cased via formatFieldName)
+        expect(screen.getByText("Name:")).toBeInTheDocument();
+        expect(screen.getByText("Type:")).toBeInTheDocument();
+        expect(screen.getByText("Elevation:")).toBeInTheDocument();
+        expect(screen.getByText("Status:")).toBeInTheDocument();
 
         // Check for attribute values within the rows
         expect(screen.getByText("100")).toBeInTheDocument();

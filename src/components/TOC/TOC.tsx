@@ -60,7 +60,6 @@ export default function TOC({ visible = true }: TOCProps) {
   const initializeFromConfig = useTOCStore((s) => s.initializeFromConfig);
   const refreshTOC = useTOCStore((s) => s.refreshTOC);
   const toggleLayerLegendById = useTOCStore((s) => s.toggleLayerLegendById);
-  const updateLayerVisibilitiesBatch = useTOCStore((s) => s.updateLayerVisibilitiesBatch);
   const getAllVisibleLayers = useTOCStore((s) => s.getAllVisibleLayers);
 
   const updateLayerVisibility = useLayerManagerStore((s) => s.updateLayerVisibility);
@@ -69,6 +68,7 @@ export default function TOC({ visible = true }: TOCProps) {
   const urlParameters = useAppStore((state) => state.urlParameters);
   const [initialized, setInitialized] = useState(false);
   const expandLegendProcessedRef = useRef(false);
+  const layersProcessedForUrlRef = useRef<string | null>(null);
 
   // URL Parameter context for registering TOC readiness
   const urlParamContext = useUrlParameterContextOptional();
@@ -359,6 +359,11 @@ export default function TOC({ visible = true }: TOCProps) {
         // the first LIST↔FOLDER switch preserves restored visibility instead of
         // resetting a view to config defaults.
         useTOCStore.getState().seedViewVisibilityStatesFromGroups();
+
+        // Apply URL parameters now that layers, OpenLayers objects, and saved
+        // state are fully loaded. This runs after localStorage restore so URL
+        // LAYERS/GROUP always take precedence over saved visibility.
+        handleURLParameters();
 
         if (urlParamContext?.registerComponentReady) {
           urlParamContext.registerComponentReady("toc", { readinessType: "dataLoaded" });
@@ -657,99 +662,104 @@ export default function TOC({ visible = true }: TOCProps) {
 
   // Handle URL parameters for TOC type, group, and layers
   const handleURLParameters = useCallback(() => {
+    const params = useAppStore.getState().urlParameters;
+    const tocTypeParam = params.TOCTYPE;
+    const urlGroupName = params.GROUP;
+    const urlVisibleLayers = params.LAYERS;
+    const urlExpandLegend = params.EXPAND_LEGEND;
+
+    if (!tocTypeParam && !urlGroupName && !urlVisibleLayers && !urlExpandLegend) {
+      return;
+    }
+
+    // Read fresh TOC state to avoid stale closures when this is called from
+    // the async initialization sequence.
+    const tocState = useTOCStore.getState();
+    let effectiveTocType = tocState.tocType;
+
     // Handle TOCTYPE parameter
-    const tocTypeParam = urlParameters.TOCTYPE;
-
     if (tocTypeParam !== null && tocTypeParam !== undefined) {
-      // Available TOC types for validation
       const validTocTypes = ["LIST", "FOLDER"];
-
-      // Check if the tocType is valid, convert to uppercase for comparison
       const upperCaseType = tocTypeParam.toUpperCase();
 
       if (validTocTypes.includes(upperCaseType)) {
-        const validTocType = upperCaseType as "LIST" | "FOLDER";
-        setTocType(validTocType);
-        // Note: TOC type is saved to localStorage only when user clicks "Save All Layers"
+        effectiveTocType = upperCaseType as "LIST" | "FOLDER";
+        if (effectiveTocType !== tocState.tocType) {
+          setTocType(effectiveTocType);
+        }
       }
     }
 
-    // Handle GROUP and LAYERS parameters
-    const urlGroupName = urlParameters.GROUP;
-    const urlVisibleLayers = urlParameters.LAYERS;
-    const urlExpandLegend = urlParameters.EXPAND_LEGEND;
+    if (!urlGroupName && !urlVisibleLayers && !urlExpandLegend) {
+      return;
+    }
 
-    if (urlGroupName || urlVisibleLayers || urlExpandLegend) {
-      // Get the current layer groups based on TOC type
-      const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;
+    // Get the current layer groups based on the effective TOC type
+    const currentGroups = effectiveTocType === "LIST" ? tocState.layerListGroups : tocState.layerFolderGroups;
+    if (currentGroups.length === 0) return;
 
-      if (currentGroups.length > 0) {
-        let targetGroup: TOCLayerGroup | null = null;
+    // In LIST view, determine the single active group. In FOLDER view, all
+    // groups are visible and GROUP is ignored.
+    let targetGroup: TOCLayerGroup | null = null;
+    if (effectiveTocType === "LIST") {
+      if (urlGroupName) {
+        targetGroup = currentGroups.find((group) => group.label === urlGroupName || group.value === urlGroupName) || null;
+      }
 
-        if (urlGroupName) {
-          // Find group by label or value
-          targetGroup = currentGroups.find((group) => group.label === urlGroupName || group.value === urlGroupName) || null;
-        }
+      if (!targetGroup) {
+        targetGroup = tocState.selectedGroup || currentGroups.find((g) => g.defaultGroup) || currentGroups[0];
+      }
 
-        // If no specific group found or specified, use current selected/default group
-        if (!targetGroup) {
-          targetGroup = selectedGroup || currentGroups.find((g) => g.defaultGroup) || currentGroups[0];
-        }
+      if (targetGroup) {
+        setSelectedGroup(targetGroup);
+      }
+    }
 
-        if (targetGroup) {
-          // Set the group as selected
-          setSelectedGroup(targetGroup);
+    // Handle visible layers if specified
+    if (urlVisibleLayers) {
+      const layersUrlKey = `${effectiveTocType}|${urlGroupName ?? ""}|${urlVisibleLayers}`;
+      if (layersProcessedForUrlRef.current !== layersUrlKey) {
+        const visibleLayerNames = urlVisibleLayers.split(",").map((name) => name.trim());
+        const batchUpdates: Array<{ layerId: string; visible: boolean }> = [];
+        const groupsToSearch = effectiveTocType === "FOLDER" ? currentGroups : targetGroup ? [targetGroup] : [];
 
-          // Handle visible layers if specified
-          if (urlVisibleLayers) {
-            const visibleLayerNames = urlVisibleLayers.split(",").map((name) => name.trim());
+        groupsToSearch.forEach((group) => {
+          group.layers.forEach((layer) => {
+            const shouldBeVisible = visibleLayerNames.includes(layer.tocDisplayName) || visibleLayerNames.includes(layer.name) || visibleLayerNames.includes(layer.displayName || layer.name);
 
-            // Build batch updates for all layers that need visibility changes
-            const batchUpdates: Array<{ layerId: string; visible: boolean }> = [];
-
-            targetGroup.layers.forEach((layer) => {
-              const shouldBeVisible = visibleLayerNames.includes(layer.tocDisplayName) || visibleLayerNames.includes(layer.name) || visibleLayerNames.includes(layer.displayName || layer.name);
-
-              if (shouldBeVisible !== layer.visible) {
-                batchUpdates.push({ layerId: layer.id, visible: shouldBeVisible });
-              }
-            });
-
-            // Apply all visibility changes in a single store update
-            if (batchUpdates.length > 0) {
-              updateLayerVisibilitiesBatch(batchUpdates);
+            if (shouldBeVisible !== layer.visible) {
+              batchUpdates.push({ layerId: layer.id, visible: shouldBeVisible });
             }
-          }
+          });
+        });
 
-          // Handle EXPAND_LEGEND parameter (only process once to avoid loops)
-          if (urlExpandLegend && urlExpandLegend.toUpperCase() === "TRUE" && !expandLegendProcessedRef.current) {
-            // Expand legends for all layers in the target group
-            targetGroup.layers.forEach((layer) => {
-              if (!layer.showLegend) {
-                // Toggle the legend to show it using unique ID
-                toggleLayerLegendById(layer.id);
-              }
-            });
-            // Mark as processed to prevent repeated execution
-            expandLegendProcessedRef.current = true;
-          }
+        if (batchUpdates.length > 0) {
+          tocState.updateLayerVisibilitiesBatch(batchUpdates);
         }
+
+        // Push the active view's committed visibility onto the OpenLayers map.
+        // This enforces LIST-view dedup winners and prevents stale OL state.
+        tocState.syncActiveViewVisibilityToMap();
+
+        layersProcessedForUrlRef.current = layersUrlKey;
       }
     }
-  }, [
-    urlParameters.TOCTYPE,
-    urlParameters.GROUP,
-    urlParameters.LAYERS,
-    urlParameters.EXPAND_LEGEND,
-    setTocType,
-    tocType,
-    layerListGroups,
-    layerFolderGroups,
-    selectedGroup,
-    setSelectedGroup,
-    toggleLayerLegendById,
-    updateLayerVisibilitiesBatch,
-  ]);
+
+    // Handle EXPAND_LEGEND parameter (only process once to avoid loops)
+    if (urlExpandLegend && urlExpandLegend.toUpperCase() === "TRUE" && !expandLegendProcessedRef.current) {
+      const groupsToExpand = effectiveTocType === "FOLDER" ? currentGroups : targetGroup ? [targetGroup] : [];
+
+      groupsToExpand.forEach((group) => {
+        group.layers.forEach((layer) => {
+          if (!layer.showLegend) {
+            tocState.toggleLayerLegendById(layer.id);
+          }
+        });
+      });
+
+      expandLegendProcessedRef.current = true;
+    }
+  }, [setTocType, setSelectedGroup]);
 
   // Handle URL parameters after TOC is initialized
   useEffect(() => {
@@ -759,7 +769,7 @@ export default function TOC({ visible = true }: TOCProps) {
         handleURLParameters();
       }, 200); // Slightly longer delay to ensure groups are loaded
     }
-  }, [initialized, urlParameters]);
+  }, [initialized, urlParameters, handleURLParameters]);
 
   // Reset expandLegendProcessed when URL parameters change (for new page loads)
   useEffect(() => {
@@ -774,7 +784,7 @@ export default function TOC({ visible = true }: TOCProps) {
         handleURLParameters();
       }, 100);
     }
-  }, [initialized, layerListGroups.length, layerFolderGroups.length, urlParameters]);
+  }, [initialized, layerListGroups.length, layerFolderGroups.length, urlParameters, handleURLParameters]);
 
   // Get current layer groups
   const currentGroups = tocType === "LIST" ? layerListGroups : layerFolderGroups;

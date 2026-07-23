@@ -28,12 +28,7 @@ import type { MapBrowserEvent } from "ol";
 import VectorLayer from "ol/layer/Vector";
 
 import type { Result } from "@/components/ResultsPopup";
-import {
-  useInteractionManagerStore,
-  type InteractionEventType,
-  type InteractionHandler,
-  type InteractionResult,
-} from "@/stores/interactionManagerStore";
+import { useInteractionManagerStore, type InteractionEventType, type InteractionHandler, type InteractionResult } from "@/stores/interactionManagerStore";
 import { useMapStore } from "@/stores/mapStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 
@@ -154,12 +149,7 @@ export class InteractionManager extends Interaction {
     map.forEachFeatureAtPixel(
       event.pixel,
       (_feature, layer) => {
-        if (
-          layer &&
-          (layer.get("suppressParcelClick") === true ||
-            layer.get("suppressParcelClickAlways") === true ||
-            layer.get("disableParcelClick") === true)
-        ) {
+        if (layer && (layer.get("suppressParcelClick") === true || layer.get("suppressParcelClickAlways") === true || layer.get("disableParcelClick") === true)) {
           shouldDisable = true;
           return true;
         }
@@ -168,9 +158,7 @@ export class InteractionManager extends Interaction {
         layerFilter: (layer) =>
           layer instanceof VectorLayer &&
           layer.getVisible() &&
-          (layer.get("suppressParcelClick") === true ||
-            layer.get("suppressParcelClickAlways") === true ||
-            layer.get("disableParcelClick") === true),
+          (layer.get("suppressParcelClick") === true || layer.get("suppressParcelClickAlways") === true || layer.get("disableParcelClick") === true),
       },
     );
 
@@ -184,17 +172,6 @@ export class InteractionManager extends Interaction {
   override handleEvent(event: MapBrowserEvent<PointerEvent>): boolean {
     const eventType = event.type as InteractionEventType;
 
-    // Tool-gating: when any tool is active, singleclick is suppressed so the
-    // tool's own OL interaction (Draw, etc.) handles the event uninterrupted.
-    // The MyMaps eraser is the one exception — it relies on the singleclick
-    // pipeline to detect which feature to remove.
-    if (eventType === "singleclick") {
-      const toolId = useMapStore.getState().activeToolId;
-      if (toolId && toolId !== "mymaps-eraser") {
-        return false;
-      }
-    }
-
     // Suppress the right-click context menu when any registered layer requests it.
     if (eventType === "contextmenu" && LayerManager.hasRightClickSuppressLayer()) {
       event.originalEvent.preventDefault();
@@ -203,7 +180,26 @@ export class InteractionManager extends Interaction {
 
     const handlerFilter = InteractionManager.handlerFilter ?? (() => true);
     const allHandlers = useInteractionManagerStore.getState().handlers;
-    const applicableHandlers = allHandlers.filter((h) => h.eventType === eventType && handlerFilter(h, event));
+    let applicableHandlers = allHandlers.filter((h) => h.eventType === eventType && handlerFilter(h, event));
+
+    // Tool-gating: when a tool is active, singleclick is usually suppressed
+    // so the tool's own OL interaction handles events. To support tools that
+    // still rely on the singleclick pipeline (like the attribute-table select
+    // handler), allow the handler whose `id` matches `activeToolId` to run.
+    // The MyMaps eraser remains an exception and is allowed to run via the
+    // original pipeline.
+    if (eventType === "singleclick") {
+      const toolId = useMapStore.getState().activeToolId;
+      if (toolId && toolId !== "mymaps-eraser") {
+        const matching = applicableHandlers.filter((h) => h.id === toolId);
+        if (matching.length === 0) {
+          // No handler registered for the active tool — suppress as before.
+          return false;
+        }
+        // Only run the matching handler(s) for the active tool.
+        applicableHandlers = matching;
+      }
+    }
 
     if (applicableHandlers.length === 0) {
       return true;
@@ -273,9 +269,7 @@ export class InteractionManager extends Interaction {
    *   4. Dev-mode warn when results lack `layerId` so we can incrementally
    *      tighten coverage of the new contract.
    */
-  private static aggregateAndSuppress(
-    entries: Array<{ handler: InteractionHandler; result: InteractionResult[] | void | null }>,
-  ): Result[] {
+  private static aggregateAndSuppress(entries: Array<{ handler: InteractionHandler; result: InteractionResult[] | void | null }>): Result[] {
     const suppressLayerIds = LayerManager.getSuppressLayerIds();
     let propertyReportSuppressed = false;
     let mymapsExclusive = false;
@@ -297,9 +291,7 @@ export class InteractionManager extends Interaction {
       const isPropertyReport = handler.id === PROPERTY_REPORT_HANDLER_ID;
       for (const r of result) {
         if (process.env.NODE_ENV !== "production" && !r.layerId) {
-          console.warn(
-            `[InteractionManager] result from handler "${handler.id}" is missing layerId — suppression filter cannot match it`,
-          );
+          console.warn(`[InteractionManager] result from handler "${handler.id}" is missing layerId — suppression filter cannot match it`);
         }
         if (isPropertyReport) {
           propertyReportResults.push(r);

@@ -11,6 +11,8 @@ import { FaInfoCircle, FaSearchPlus, FaDownload, FaTrash, FaTable, FaTimes, FaEy
 import { openLayerInfo } from "@/lib/layerInfoHelpers";
 import { useToast } from "@/hooks/useToast";
 import { useAttributeTableStore } from "@/stores/attributeTableStore";
+import { reprojectExtentToWebMercator } from "@/utils/coordinateConversion";
+import { fetchWmsLayerExtent } from "@/utils/geoServerClient";
 import "@/components/TOC/LayerOptionsMenu.css";
 
 interface LayerOptionsMenuProps {
@@ -176,87 +178,56 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
           if (typeof extent === "object" && extent !== null && "needsCapabilities" in extent) {
             const capabilitiesInfo = extent as { needsCapabilities: boolean; wmsUrl: string; layerName: string };
 
-            try {
-              const baseUrl = capabilitiesInfo.wmsUrl.split("?")[0]; // Remove any existing query params
-              const capabilitiesUrl = `${baseUrl}?service=WMS&version=1.3.0&request=GetCapabilities`;
+            // Scope the request to this single workspace+layer (GeoServer virtual service)
+            // instead of hitting the global /geoserver/wms endpoint, which returns
+            // capabilities for every layer on the server and can be very slow. Also attaches
+            // a Bearer token for secured GeoServer endpoints (opengis2.simcoe.ca).
+            const wmsExtent = await fetchWmsLayerExtent(capabilitiesInfo.wmsUrl, capabilitiesInfo.layerName);
+            if (wmsExtent) {
+              const view = map.getView();
+              view.fit(wmsExtent, {
+                duration: 1000,
+                padding: [20, 20, 20, 20],
+                maxZoom: 16,
+              });
 
-              const response = await fetch(capabilitiesUrl);
-              const capabilitiesText = await response.text();
-
-              // Parse XML to find layer extent
-              const parser = new DOMParser();
-              const xmlDoc = parser.parseFromString(capabilitiesText, "text/xml");
-
-              // Find the layer in capabilities
-              const layers = xmlDoc.getElementsByTagName("Layer");
-              for (let i = 0; i < layers.length; i++) {
-                const layer = layers[i];
-                const nameEl = layer.getElementsByTagName("Name")[0];
-                if (nameEl && nameEl.textContent === capabilitiesInfo.layerName) {
-                  // Look for EX_GeographicBoundingBox first
-                  const geoBounds = layer.getElementsByTagName("EX_GeographicBoundingBox")[0];
-                  if (geoBounds) {
-                    const westBound = geoBounds.getElementsByTagName("westBoundLongitude")[0]?.textContent;
-                    const eastBound = geoBounds.getElementsByTagName("eastBoundLongitude")[0]?.textContent;
-                    const southBound = geoBounds.getElementsByTagName("southBoundLatitude")[0]?.textContent;
-                    const northBound = geoBounds.getElementsByTagName("northBoundLatitude")[0]?.textContent;
-
-                    if (westBound && eastBound && southBound && northBound) {
-                      // Convert from geographic coordinates (EPSG:4326) to Web Mercator (EPSG:3857)
-                      const proj = await import("ol/proj");
-                      const bottomLeft = proj.fromLonLat([parseFloat(westBound), parseFloat(southBound)]);
-                      const topRight = proj.fromLonLat([parseFloat(eastBound), parseFloat(northBound)]);
-                      const wmsExtent = [bottomLeft[0], bottomLeft[1], topRight[0], topRight[1]];
-
-                      const view = map.getView();
-                      view.fit(wmsExtent, {
-                        duration: 1000,
-                        padding: [20, 20, 20, 20],
-                        maxZoom: 16,
-                      });
-
-                      onClose();
-                      return;
-                    }
-                  }
-
-                  // Also try CRS-specific BoundingBox elements
-                  const bboxes = layer.getElementsByTagName("BoundingBox");
-                  for (let j = 0; j < bboxes.length; j++) {
-                    const bbox = bboxes[j];
-                    const crs = bbox.getAttribute("CRS") || bbox.getAttribute("SRS");
-
-                    if (crs === "EPSG:3857" || crs === "EPSG:900913") {
-                      // Web Mercator bounds - can use directly
-                      const minx = parseFloat(bbox.getAttribute("minx") || "0");
-                      const miny = parseFloat(bbox.getAttribute("miny") || "0");
-                      const maxx = parseFloat(bbox.getAttribute("maxx") || "0");
-                      const maxy = parseFloat(bbox.getAttribute("maxy") || "0");
-
-                      if (minx && miny && maxx && maxy && minx < maxx && miny < maxy) {
-                        const webMercatorExtent = [minx, miny, maxx, maxy];
-
-                        const view = map.getView();
-                        view.fit(webMercatorExtent, {
-                          duration: 1000,
-                          padding: [20, 20, 20, 20],
-                          maxZoom: 16,
-                        });
-
-                        onClose();
-                        return;
-                      }
-                    }
-                  }
-
-                  break;
-                }
-              }
-            } catch (error) {
-              console.warn("Failed to fetch WMS capabilities:", error);
+              onClose();
+              return;
             }
 
             // If we get here, the capabilities approach failed, continue to other methods
+          } else if (typeof extent === "object" && extent !== null && "needsArcGISExtent" in extent) {
+            // ArcGIS layer with no extent captured at build time - fetch it from the ArcGIS
+            // REST layer metadata endpoint (?f=json), which exposes extent/fullExtent +
+            // spatialReference in the service's native CRS.
+            const arcgisInfo = extent as { needsArcGISExtent: boolean; metadataUrl: string };
+
+            try {
+              const response = await fetch(arcgisInfo.metadataUrl);
+              const layerJson = await response.json();
+              const svcExtent = layerJson?.extent ?? layerJson?.fullExtent;
+
+              if (svcExtent && [svcExtent.xmin, svcExtent.ymin, svcExtent.xmax, svcExtent.ymax].every((value: unknown) => typeof value === "number" && isFinite(value))) {
+                const wkid = svcExtent.spatialReference?.latestWkid ?? svcExtent.spatialReference?.wkid;
+                const reprojected = reprojectExtentToWebMercator([svcExtent.xmin, svcExtent.ymin, svcExtent.xmax, svcExtent.ymax], wkid);
+
+                if (reprojected) {
+                  const view = map.getView();
+                  view.fit(reprojected, {
+                    duration: 1000,
+                    padding: [20, 20, 20, 20],
+                    maxZoom: 16,
+                  });
+
+                  onClose();
+                  return;
+                }
+              }
+            } catch (error) {
+              console.warn("Failed to fetch ArcGIS layer extent:", error);
+            }
+
+            // If we get here, the ArcGIS metadata fetch failed, continue to other methods
           } else if (Array.isArray(extent)) {
             // Handle normal extent array
             // Check if extent appears to be in geographic coordinates and transform if needed
@@ -307,82 +278,20 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
           }
 
           if (layerGroup?.wmsGroupUrl) {
-            try {
-              const capabilitiesUrl = `${layerGroup.wmsGroupUrl.split("/wms")[0]}/wms?service=WMS&version=1.3.0&request=GetCapabilities`;
-              const response = await fetch(capabilitiesUrl);
-              const capabilitiesText = await response.text();
+            // Scope the request to this single workspace+layer (GeoServer virtual service)
+            // instead of hitting the group's/global endpoint for every layer on the server.
+            // Also attaches a Bearer token for secured GeoServer endpoints.
+            const wmsExtent = await fetchWmsLayerExtent(layerGroup.wmsGroupUrl, currentLayerInfo.name);
+            if (wmsExtent) {
+              const view = map.getView();
+              view.fit(wmsExtent, {
+                duration: 1000,
+                padding: [20, 20, 20, 20],
+                maxZoom: 16,
+              });
 
-              // Parse XML to find layer extent
-              const parser = new DOMParser();
-              const xmlDoc = parser.parseFromString(capabilitiesText, "text/xml");
-
-              // Find the layer in capabilities
-              const layers = xmlDoc.getElementsByTagName("Layer");
-              for (let i = 0; i < layers.length; i++) {
-                const layer = layers[i];
-                const nameEl = layer.getElementsByTagName("Name")[0];
-                if (nameEl && nameEl.textContent === currentLayerInfo.name) {
-                  // Look for EX_GeographicBoundingBox or BoundingBox
-                  const geoBounds = layer.getElementsByTagName("EX_GeographicBoundingBox")[0];
-                  if (geoBounds) {
-                    const westBound = geoBounds.getElementsByTagName("westBoundLongitude")[0]?.textContent;
-                    const eastBound = geoBounds.getElementsByTagName("eastBoundLongitude")[0]?.textContent;
-                    const southBound = geoBounds.getElementsByTagName("southBoundLatitude")[0]?.textContent;
-                    const northBound = geoBounds.getElementsByTagName("northBoundLatitude")[0]?.textContent;
-
-                    if (westBound && eastBound && southBound && northBound) {
-                      // Convert from geographic coordinates (EPSG:4326) to Web Mercator (EPSG:3857)
-                      const proj = await import("ol/proj");
-                      const bottomLeft = proj.fromLonLat([parseFloat(westBound), parseFloat(southBound)]);
-                      const topRight = proj.fromLonLat([parseFloat(eastBound), parseFloat(northBound)]);
-                      const wmsExtent = [bottomLeft[0], bottomLeft[1], topRight[0], topRight[1]];
-
-                      const view = map.getView();
-                      view.fit(wmsExtent, {
-                        duration: 1000,
-                        padding: [20, 20, 20, 20],
-                        maxZoom: 16,
-                      });
-
-                      onClose();
-                      return;
-                    }
-                  }
-
-                  // Also try CRS-specific BoundingBox elements
-                  const bboxes = layer.getElementsByTagName("BoundingBox");
-                  for (let j = 0; j < bboxes.length; j++) {
-                    const bbox = bboxes[j];
-                    const crs = bbox.getAttribute("CRS") || bbox.getAttribute("SRS");
-
-                    if (crs === "EPSG:3857" || crs === "EPSG:900913") {
-                      // Web Mercator bounds - can use directly
-                      const minx = parseFloat(bbox.getAttribute("minx") || "0");
-                      const miny = parseFloat(bbox.getAttribute("miny") || "0");
-                      const maxx = parseFloat(bbox.getAttribute("maxx") || "0");
-                      const maxy = parseFloat(bbox.getAttribute("maxy") || "0");
-
-                      if (minx && miny && maxx && maxy && minx < maxx && miny < maxy) {
-                        const webMercatorExtent = [minx, miny, maxx, maxy];
-
-                        const view = map.getView();
-                        view.fit(webMercatorExtent, {
-                          duration: 1000,
-                          padding: [20, 20, 20, 20],
-                          maxZoom: 16,
-                        });
-
-                        onClose();
-                        return;
-                      }
-                    }
-                  }
-
-                  break;
-                }
-              }
-            } catch (error) {
-              console.warn("Failed to fetch layer extent from WMS capabilities:", error);
+              onClose();
+              return;
             }
           }
         }
@@ -602,7 +511,9 @@ export default function LayerOptionsMenu({ layerInfo, group, position, onClose }
       }}
     >
       <div className="flex items-center justify-between px-3 py-2 bg-[#f8f9fa] border-b border-[#e9ecef]">
-        <span className="font-medium text-[#333] flex-1 whitespace-nowrap overflow-hidden text-ellipsis text-[13px]">{getCurrentLayerInfo().tocDisplayName}</span>
+        <span className="font-medium text-[#333] flex-1 text-[13px] sc-line-clamp-2" title={getCurrentLayerInfo().tocDisplayName}>
+          {getCurrentLayerInfo().tocDisplayName}
+        </span>
         <button
           className="bg-transparent border-none cursor-pointer text-[#666] p-0.5 ml-2 rounded-[3px] flex items-center justify-center hover:bg-[#e9ecef] hover:text-[#333]"
           onClick={onClose}

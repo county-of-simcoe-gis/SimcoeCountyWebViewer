@@ -3,6 +3,7 @@ import { immer } from "zustand/middleware/immer";
 import type { Layer } from "ol/layer";
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { calculateZIndex } from "@/stores/tocStore";
+import { reprojectExtentToWebMercator } from "@/utils/coordinateConversion";
 
 // Layer category types
 export type LayerCategory = "BaseMap" | "TOC" | "MyMaps" | "Themes" | "Tools" | "Graphics" | "Overlay" | "Popup";
@@ -106,7 +107,7 @@ interface LayerManagerState {
   getNextZIndex: (category: LayerCategory, index?: number) => number;
 
   // Get layer extent
-  getLayerExtent: (layerId: string) => number[] | { needsCapabilities: boolean; wmsUrl: string; layerName: string } | null;
+  getLayerExtent: (layerId: string) => number[] | { needsCapabilities: boolean; wmsUrl: string; layerName: string } | { needsArcGISExtent: boolean; metadataUrl: string } | null;
 
   // Global opacity methods
   setGlobalOpacity: (opacity: number) => void;
@@ -483,6 +484,30 @@ export const useLayerManagerStore = create<LayerManagerState>()(
       try {
         const olLayer = managedLayer.layer;
 
+        // ArcGIS layers: extent (if known) and spatial reference are captured at layer-build
+        // time in tocHelpers.ts (buildESRILayer), since ImageArcGISRest/TileArcGISRest sources
+        // don't expose usable extent info of their own. Handle this before the generic source
+        // checks below so ArcGIS layers never fall into the WMS GetCapabilities path (Method 2),
+        // which misfires for them (ImageArcGISRest also implements getParams()/getUrl()).
+        if (managedLayer.metadata?.isArcGIS) {
+          const rawExtent = managedLayer.metadata.extent as number[] | undefined;
+          const extentWkid = managedLayer.metadata.extentWkid as number | string | undefined;
+
+          if (rawExtent) {
+            const reprojected = reprojectExtentToWebMercator(rawExtent, extentWkid);
+            if (reprojected) {
+              return reprojected;
+            }
+          }
+
+          // No usable extent stored - signal the UI to fetch it from the ArcGIS REST
+          // metadata endpoint (?f=json), which exposes extent/fullExtent + spatialReference.
+          const arcgisMetadataUrl = managedLayer.metadata.arcgisMetadataUrl as string | undefined;
+          if (arcgisMetadataUrl) {
+            return { needsArcGISExtent: true, metadataUrl: arcgisMetadataUrl };
+          }
+        }
+
         // Method 1: Try to get extent from the layer source
         if ("getSource" in olLayer && typeof olLayer.getSource === "function") {
           const source = olLayer.getSource();
@@ -518,7 +543,7 @@ export const useLayerManagerStore = create<LayerManagerState>()(
           }
 
           // Method 2: For WMS layers, try to get extent from source params or capabilities
-          if (source && "getParams" in source && typeof source.getParams === "function") {
+          if (!managedLayer.metadata?.isArcGIS && source && "getParams" in source && typeof source.getParams === "function") {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const params = (source as any).getParams();
 

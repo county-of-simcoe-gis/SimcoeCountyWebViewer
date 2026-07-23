@@ -22,6 +22,7 @@ import { useToastStore } from "@/hooks/useToast";
 import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
 import { createDefaultDrawStyle, featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
+import { formatFieldValueAsText } from "@/utils/identifyHelpers";
 import AttributeTableTabs from "./AttributeTableTabs";
 import AttributeTableGrid from "./AttributeTableGrid";
 import AttributeTableMapSelect from "./AttributeTableMapSelect";
@@ -193,10 +194,11 @@ export default function AttributeTablePanel(): React.ReactElement | null {
         const r: Array<string | number | boolean | null> = new Array(columns.length);
         for (let c = 0; c < columns.length; c++) {
           const v = store.getCell(srcRow, columns[c]);
-          // Render dates as ISO strings at extraction time so the CSV is
-          // human-readable without extra work in the worker.
+          // Format each cell the same way it displays on-screen (dates,
+          // booleans, etc.) so the CSV matches the grid; keep null/undefined
+          // as an empty cell rather than the formatter's "N/A" placeholder.
           const col = active.schema![c];
-          r[c] = col.type === "date" && typeof v === "number" ? new Date(v).toISOString() : v;
+          r[c] = v === null || v === undefined ? "" : formatFieldValueAsText(col.name, v, col.type);
         }
         rows[i] = r;
       }
@@ -306,6 +308,12 @@ export default function AttributeTablePanel(): React.ReactElement | null {
   const selectedCount = active.selection.size;
   const capBanner = active.capReached && active.totalCount !== null && active.totalCount > ATTRIBUTE_TABLE_DEFAULTS.rowCap;
 
+  // Tooltip text for the "Select from map" button. When active, include a
+  // short hint about disabling; otherwise show usage instructions.
+  const mapSelectTooltip = active.mapSelectActive
+    ? "Map selection active — click to disable. Click a feature to select (replaces selection). Hold Shift/Ctrl/Cmd to add/toggle. Shift+drag to box-select multiple features."
+    : "Click a feature to select (replaces selection). Hold Shift/Ctrl/Cmd to add/toggle. Shift+drag to box-select multiple features.";
+
   return (
     <div
       className="fixed bottom-0 z-[500] bg-base-100 border-t border-base-300 shadow-[0_-4px_16px_rgba(0,0,0,0.15)] flex flex-col print:hidden"
@@ -346,7 +354,7 @@ export default function AttributeTablePanel(): React.ReactElement | null {
           type="button"
           className={`btn btn-xs ${active.mapSelectActive ? "btn-primary" : "btn-ghost"}`}
           onClick={() => setMapSelectActive(active.layerId, !active.mapSelectActive)}
-          title={active.mapSelectActive ? "Disable map selection (active)" : "Select features from map (click or Shift+drag)"}
+          title={mapSelectTooltip}
           aria-label="Select from map"
         >
           <FaMousePointer size={10} /> Select from map

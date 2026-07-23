@@ -39,6 +39,17 @@ describe("ColumnarStore", () => {
     expect(new Date(created0 as number).toISOString()).toBe("2024-01-01T00:00:00.000Z");
   });
 
+  it("stores a pre-declared 'date' column whose raw values are already epoch-ms numbers (e.g. ArcGIS/EsriJSON)", () => {
+    // ArcGIS field metadata declares the column type up front (see arcgis.ts
+    // esriTypeToColumnType), so the schema is "date" even though the raw
+    // feature attribute is a plain epoch-ms number, not an ISO string.
+    const esriSchema = [{ name: "Effective_", type: "date" as const }];
+    const store = new ColumnarStore(esriSchema);
+    store.appendPage([{ id: 1, properties: { Effective_: 1668470400000 } }]);
+
+    expect(store.getCell(0, "Effective_")).toBe(1668470400000);
+  });
+
   it("grows capacity beyond initial allocation", () => {
     const schema = inferSchema(sample);
     const store = new ColumnarStore(schema, 2);

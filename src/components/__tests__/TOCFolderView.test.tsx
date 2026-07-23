@@ -11,9 +11,7 @@ vi.mock("@/components/TOC/GroupItem", () => ({
       <button data-testid={`group-${group.value}-toggle`} onClick={() => onGroupFolderToggle(group.value, true)}>
         Toggle Group
       </button>
-      <button data-testid={`group-${group.value}-visibility`} onClick={() => onLayerVisibilityGroup(group, true)}>
-        Group Visibility
-      </button>
+      <input data-testid={`group-${group.value}-visibility`} type="checkbox" onChange={() => onLayerVisibilityGroup(group, true)} />
       {group.layers.map((layer: TOCLayer) => (
         <div key={layer.name} data-testid={`layer-${layer.name}`}>
           <span>{layer.tocDisplayName}</span>
@@ -226,7 +224,7 @@ describe("TOCFolderView", () => {
 
       expect(defaultProps.onLayerOptionsClick).toHaveBeenCalledWith(
         expect.any(Object), // MouseEvent
-        mockLayers[0]
+        mockLayers[0],
       );
     });
 

@@ -9,6 +9,9 @@ import {
   getFeatureExtent,
   GeoServerError,
   handleGeoServerError,
+  splitWorkspaceLayerName,
+  buildLayerScopedCapabilitiesUrl,
+  fetchWmsLayerExtent,
 } from "@/utils/geoServerClient";
 import { server } from "@/test/testServer";
 import { http, HttpResponse } from "msw";
@@ -17,6 +20,7 @@ import { http, HttpResponse } from "msw";
 vi.mock("@/utils/auth", () => ({
   getAccessToken: vi.fn().mockResolvedValue(null),
   isSecuredUrl: vi.fn().mockReturnValue(false),
+  fetchWithAuth: vi.fn((url: string) => fetch(url)),
 }));
 
 const mockFeatureCollection = {
@@ -506,5 +510,89 @@ describe("geoServerClient", () => {
       });
       expect(extent).toEqual([0, 0, 20, 20]);
     });
+  });
+});
+
+describe("splitWorkspaceLayerName", () => {
+  it("splits a workspace-qualified layer name", () => {
+    expect(splitWorkspaceLayerName("simcoe:Assessment Parcel")).toEqual({
+      workspace: "simcoe",
+      layerName: "Assessment Parcel",
+    });
+  });
+
+  it("returns a null workspace when there is no prefix", () => {
+    expect(splitWorkspaceLayerName("Assessment Parcel")).toEqual({
+      workspace: null,
+      layerName: "Assessment Parcel",
+    });
+  });
+});
+
+describe("buildLayerScopedCapabilitiesUrl", () => {
+  it("builds a workspace/layer-scoped virtual service URL from a global /wms endpoint", () => {
+    const url = buildLayerScopedCapabilitiesUrl("https://opengis2.simcoe.ca/geoserver/wms", "simcoe:Assessment Parcel");
+    expect(url).toBe("https://opengis2.simcoe.ca/geoserver/simcoe/Assessment%20Parcel/wms?service=WMS&version=1.3.0&request=GetCapabilities");
+  });
+
+  it("builds a workspace/layer-scoped virtual service URL from a group /ows endpoint with a query string", () => {
+    // The group URL already targets a per-group virtual service ("simcoe/Popular"); the true
+    // GeoServer root must be resolved via the "/geoserver/" marker, not just by stripping the
+    // trailing "/ows" segment (which would otherwise leave "simcoe/Popular" in the path).
+    const url = buildLayerScopedCapabilitiesUrl("https://opengis.simcoe.ca/geoserver/simcoe/Popular/ows?service=wms&version=1.3.0&request=GetCapabilities", "simcoe:Roads");
+    expect(url).toBe("https://opengis.simcoe.ca/geoserver/simcoe/Roads/wms?service=WMS&version=1.3.0&request=GetCapabilities");
+  });
+
+  it("falls back to a GetCapabilities request against the given URL when there is no workspace prefix", () => {
+    const url = buildLayerScopedCapabilitiesUrl("https://opengis2.simcoe.ca/geoserver/wms", "UnqualifiedLayer");
+    expect(url).toBe("https://opengis2.simcoe.ca/geoserver/wms?service=WMS&version=1.3.0&request=GetCapabilities");
+  });
+});
+
+describe("fetchWmsLayerExtent", () => {
+  // A layer-scoped virtual service commonly reports <Name> without the workspace prefix.
+  const capabilitiesXml = `<?xml version="1.0" encoding="UTF-8"?>
+<WMS_Capabilities>
+  <Capability>
+    <Layer>
+      <Layer queryable="1">
+        <Name>Assessment Parcel</Name>
+        <Title>Assessment Parcel</Title>
+        <EX_GeographicBoundingBox>
+          <westBoundLongitude>-79.8</westBoundLongitude>
+          <eastBoundLongitude>-77.5</eastBoundLongitude>
+          <southBoundLatitude>44.1</southBoundLatitude>
+          <northBoundLatitude>45.6</northBoundLatitude>
+        </EX_GeographicBoundingBox>
+      </Layer>
+    </Layer>
+  </Capability>
+</WMS_Capabilities>`;
+
+  it("resolves a reprojected EPSG:3857 extent from a layer-scoped GetCapabilities response", async () => {
+    server.use(http.get("https://opengis2.simcoe.ca/geoserver/*", () => new HttpResponse(capabilitiesXml, { headers: { "Content-Type": "text/xml" } })));
+
+    const extent = await fetchWmsLayerExtent("https://opengis2.simcoe.ca/geoserver/wms", "simcoe:Assessment Parcel");
+
+    expect(extent).not.toBeNull();
+    const [minX, minY, maxX, maxY] = extent as number[];
+    expect(minX).toBeLessThan(maxX);
+    expect(minY).toBeLessThan(maxY);
+    expect(Math.abs(minX)).toBeLessThan(20037508.34);
+    expect(Math.abs(maxY)).toBeLessThan(20037508.34);
+  });
+
+  it("returns null when the layer isn't present in the capabilities response", async () => {
+    server.use(http.get("https://opengis2.simcoe.ca/geoserver/*", () => new HttpResponse(capabilitiesXml, { headers: { "Content-Type": "text/xml" } })));
+
+    const extent = await fetchWmsLayerExtent("https://opengis2.simcoe.ca/geoserver/wms", "simcoe:NoSuchLayer");
+    expect(extent).toBeNull();
+  });
+
+  it("returns null when the request fails", async () => {
+    server.use(http.get("https://opengis2.simcoe.ca/geoserver/*", () => HttpResponse.error()));
+
+    const extent = await fetchWmsLayerExtent("https://opengis2.simcoe.ca/geoserver/wms", "simcoe:Assessment Parcel");
+    expect(extent).toBeNull();
   });
 });

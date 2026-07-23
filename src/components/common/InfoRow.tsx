@@ -1,8 +1,7 @@
 "use client";
 
 import React, { ReactNode } from "react";
-import { formatIdentifyDateValue } from "@/utils/identifyHelpers";
-import Attachments from "./Attachments";
+import { formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
 
 export interface InfoRowProps {
   label: string;
@@ -13,7 +12,6 @@ export interface InfoRowProps {
   styleMode?: "default" | "table";
 }
 
-// Tailwind class maps for style modes
 const LABEL_CLASSES = {
   default: "font-semibold text-base-content min-w-[110px] shrink-0 pr-1.5",
   table: "font-semibold text-base-content min-w-[160px] shrink-0 p-2 bg-base-200 border border-base-300 border-r-0",
@@ -25,55 +23,15 @@ const VALUE_CLASSES = {
 } as const;
 
 export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", children, imageData = false, styleMode = "default" }) => {
-  // Convert URLs to links and handle special cases
-  let displayLabel = label;
-  let displayValue: ReactNode = typeof value === "boolean" ? (value ? "Yes" : "No") : value;
-
-  // Check if value is a string for URL/path detection
-  const valueStr = typeof value === "string" ? value : "";
-
-  // Handle HTTP URLs
-  if (valueStr && valueStr.substring(0, 4).toUpperCase() === "HTTP") {
-    if (label.toLowerCase() === "attachmenturl" || label.toLowerCase() === "attachment url") {
-      displayLabel = "Attachments";
-      displayValue = <Attachments attachmentUrl={valueStr} />;
-    } else {
-      displayValue = (
-        <a href={valueStr} target="_blank" rel="noopener noreferrer">
-          Click To Open
-        </a>
-      );
-    }
-  }
-  // Handle UNC paths (\\server\path)
-  else if (valueStr && valueStr.substring(0, 2).toUpperCase() === "\\\\") {
-    displayValue = (
-      <a href={valueStr} target="_blank" rel="noopener noreferrer">
-        Click To Open
-      </a>
-    );
-  }
-  // Handle Windows drive paths (C:\path)
-  else if (valueStr && valueStr.length > 2 && valueStr.substring(1, 3).toUpperCase() === ":\\") {
-    displayValue = (
-      <a href={valueStr} target="_blank" rel="noopener noreferrer">
-        {valueStr}
-      </a>
-    );
-  }
-  // Handle date/time formatting — strict ISO 8601 detection; includes time-of-day when present
-  else if (valueStr) {
-    const dateValue = formatIdentifyDateValue(label, valueStr);
-    if (dateValue !== null) {
-      displayValue = dateValue;
-    }
-  }
+  // Use centralized field formatting which handles HTML, URLs, dates, etc.
+  const formattedValue = formatFieldValue(label, value);
+  const formattedLabel = formatFieldName(label);
 
   return (
     <div className={`flex mb-1.5 items-start text-xs ${className}`} data-testid="info-row">
-      <div className={LABEL_CLASSES[styleMode]}>{displayLabel}:</div>
+      <div className={LABEL_CLASSES[styleMode]}>{formattedLabel}:</div>
       <div className={imageData ? "hidden" : VALUE_CLASSES[styleMode]}>
-        {displayValue}
+        {formattedValue}
         {children}
       </div>
     </div>
