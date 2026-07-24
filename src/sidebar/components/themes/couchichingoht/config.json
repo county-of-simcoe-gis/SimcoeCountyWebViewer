@@ -122,6 +122,16 @@
       "zIndex": 212,
       "legendStyleName": "",
       "displayFieldName": "Address"
+    },
+    {
+      "displayName": "Indigenous Midwifery",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:COHT_Indigenous_Midwifery",
+      "visible": false,
+      "expanded": false,
+      "zIndex": 213,
+      "legendStyleName": "",
+      "displayFieldName": "Name"
     }
   ]
 }
