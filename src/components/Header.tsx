@@ -8,7 +8,7 @@ import { useAppStore } from "@/stores/appStore";
 import Search from "@/components/Search";
 import SearchZoom from "@/components/SearchZoom";
 import ProfileButton from "@/components/ProfileButton";
-import AppImage from "@/components/shared/AppImage";
+import LogoImage from "@/components/shared/LogoImage";
 import { showFeedbackWindow } from "@/utils/mapHelpers";
 
 export default function Header() {
@@ -38,20 +38,6 @@ export default function Header() {
     toggleSidebar();
   };
 
-  // Get logo image from config, with fallback
-  const getLogoImage = () => {
-    if (config?.headerLogoImageName) {
-      // If the config value already includes a path, use it as-is
-      if (config.headerLogoImageName.startsWith("/") || config.headerLogoImageName.startsWith("http")) {
-        return config.headerLogoImageName;
-      }
-      // Otherwise, prepend the /images/ path
-      return `/images/${config.headerLogoImageName}`;
-    }
-    // Fallback to original logo
-    return "/images/logo.png";
-  };
-
   return (
     <div className="w-full border-b border-gray-300 dark:border-gray-700 flex items-center h-[52px] max-h-[52px] p-0 z-[1001] absolute left-0 top-0 right-0 bottom-auto bg-[image:var(--sc-gradient-default)]">
       {/* Burger Button */}
@@ -68,7 +54,7 @@ export default function Header() {
 
       {/* Logo */}
       <div className={`relative flex items-center mr-2.5 shrink-0 max-[770px]:hidden ${config?.draft ? "sc-draft-header" : ""}`}>
-        <AppImage src={getLogoImage()} alt={config?.title || "Simcoe County"} height={50} className="h-[50px] object-contain" />
+        <LogoImage headerLogoImageName={config?.headerLogoImageName} alt={config?.title || "Simcoe County"} containerClassName="max-h-[50px]" className="max-h-[50px] max-w-[200px] object-contain" />
         {config?.logoOverlayText && (
           <span className="absolute top-2 left-[-6px] text-[10px] font-bold leading-none px-1.5 py-0.5 bg-primary text-primary-content opacity-90 pointer-events-none select-none -rotate-12 shadow-sm">
             {config.logoOverlayText}
