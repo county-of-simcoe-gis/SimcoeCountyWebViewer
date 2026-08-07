@@ -4,7 +4,7 @@ import { FaSun, FaMoon, FaLaptop } from "react-icons/fa";
 import { useTheme } from "@/components/ThemeProvider";
 
 export default function ThemeToggle() {
-  const { theme, setTheme, effectiveTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
     <div className="px-4 py-2 border-b border-base-300">

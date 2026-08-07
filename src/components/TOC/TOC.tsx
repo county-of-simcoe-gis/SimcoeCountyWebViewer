@@ -14,6 +14,7 @@ import { saveSharedItem, getSharedItem, setStorageItem, getStorageItem, removeSt
 import { flushUserStorage } from "@/utils/userStorage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
+import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
 import { LegendObject } from "@/stores/legendStore";
 
 interface TOCProps {
@@ -651,9 +652,41 @@ export default function TOC({ visible = true }: TOCProps) {
   const handleLayerVisibilityGroup = (group: TOCLayerGroup, visible: boolean) => {
     const { updateLayerVisibilityById } = useTOCStore.getState();
 
-    group.layers.forEach((layer) => {
-      updateLayerVisibilityById(layer.id, visible);
-    });
+    if (!visible) {
+      // Turning layers off never requires disclaimer acceptance.
+      group.layers.forEach((layer) => {
+        updateLayerVisibilityById(layer.id, false);
+      });
+      return;
+    }
+
+    // Turning layers on: process each layer sequentially so disclaimer modals
+    // are shown one at a time and accepted layers are toggled immediately.
+    let index = 0;
+
+    const processNext = () => {
+      if (index >= group.layers.length) return;
+      const layer = group.layers[index];
+      index++;
+
+      if (!acceptDisclaimer(layer, processNextWithCurrentLayer)) {
+        // Modal is open; it will call back into processNext once accepted.
+        return;
+      }
+
+      updateLayerVisibilityById(layer.id, true);
+      processNext();
+    };
+
+    const processNextWithCurrentLayer = () => {
+      const currentLayer = group.layers[index - 1];
+      if (currentLayer) {
+        updateLayerVisibilityById(currentLayer.id, true);
+      }
+      processNext();
+    };
+
+    processNext();
   };
 
   const handleGroupFolderToggle = (_groupValue: string, _isOpen: boolean) => {
@@ -726,6 +759,16 @@ export default function TOC({ visible = true }: TOCProps) {
         groupsToSearch.forEach((group) => {
           group.layers.forEach((layer) => {
             const shouldBeVisible = visibleLayerNames.includes(layer.tocDisplayName) || visibleLayerNames.includes(layer.name) || visibleLayerNames.includes(layer.displayName || layer.name);
+
+            if (shouldBeVisible && !layer.visible && layer.disclaimer) {
+              // URL-parameter activation for a layer with a disclaimer: show
+              // the disclaimer modal and only turn the layer on if accepted.
+              acceptDisclaimer(layer, () => {
+                tocState.updateLayerVisibilityById(layer.id, true);
+                tocState.syncActiveViewVisibilityToMap();
+              });
+              return;
+            }
 
             if (shouldBeVisible !== layer.visible) {
               batchUpdates.push({ layerId: layer.id, visible: shouldBeVisible });

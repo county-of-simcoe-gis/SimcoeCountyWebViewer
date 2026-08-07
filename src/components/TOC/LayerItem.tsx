@@ -7,6 +7,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { getMapScale } from "@/utils/mapHelpers";
 import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical } from "react-icons/fa";
 import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
+import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
 
 interface LayerItemProps {
   layerInfo: TOCLayer;
@@ -116,16 +117,20 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
     };
   }, [shouldLoadLegend, currentLayerData.legendImage, currentLayerData.legendObj]);
 
-  const onCheckboxChange = () => {
-    // Handle disclaimer if present
-    if (layerInfo.disclaimer) {
-      // TODO: Show disclaimer dialog
-    }
-
+  const doToggleLayer = () => {
     // Use the current layer data from the store (which has the OpenLayers layer object)
     const currentLayerFromStore = currentLayerData;
     const updatedLayer = { ...currentLayerFromStore, visible: !currentLayerFromStore.visible };
     onLayerChange(updatedLayer, group);
+  };
+
+  const onCheckboxChange = () => {
+    // Block the toggle if the layer has a disclaimer that has not been accepted.
+    if (!acceptDisclaimer(currentLayerData, doToggleLayer)) {
+      return;
+    }
+
+    doToggleLayer();
   };
 
   const highlightText = (text: string, searchText: string) => {

@@ -1,13 +1,13 @@
 {
   "name": "simcoecountywebviewernextjs",
-  "version": "2.0.0-rc20260723.2",
+  "version": "2.0.0-rc20260807.1",
   "private": true,
   "scripts": {
-    "dev": "node scripts/copy-readme.js && cross-env NODE_EXTRA_CA_CERTS=certs/netskope-ca.pem next dev",
-    "build": "node scripts/copy-readme.js && next build",
-    "build:dev": "node scripts/copy-readme.js && dotenv -e .env.development -- next build",
+    "dev": "node scripts/copy-readme.js && cross-env NODE_EXTRA_CA_CERTS=certs/netskope-ca.pem next dev --webpack",
+    "build": "node scripts/copy-readme.js && next build --webpack",
+    "build:dev": "node scripts/copy-readme.js && dotenv -e .env.development -- next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "copy-readme": "node scripts/copy-readme.js",
     "test": "cross-env NODE_OPTIONS=--max-old-space-size=8192 vitest run --no-coverage --run",
     "test:watch": "cross-env NODE_OPTIONS=--max-old-space-size=8192 vitest",
@@ -25,18 +25,18 @@
     "@types/mapbox__polyline": "^1.0.5",
     "@types/react-window": "^1.8.8",
     "@types/uuid": "^10.0.0",
-    "adm-zip": "^0.5.16",
+    "adm-zip": "^0.6.0",
     "axios": "^1.17.0",
     "canvas": "^3.2.0",
     "dompurify": "^3.4.12",
-    "fast-xml-parser": "^4.3.9",
+    "fast-xml-parser": "^5.10.1",
     "geist": "^1.7.0",
     "geojson": "^0.5.0",
     "immer": "^10.1.1",
     "jspdf": "^4.0.0",
     "moment": "^2.30.1",
     "mssql": "^12.0.0",
-    "next": "^15.5.7",
+    "next": "^16.3.0",
     "next-auth": "^4.24.11",
     "ol": "^10.5.0",
     "ol-mapbox-style": "^13.0.1",
@@ -78,7 +78,7 @@
     "daisyui": "^5.5.17",
     "dotenv-cli": "^11.0.0",
     "eslint": "^9",
-    "eslint-config-next": "15.3.3",
+    "eslint-config-next": "^16.3.0",
     "jsdom": "^26.1.0",
     "msw": "^2.4.10",
     "prisma": "^6.16.2",
@@ -87,6 +87,7 @@
     "vitest": "^4.1.8"
   },
   "overrides": {
-    "effect": "3.20.0"
+    "effect": "3.20.0",
+    "esbuild": "^0.28.1"
   }
 }

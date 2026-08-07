@@ -37,4 +37,22 @@ describe("LogoImage", () => {
     expect(img).toHaveClass("my-image");
     expect(img.parentElement).toHaveClass("my-container");
   });
+
+  it("does not add conflicting fill utilities when an explicit image className is provided", () => {
+    render(<LogoImage headerLogoImageName="logo.svg" alt="Conflicting logo" className="max-h-[50px] max-w-[200px]" />);
+    const img = screen.getByAltText("Conflicting logo");
+    expect(img).toHaveClass("max-h-[50px]");
+    expect(img).toHaveClass("max-w-[200px]");
+    expect(img).not.toHaveClass("max-h-full");
+    expect(img).not.toHaveClass("max-w-full");
+    expect(img).toHaveClass("object-contain");
+  });
+
+  it("applies default fill utilities when no image className is provided", () => {
+    render(<LogoImage headerLogoImageName="logo.svg" alt="Default fill logo" />);
+    const img = screen.getByAltText("Default fill logo");
+    expect(img).toHaveClass("max-h-full");
+    expect(img).toHaveClass("max-w-full");
+    expect(img).toHaveClass("object-contain");
+  });
 });

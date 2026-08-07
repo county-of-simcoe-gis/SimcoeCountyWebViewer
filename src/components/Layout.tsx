@@ -24,6 +24,7 @@ import LegendModal from "@/components/Legend/LegendModal";
 import AttributeTablePanel from "@/components/AttributeTable/AttributeTablePanel";
 import MoreMenu from "@/components/MoreMenu";
 import GlobalURLModal from "@/components/common/GlobalURLModal";
+import DisclaimerModal from "@/components/common/DisclaimerModal";
 import GoogleAnalytics from "@/components/GoogleAnalytics";
 import "@/styles/react-tabs.css";
 
@@ -226,6 +227,9 @@ export default function Layout({ children }: LayoutProps) {
 
       {/* Global URL Modal - full-screen iframe overlay triggered by showURLWindow() */}
       <GlobalURLModal />
+
+      {/* Disclaimer Modal - layer-specific terms/disclaimer prompt */}
+      <DisclaimerModal />
 
       {/* Google Analytics - conditionally loaded when googleAnalyticsID is configured */}
       <GoogleAnalytics />

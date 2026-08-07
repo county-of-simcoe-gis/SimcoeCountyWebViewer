@@ -1,26 +1,21 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
+import nextConfig from "eslint-config-next";
 
 const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  ...nextConfig,
+  {
+    ignores: ["coverage/**", "test-results/**", "playwright-report/**", "vitest-output.txt"],
+  },
   {
     rules: {
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          argsIgnorePattern: "^_",
-          varsIgnorePattern: "^_",
-          caughtErrorsIgnorePattern: "^_",
-        },
-      ],
+      // Next.js 16 / eslint-plugin-react-hooks added these stricter React
+      // Compiler rules. Many existing components use patterns that the compiler
+      // flags. Disable globally until the codebase can be refactored for React 19.
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/refs": "off",
+      "react-hooks/immutability": "off",
+      "react-hooks/preserve-manual-memoization": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/static-components": "off",
       // GIS app loads images from external WMS/WFS services where next/image
       // requires custom loaders and explicit dimensions - impractical for dynamic map content
       "@next/next/no-img-element": "off",
@@ -33,6 +28,19 @@ const eslintConfig = [
           selector: 'JSXAttribute[name.name="unoptimized"]',
           message:
             'Do not use the "unoptimized" prop on <Image>. It bypasses the custom image loader that prepends basePath, causing image 404s. The loader already serves images directly without optimization.',
+        },
+      ],
+    },
+  },
+  {
+    files: ["**/*.ts", "**/*.tsx"],
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
         },
       ],
     },

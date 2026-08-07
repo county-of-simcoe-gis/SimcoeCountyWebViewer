@@ -7,7 +7,7 @@ vi.mock("@/stores/appStore", () => ({
   },
 }));
 
-import { getActiveMunicipality, isPropertyInMunicipality, hasMunicipalityFilter } from "@/utils/municipalityFilter";
+import { getActiveMunicipality, isPropertyInMunicipality, hasMunicipalityFilter, isCountyUser, getUserMunicipality } from "@/utils/municipalityFilter";
 
 describe("municipalityFilter", () => {
   beforeEach(() => {
@@ -91,6 +91,55 @@ describe("municipalityFilter", () => {
         urlParameters: {},
       } as never);
       expect(hasMunicipalityFilter()).toBe(false);
+    });
+  });
+
+  describe("isCountyUser", () => {
+    it("returns true when locations include COUNTY OF SIMCOE (case-insensitive)", () => {
+      expect(isCountyUser({ locations: ["County of Simcoe"] })).toBe(true);
+      expect(isCountyUser({ locations: ["COUNTY OF SIMCOE", "Town of Innisfil"] })).toBe(true);
+    });
+
+    it("returns false when locations do not include COUNTY OF SIMCOE", () => {
+      expect(isCountyUser({ locations: ["Town of Innisfil"] })).toBe(false);
+      expect(isCountyUser({ locations: [] })).toBe(false);
+      expect(isCountyUser({})).toBe(false);
+    });
+  });
+
+  describe("getUserMunicipality", () => {
+    it("prefers the active municipality filter over user locations", () => {
+      vi.mocked(useAppStore.getState).mockReturnValue({
+        config: { municipality: "Barrie" },
+        urlParameters: {},
+      } as never);
+      expect(getUserMunicipality({ locations: ["Town of Innisfil"] })).toBe("Barrie");
+    });
+
+    it("falls back to the first non-county location when no active filter", () => {
+      vi.mocked(useAppStore.getState).mockReturnValue({
+        config: {},
+        urlParameters: {},
+      } as never);
+      expect(getUserMunicipality({ locations: ["Town of Innisfil"] })).toBe("Town of Innisfil");
+      expect(getUserMunicipality({ locations: ["COUNTY OF SIMCOE", "Town of Innisfil"] })).toBe("Town of Innisfil");
+    });
+
+    it("returns null for County users when no active filter", () => {
+      vi.mocked(useAppStore.getState).mockReturnValue({
+        config: {},
+        urlParameters: {},
+      } as never);
+      expect(getUserMunicipality({ locations: ["COUNTY OF SIMCOE"] })).toBeNull();
+    });
+
+    it("returns null when no filter and no locations", () => {
+      vi.mocked(useAppStore.getState).mockReturnValue({
+        config: {},
+        urlParameters: {},
+      } as never);
+      expect(getUserMunicipality({ locations: [] })).toBeNull();
+      expect(getUserMunicipality({})).toBeNull();
     });
   });
 });

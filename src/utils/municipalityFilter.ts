@@ -7,7 +7,16 @@
  * available for parcels that belong to that municipality.
  */
 
+import { COUNTY_OF_SIMCOE_LOCATION } from "@/types/mapSettings";
 import { useAppStore } from "@/stores/appStore";
+
+/**
+ * Lightweight user shape used by the municipality helpers.
+ * Intentionally compatible with session.user and other user objects.
+ */
+export interface MunicipalityUser {
+  locations?: string[];
+}
 
 /**
  * Return the active municipality filter string, or `null` if no filter is set.
@@ -44,4 +53,37 @@ export function isPropertyInMunicipality(propertyMunicipality: string | undefine
  */
 export function hasMunicipalityFilter(): boolean {
   return getActiveMunicipality() !== null;
+}
+
+/**
+ * Check whether a user is a County of Simcoe user (i.e. has the canonical
+ * County of Simcoe location). County users bypass municipality-level
+ * restrictions.
+ */
+export function isCountyUser(user: MunicipalityUser): boolean {
+  return (user.locations ?? []).some((location) => location.toLowerCase() === COUNTY_OF_SIMCOE_LOCATION.toLowerCase());
+}
+
+/**
+ * Determine the effective municipality for a user.
+ *
+ * Prefers the active municipality filter (config.municipality or the MUNI
+ * URL parameter). If no filter is active and the user is not a County user,
+ * falls back to the first location that is not the County of Simcoe location.
+ * Returns `null` for County users or when the municipality cannot be resolved.
+ */
+export function getUserMunicipality(user: MunicipalityUser): string | null {
+  const activeMuni = getActiveMunicipality();
+  if (activeMuni) return activeMuni;
+
+  const locations = user.locations ?? [];
+  if (locations.length === 0) return null;
+
+  const nonCounty = locations.find((location) => location.toLowerCase() !== COUNTY_OF_SIMCOE_LOCATION.toLowerCase());
+  if (nonCounty) return nonCounty;
+
+  // Only County locations means the user is a County user → unrestricted.
+  if (isCountyUser(user)) return null;
+
+  return null;
 }

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import PanelComponent from "@/components/PanelComponent";
 import { useMapStore, type ControlVisibility } from "@/stores/mapStore";
-import { useAppStore } from "@/stores/appStore";
 import { getStorageKeys, getStorageItem, removeStorageItem } from "@/utils/storage";
 import { flushUserStorage } from "@/utils/userStorage";
 

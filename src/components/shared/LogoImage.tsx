@@ -35,7 +35,11 @@ export default function LogoImage({ headerLogoImageName, alt = "County of Simcoe
     .filter(Boolean)
     .join(" ");
 
-  const imageClasses = ["max-h-full max-w-full object-contain", className].filter(Boolean).join(" ");
+  // Only apply the default "fill the container" sizing when the caller hasn't
+  // supplied explicit width/height utilities. Passing both `max-h-full` and a
+  // concrete `max-h-[...]` causes a same-specificity conflict where the order
+  // of generated CSS decides the winner, which can ignore the caller's intent.
+  const imageClasses = className ? ["object-contain", className].filter(Boolean).join(" ") : "max-h-full max-w-full object-contain";
 
   return (
     <div className={containerClasses}>

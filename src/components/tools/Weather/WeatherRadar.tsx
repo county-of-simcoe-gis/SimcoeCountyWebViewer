@@ -318,7 +318,7 @@ export default function WeatherRadar(): React.ReactElement {
         }
 
         applyVisibility();
-      } catch (err) {
+      } catch {
         // Silently fail on fetch error
       } finally {
         setIsLoading(false);

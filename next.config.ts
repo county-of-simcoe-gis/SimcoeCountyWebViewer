@@ -32,10 +32,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  eslint: {
-    // Suppress ESLint warnings during build (use with caution)
-    ignoreDuringBuilds: true,
-  },
   typescript: {
     // Suppress TypeScript warnings during build (use with caution)
     ignoreBuildErrors: true,

@@ -1,5 +1,5 @@
 import { WMSCapabilities } from "ol/format.js";
-import { TOCLayerGroup, TOCLayer, TOCSource } from "@/stores/tocStore";
+import { TOCLayerGroup, TOCLayer, TOCSource, type LayerDisclaimer } from "@/stores/tocStore";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES, LayerOptions } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -165,9 +165,9 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   }
 
   // Build disclaimer object
-  let disclaimer: string | undefined;
+  let disclaimer: LayerDisclaimer | undefined;
   if (disclaimerUrl !== "" || disclaimerTitle !== "" || warningMsg !== "") {
-    disclaimer = JSON.stringify({ title: disclaimerTitle, url: disclaimerUrl, warning: warningMsg });
+    disclaimer = { title: disclaimerTitle, url: disclaimerUrl, warning: warningMsg };
   }
 
   // Scale denominators
@@ -490,7 +490,7 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
     // the source explicitly requests it (source.appToken). Otherwise fall
     // back to the user token store for secured services.
     let tokenParam = "";
-    if ((source as any).appToken) {
+    if ((source as { appToken?: boolean }).appToken) {
       try {
         const resp = await fetch(apiUrl("/api/secure/arcgis/token"), { method: "POST", credentials: "same-origin" });
         if (resp.ok) {
@@ -1125,6 +1125,7 @@ interface BuildESRILayerOptions {
       identifyIdColumn?: string;
       disclaimerTitle?: string;
       disclaimerUrl?: string;
+      disclaimerWarning?: string;
     };
     hasAttachments?: boolean;
     visible?: boolean;
@@ -1187,9 +1188,10 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   // DISCLAIMER
   const disclaimerTitle = layer.options.disclaimerTitle;
   const disclaimerUrl = layer.options.disclaimerUrl;
-  let disclaimer: { title: string; url: string } | undefined = undefined;
-  if (disclaimerUrl !== "" || disclaimerTitle !== "") {
-    disclaimer = { title: disclaimerTitle || "", url: disclaimerUrl || "" };
+  const disclaimerWarning = (layer.options as { disclaimerWarning?: string }).disclaimerWarning;
+  let disclaimer: LayerDisclaimer | undefined = undefined;
+  if (disclaimerUrl !== "" || disclaimerTitle !== "" || disclaimerWarning !== "") {
+    disclaimer = { title: disclaimerTitle || "", url: disclaimerUrl || "", warning: disclaimerWarning || "" };
   }
 
   const minScale = layer.options.minScale || 0;
@@ -1368,7 +1370,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         displayName: displayName,
         tocDisplayName: tocDisplayName,
         hasAttachments: hasAttachments,
-        disclaimer: disclaimer ? disclaimer.title : undefined,
+        disclaimer,
         extendedProperties: {
           keywords: {
             SAR: layer.options.sar || false,

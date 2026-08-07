@@ -56,7 +56,7 @@ export function usePermissions() {
 
       // Intentionally do not notify the user on startup when geolocation is denied.
       // The UI control (CurrentLocation) will reflect the disabled state and provide the tooltip.
-    } catch (e) {
+    } catch {
       setPermissionState("geolocation", "unknown");
     }
   }, [setPermissionState, toast]);
@@ -72,17 +72,21 @@ export function usePermissions() {
       const readPerm = await (navigator.permissions as any).query({ name: "clipboard-read" } as any);
       const writePerm = await (navigator.permissions as any).query({ name: "clipboard-write" } as any);
 
-      const state = (readPerm.state === "granted" || writePerm.state === "granted") ? "granted"
-        : (readPerm.state === "prompt" || writePerm.state === "prompt") ? "prompt"
-        : (readPerm.state === "denied" || writePerm.state === "denied") ? "denied"
-        : "unknown";
+      const state =
+        readPerm.state === "granted" || writePerm.state === "granted"
+          ? "granted"
+          : readPerm.state === "prompt" || writePerm.state === "prompt"
+            ? "prompt"
+            : readPerm.state === "denied" || writePerm.state === "denied"
+              ? "denied"
+              : "unknown";
 
       setPermissionState("clipboard", state as PermissionState);
 
       if (state === "denied") {
         toast.warning("Clipboard access is denied. Copy/share features may not work.");
       }
-    } catch (e) {
+    } catch {
       setPermissionState("clipboard", "unknown");
     }
   }, [setPermissionState, toast]);
@@ -96,7 +100,7 @@ export function usePermissions() {
       if (mapped === "denied") {
         toast.warning("Local network access is denied. Some local services or layers may not load properly.");
       }
-    } catch (e) {
+    } catch {
       setPermissionState("local-network", "unknown");
     }
   }, [setPermissionState, toast]);

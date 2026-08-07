@@ -54,7 +54,7 @@ export default function Header() {
 
       {/* Logo */}
       <div className={`relative flex items-center mr-2.5 shrink-0 max-[770px]:hidden ${config?.draft ? "sc-draft-header" : ""}`}>
-        <LogoImage headerLogoImageName={config?.headerLogoImageName} alt={config?.title || "Simcoe County"} containerClassName="max-h-[50px]" className="max-h-[50px] max-w-[200px] object-contain" />
+        <LogoImage headerLogoImageName={config?.headerLogoImageName} alt={config?.title || "Simcoe County"} containerClassName="max-h-[50px]" className="max-h-[50px] max-w-[200px]" />
         {config?.logoOverlayText && (
           <span className="absolute top-2 left-[-6px] text-[10px] font-bold leading-none px-1.5 py-0.5 bg-primary text-primary-content opacity-90 pointer-events-none select-none -rotate-12 shadow-sm">
             {config.logoOverlayText}

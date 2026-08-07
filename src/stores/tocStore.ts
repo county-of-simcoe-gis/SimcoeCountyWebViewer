@@ -41,6 +41,13 @@ interface OpenLayersLayer {
   setProperties: (properties: Record<string, unknown>) => void;
 }
 
+// Parsed disclaimer metadata attached to a TOC layer
+export interface LayerDisclaimer {
+  title?: string;
+  url?: string;
+  warning?: string;
+}
+
 // Layer interface based on the old app's layer structure
 export interface TOCLayer {
   id: string; // Unique identifier for the layer
@@ -73,7 +80,7 @@ export interface TOCLayer {
   secured?: boolean;
   canDownload?: boolean;
   hasAttachments?: boolean;
-  disclaimer?: string;
+  disclaimer?: LayerDisclaimer;
   infoFormat?: string; // INFO_FORMAT for WMS GetFeatureInfo requests (e.g., text/plain, text/html)
   xslTemplate?: string; // XSL template URL for transforming identify results
   extendedProperties?: { keywords: Record<string, unknown> }; // Parsed GeoServer keywords (e.g. SAR, CATEGORY)
