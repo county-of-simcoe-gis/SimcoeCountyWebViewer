@@ -89,6 +89,20 @@ const MapApp = (props) => {
         if (window.config.default_theme !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_theme, "themes");
         if (window.config.default_tool !== undefined) window.emitter.emit("activateSidebarItem", window.config.default_tool, "tools");
       });
+
+      const betaUrl = `https://opengisbeta.simcoe.ca${window.location.search}`;
+      helpers.showMessage(
+        "Coming Soon",
+        <span>
+          Try the next version of OpenGIS at{" "}
+          <a href={betaUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#fff", textDecoration: "underline" }}>
+            opengisbeta.simcoe.ca
+          </a>
+        </span>,
+        "blue",
+        15000,
+        false,
+      );
     });
     return () => {
       window.emitter.removeListener("mapLoaded", mapLoadedListener);
