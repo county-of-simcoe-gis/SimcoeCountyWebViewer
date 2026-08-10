@@ -12,6 +12,7 @@ export async function GET(
 ): Promise<NextResponse> {
   try {
     const { appName, actionType, description } = await params;
+    const userName = request.nextUrl.searchParams.get("user_name") || null;
 
     // Extract client IP from proxy headers (same priority as old API)
     let ip = request.headers.get("x-real-ip");
@@ -25,9 +26,9 @@ export async function GET(
     const now = new Date();
     const dtString = now.toISOString().replace("T", " ").replace("Z", "");
 
-    const insertSql = `INSERT INTO public.tbl_app_stats (app_name, action_type, action_description, action_date, ip)
-      VALUES ($1, $2, $3, $4, $5);`;
-    const values = [appName, actionType, description, dtString, ip];
+    const insertSql = `INSERT INTO public.tbl_app_stats (app_name, action_type, action_description, action_date, ip, user_name)
+      VALUES ($1, $2, $3, $4, $5, $6);`;
+    const values = [appName, actionType, description, dtString, ip, userName];
 
     await pgTabular.selectAllWithValues(insertSql, values);
 

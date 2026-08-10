@@ -1,8 +1,20 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, renderHook } from "@testing-library/react";
+import { render, renderHook, fireEvent, waitFor, act } from "@testing-library/react";
 import BasemapSwitcher from "@/components/BasemapSwitcher";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { trackBasemap } from "@/lib/appStats";
+
+// Mock app stats so we can assert on tracking calls
+vi.mock("@/lib/appStats", () => ({
+  trackBasemap: vi.fn(),
+}));
+
+// Mock next-auth
+vi.mock("next-auth/react", () => ({
+  getSession: vi.fn().mockResolvedValue(null),
+}));
 
 // Mock Next.js Image component
 vi.mock("next/image", () => ({
@@ -73,10 +85,16 @@ vi.mock("@/components/basemapSwitcherConfig.json", () => ({
 
 // Mock rc-slider with better simulation
 vi.mock("rc-slider", () => ({
-  default: vi.fn(({ onChange, value, ...props }) => {
+  default: vi.fn(({ onChange, onChangeComplete, value, vertical: _vertical, included: _included, ...props }) => {
     return (
       <div data-testid="imagery-slider" data-value={value}>
-        <input type="range" value={value} onChange={(e) => onChange && onChange(parseFloat(e.target.value))} {...props} />
+        <input
+          type="range"
+          value={value}
+          onChange={(e) => onChange && onChange(parseFloat(e.target.value))}
+          onMouseUp={(e) => onChangeComplete && onChangeComplete(parseFloat((e.target as HTMLInputElement).value))}
+          {...props}
+        />
       </div>
     );
   }),
@@ -110,7 +128,15 @@ vi.mock("@/utils/openlayers/LayerManager", () => ({
 
 vi.mock("@/utils/openlayers", () => ({
   LayerHelpers: {
-    getLayer: vi.fn(),
+    getLayer: vi.fn((_options, callback) => {
+      const mockLayer = {
+        setOpacity: vi.fn(),
+        setVisible: vi.fn(),
+        set: vi.fn(),
+        getSource: vi.fn(() => ({ refresh: vi.fn() })),
+      };
+      callback(mockLayer as any);
+    }),
   },
   OL_DATA_TYPES: {
     XYZ: "XYZ",
@@ -142,21 +168,21 @@ describe("BasemapSwitcher", () => {
   let mockMap: MockMap;
 
   beforeEach(() => {
-    vi.useFakeTimers();
     mockMap = new MockMap();
 
     // Reset all stores
     useMapStore.setState({ map: null });
-    useAppStore.setState({ urlParameters: {} });
+    useAppStore.setState({ urlParameters: {}, urlParametersLoaded: true });
 
     // Reset all mocks
     vi.clearAllMocks();
+
+    // Default LayerManager return values
+    vi.mocked(LayerManager.getLayersByCategory).mockReturnValue([]);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
-    vi.clearAllTimers();
-    vi.runOnlyPendingTimers();
     vi.useRealTimers();
   });
 
@@ -176,14 +202,15 @@ describe("BasemapSwitcher", () => {
   });
 
   describe("Component Structure", () => {
-    it("renders without crashing when map is provided", () => {
+    it("renders without crashing when map is provided", async () => {
       useMapStore.setState({ map: mockMap as any });
 
-      const { container } = render(<BasemapSwitcher />);
-      vi.runAllTimers();
+      const { findByTestId } = render(<BasemapSwitcher />);
 
-      // Component should render something or return null gracefully
-      expect(container).toBeDefined();
+      // Wait for the dynamic config import and basemap init to complete.
+      const slider = await findByTestId("imagery-slider");
+
+      expect(slider).toBeInTheDocument();
     });
   });
 
@@ -211,6 +238,60 @@ describe("BasemapSwitcher", () => {
       expect(mockBasemapConfig.imageryServices).toBeDefined();
       expect(mockBasemapConfig.topoServices.length).toBeGreaterThan(0);
       expect(mockBasemapConfig.imageryServices.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Basemap Stats Tracking", () => {
+    it("tracks basemap selection via onChangeComplete", async () => {
+      useMapStore.setState({ map: mockMap as any });
+
+      const { findByTestId } = render(<BasemapSwitcher />);
+      const slider = (await findByTestId("imagery-slider")).querySelector("input") as HTMLInputElement;
+
+      fireEvent.mouseUp(slider, { target: { value: "1" } });
+
+      await waitFor(() => {
+        expect(trackBasemap).toHaveBeenCalledWith("Imagery - 2023");
+      });
+    });
+
+    it("tracks basemap selection via debounced onChange when onChangeComplete does not fire", async () => {
+      useMapStore.setState({ map: mockMap as any });
+
+      const { findByTestId } = render(<BasemapSwitcher />);
+      const slider = (await findByTestId("imagery-slider")).querySelector("input") as HTMLInputElement;
+
+      vi.useFakeTimers();
+
+      fireEvent.change(slider, { target: { value: "0" } });
+
+      // Should not track immediately
+      expect(trackBasemap).not.toHaveBeenCalled();
+
+      // Wait for debounce
+      act(() => {
+        vi.advanceTimersByTime(400);
+      });
+
+      vi.useRealTimers();
+
+      await waitFor(() => {
+        expect(trackBasemap).toHaveBeenCalledWith("Imagery - 2022");
+      });
+    });
+
+    it("does not track the same basemap value twice in a row", async () => {
+      useMapStore.setState({ map: mockMap as any });
+
+      const { findByTestId } = render(<BasemapSwitcher />);
+      const slider = (await findByTestId("imagery-slider")).querySelector("input") as HTMLInputElement;
+
+      fireEvent.mouseUp(slider, { target: { value: "1" } });
+      fireEvent.mouseUp(slider, { target: { value: "1" } });
+
+      await waitFor(() => {
+        expect(trackBasemap).toHaveBeenCalledTimes(1);
+      });
     });
   });
 });

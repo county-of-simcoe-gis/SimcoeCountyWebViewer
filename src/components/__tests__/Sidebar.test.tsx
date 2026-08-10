@@ -83,6 +83,8 @@ describe("Sidebar", () => {
     useSidebarStore.setState({
       isOpen: true,
       activeTab: 1,
+      activeTool: null,
+      activeTheme: null,
       tools: [{ id: "1", name: "Measure", type: "tool", imageName: "measure.png", enabled: true }] as SidebarItem[],
       themes: [],
       hideLayers: false,

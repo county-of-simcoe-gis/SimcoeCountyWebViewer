@@ -115,6 +115,7 @@ const mockAppStoreState = {
   setSidebarLoading: vi.fn(),
   setMapLoading: vi.fn(),
   setLayersLoading: vi.fn(),
+  setUserName: vi.fn(),
   // Permissions API helpers used by usePermissions
   setPermissionState: vi.fn(),
   permissions: {},

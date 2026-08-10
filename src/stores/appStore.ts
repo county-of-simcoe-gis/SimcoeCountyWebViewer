@@ -19,6 +19,9 @@ interface AppState {
     homepage: string;
   };
 
+  // Authenticated user
+  userName: string | null;
+
   // URL parameters
   urlParameters: Record<string, string>;
   urlParametersLoaded: boolean;
@@ -31,6 +34,7 @@ interface AppState {
   setConfig: (config: AppConfig | null) => void;
   setConfigError: (error: string | null) => void;
   setAppInfo: (info: Partial<AppState["appInfo"]>) => void;
+  setUserName: (userName: string | null) => void;
   setUrlParameters: (params: Record<string, string>) => void;
   setUrlParametersLoaded: (loaded: boolean) => void;
 
@@ -55,6 +59,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     version: "",
     homepage: "",
   },
+  userName: null,
   urlParameters: {},
   urlParametersLoaded: false,
   permissions: {},
@@ -70,6 +75,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       appInfo: { ...state.appInfo, ...info },
     })),
+  setUserName: (userName) => set({ userName }),
   setUrlParameters: (params) => set({ urlParameters: params, urlParametersLoaded: true }),
   setUrlParametersLoaded: (loaded) => set({ urlParametersLoaded: loaded }),
 

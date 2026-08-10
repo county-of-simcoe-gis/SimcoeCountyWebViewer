@@ -12,6 +12,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { showURLWindow } from "@/utils/helpersUI";
 import { enableUserStorage, getUserStorage, userStorageReady } from "@/utils/userStorage";
 import { getStorageItem } from "@/utils/storage";
+import { trackMapLoad } from "@/lib/appStats";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SidebarSlim from "@/components/SidebarSlim";
@@ -42,6 +43,7 @@ export default function Layout({ children }: LayoutProps) {
   const setConfig = useAppStore((s) => s.setConfig);
   const setConfigLoading = useAppStore((s) => s.setConfigLoading);
   const setConfigError = useAppStore((s) => s.setConfigError);
+  const setUserName = useAppStore((s) => s.setUserName);
   const loadFromConfig = useSidebarStore((s) => s.loadFromConfig);
   const activateDefaultItems = useSidebarStore((s) => s.activateDefaultItems);
   const openSidebar = useSidebarStore((s) => s.openSidebar);
@@ -49,6 +51,15 @@ export default function Layout({ children }: LayoutProps) {
   const { config, loading: configLoading, error: configError } = useConfig();
   const { data: session, status: sessionStatus } = useSession();
   const { checkAllPermissions } = usePermissions();
+
+  // Sync authenticated username into appStore for app stats
+  useEffect(() => {
+    if (sessionStatus === "authenticated" && session?.user?.name) {
+      setUserName(session.user.name);
+    } else if (sessionStatus === "unauthenticated") {
+      setUserName(null);
+    }
+  }, [session, sessionStatus, setUserName]);
 
   // --- User storage sync (restore localStorage from server for saveToServer users) ---
   const userStorageFiredRef = useRef(false);
@@ -124,6 +135,12 @@ export default function Layout({ children }: LayoutProps) {
       if (viewerMode === "ADVANCED") {
         openSidebar();
       }
+
+      // Track map load once per session
+      if (!mapLoadTrackedRef.current) {
+        mapLoadTrackedRef.current = true;
+        trackMapLoad(config.mapId);
+      }
     }
 
     if (configError) {
@@ -131,6 +148,9 @@ export default function Layout({ children }: LayoutProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, configLoading, configError, storageReady, setConfig, setConfigLoading, setConfigError, loadFromConfig, activateDefaultItems]);
+
+  // Ref to ensure we only track map load once per session
+  const mapLoadTrackedRef = useRef(false);
 
   // Run permission checks early on app mount so features can warn the user
   useEffect(() => {

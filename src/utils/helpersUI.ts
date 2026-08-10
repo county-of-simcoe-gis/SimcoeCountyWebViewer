@@ -4,11 +4,11 @@
 
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
-import { useAppStore } from "@/stores/appStore";
 import { useToastStore } from "@/hooks/useToast";
 import { getSharedItem } from "@/utils/storage";
-import { apiUrl } from "@/lib/axiosInstance";
 import { getBasePath, getPublicPath } from "@/utils/getPublicPath";
+
+export { addAppStat } from "@/lib/appStats";
 
 /**
  * All tab names in their default order
@@ -81,40 +81,3 @@ export function showHelpWindow(sectionId?: string): void {
   showURLWindow(`${getPublicPath("/help")}${sectionHash}`, false, "normal", false, false, "Help");
 }
 
-/**
- * App statistics tracking.
- * Sends a fire-and-forget HTTP GET to the internal stats API route.
- * Gated by the includeAppStats config flag and skipped on localhost.
- */
-export function addAppStat(type: string, description: string): void {
-  try {
-    const config = useAppStore.getState().config;
-    if (!config) return;
-
-    // Gate: config opt-out
-    if (config.includeAppStats === false) return;
-
-    // Gate: skip on localhost
-    const hostname = window?.location?.hostname;
-    if (hostname === "localhost" || hostname === "127.0.0.1") return;
-
-    // Build identifier matching old app format: {name}-{version}-{homepage}
-    const { name, version, homepage } = useAppStore.getState().appInfo;
-    let buildName = "";
-    if (name && version) {
-      buildName = `${name}-${version}`;
-    } else {
-      buildName = (config.title || "WebViewer").replace(/\s+/g, "-");
-    }
-    if (homepage) buildName += `-${homepage}`;
-    if (!buildName) buildName = "Unknown";
-
-    // Fire-and-forget GET request to internal NextJS API route
-    const url = apiUrl(`/api/public/stats/write/${encodeURIComponent(buildName)}/${encodeURIComponent(type)}/${encodeURIComponent(description)}`);
-    fetch(url, { method: "GET" }).catch(() => {
-      // Intentionally swallowed — stats are best-effort
-    });
-  } catch {
-    // Intentionally swallowed
-  }
-}

@@ -8,6 +8,7 @@ import { getMapScale } from "@/utils/mapHelpers";
 import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical } from "react-icons/fa";
 import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
 import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
+import { trackLayer } from "@/lib/appStats";
 
 interface LayerItemProps {
   layerInfo: TOCLayer;
@@ -128,6 +129,11 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
     // Block the toggle if the layer has a disclaimer that has not been accepted.
     if (!acceptDisclaimer(currentLayerData, doToggleLayer)) {
       return;
+    }
+
+    // Track user-initiated turn-on only, not default visibility or turn-offs
+    if (!currentLayerData.visible) {
+      trackLayer(currentLayerData.tocDisplayName, group.label);
     }
 
     doToggleLayer();

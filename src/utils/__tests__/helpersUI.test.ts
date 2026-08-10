@@ -143,14 +143,13 @@ describe("helpersUI", () => {
   });
 
   describe("addAppStat", () => {
-    it("sends stat via fetch when config is available", () => {
+    it("sends stat via fetch when collection is enabled", () => {
+      vi.stubEnv("NEXT_PUBLIC_COLLECT_APP_STATS", "true");
       const fetchSpy = vi.spyOn(global, "fetch").mockImplementation(() => Promise.resolve(new Response()));
       useAppStore.setState({
-        config: { includeAppStats: true, title: "TestApp" } as any,
+        config: { title: "TestApp" } as any,
         appInfo: { name: "myapp", version: "1.2.3", homepage: "public" },
       });
-      // Mock hostname to be non-localhost
-      Object.defineProperty(window, "location", { value: { hostname: "example.com" }, writable: true, configurable: true });
 
       addAppStat("click", "button-pressed");
       expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("myapp-1.2.3-public"), expect.objectContaining({ method: "GET" }));

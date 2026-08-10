@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
+import { trackGroup } from "@/lib/appStats";
 
 interface GroupItemProps {
   id: string;
@@ -89,6 +90,10 @@ export default function GroupItem({
   const onGroupVisibilityChange = useCallback(
     (evt: React.ChangeEvent<HTMLInputElement>) => {
       evt.stopPropagation();
+      // Track user-initiated group turn-on only
+      if (!allVisible) {
+        trackGroup(group.label);
+      }
       onLayerVisibilityGroup(group, !allVisible);
     },
     [group, allVisible, onLayerVisibilityGroup],

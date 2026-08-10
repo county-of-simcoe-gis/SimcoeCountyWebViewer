@@ -14,6 +14,7 @@ import { Layer } from "ol/layer";
 import { MdManageHistory } from "react-icons/md";
 import { setStorageItem, getStorageItem } from "@/utils/storage";
 import { setBasemapPrintOnlyDescriptors, type BasemapPrintOnlyDescriptor } from "@/components/basemapPrintOnlyRegistry";
+import { trackBasemap } from "@/lib/appStats";
 import Image from "next/image";
 
 interface BasemapLayer {
@@ -616,11 +617,56 @@ export default function BasemapSwitcher() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config, map, loadImageryLayers, loadStreets, loadWorldImagery, applyBasemap, updateImageryLayers]);
 
+  // Track the last slider value we already reported to avoid duplicate stats
+  const lastTrackedSliderValueRef = useRef<number | null>(null);
+  const sliderTrackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const trackSliderBasemap = useCallback(
+    (sliderValue: number) => {
+      const roundedValue = Math.round(sliderValue);
+      if (roundedValue === lastTrackedSliderValueRef.current) return;
+      lastTrackedSliderValueRef.current = roundedValue;
+
+      const serviceName = config?.imageryServices?.[roundedValue]?.name;
+      if (serviceName) {
+        trackBasemap(`Imagery - ${serviceName}`);
+      }
+    },
+    [config],
+  );
+
+  // Clean up any pending slider tracking timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (sliderTrackTimeoutRef.current) {
+        clearTimeout(sliderTrackTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Event handlers
   const onSliderChange = (value: number | number[]) => {
     const sliderValue = Array.isArray(value) ? value[0] : value;
     updateImageryLayers(sliderValue);
     setImagerySliderValue(sliderValue);
+
+    // Fallback for rc-slider controlled-mode issue where onChangeComplete
+    // may not fire: track the final basemap after the user stops moving.
+    if (sliderTrackTimeoutRef.current) {
+      clearTimeout(sliderTrackTimeoutRef.current);
+    }
+    sliderTrackTimeoutRef.current = setTimeout(() => {
+      trackSliderBasemap(sliderValue);
+    }, 400);
+  };
+
+  const onSliderAfterChange = (value: number | number[]) => {
+    if (sliderTrackTimeoutRef.current) {
+      clearTimeout(sliderTrackTimeoutRef.current);
+      sliderTrackTimeoutRef.current = null;
+    }
+    const sliderValue = Array.isArray(value) ? value[0] : value;
+    trackSliderBasemap(sliderValue);
   };
 
   const onBasemapImageClick = () => {
@@ -762,6 +808,7 @@ export default function BasemapSwitcher() {
     applyBasemap(service);
     setTopoPanelOpen(false);
     setActiveButton("topo");
+    trackBasemap(service.name);
     saveBasemapOptions({
       activeButton: "topo",
       selectedTopoServiceName: service.name,
@@ -774,6 +821,8 @@ export default function BasemapSwitcher() {
     setTopoPanelOpen(false);
     setActiveButton("imagery");
     enableImagery();
+    const currentImageryName = config?.imageryServices?.[imagerySliderValue]?.name;
+    trackBasemap(currentImageryName ? `Imagery - ${currentImageryName}` : "Imagery");
     saveBasemapOptions({
       activeButton: "imagery",
       selectedTopoServiceName: selectedTopoService?.name ?? null,
@@ -951,7 +1000,18 @@ export default function BasemapSwitcher() {
           &nbsp;Streets
         </label>
 
-        <Slider vertical included={false} style={sliderWrapperStyle} marks={imagerySliderMarks} max={imagerySliderMax} min={0} step={0.01} value={imagerySliderValue} onChange={onSliderChange} />
+        <Slider
+          vertical
+          included={false}
+          style={sliderWrapperStyle}
+          marks={imagerySliderMarks}
+          max={imagerySliderMax}
+          min={0}
+          step={0.01}
+          value={imagerySliderValue}
+          onChange={onSliderChange}
+          onChangeComplete={onSliderAfterChange}
+        />
       </div>
 
       {/* Topo Options Panel */}

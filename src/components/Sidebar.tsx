@@ -7,9 +7,10 @@ import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
-import { useEffect, useState, Suspense, useCallback, useMemo } from "react";
+import { useEffect, useState, Suspense, useCallback, useMemo, useRef } from "react";
 import { lazy } from "react";
 import { useSession } from "next-auth/react";
+import { trackTheme, trackTool, trackMyMaps } from "@/lib/appStats";
 import { FaLock } from "react-icons/fa";
 import ReportsNavBar from "@/components/ReportsNavBar";
 import { SectionTitle } from "@/components/ui";
@@ -149,6 +150,10 @@ export default function Sidebar() {
   const [activeToolComponent, setActiveToolComponent] = useState<React.ReactNode>(null);
   const [activeThemeComponent, setActiveThemeComponent] = useState<React.ReactNode>(null);
 
+  // Refs to avoid tracking the initial null render and double-fires from StrictMode
+  const trackedThemeRef = useRef<string | null>(null);
+  const trackedToolRef = useRef<string | null>(null);
+
   // Close handlers clear both the local component and the store-level active flag so the
   // tab indicator (green dot) doesn't reappear when tools/themes lists are rebuilt (e.g. switching layouts).
   const handleCloseTool = useCallback(() => {
@@ -164,8 +169,9 @@ export default function Sidebar() {
   // Sync theme component when activeTheme changes (for URL parameter activation)
   useEffect(() => {
     if (activeTheme && visibleThemes.length > 0) {
-      // Find the theme in the list
-      const theme = visibleThemes.find((t) => t.id === activeTheme);
+      // Find the theme in the list. activeTheme may be the item id (default activation)
+      // or the component/name key (sidebar/More menu click), so match either.
+      const theme = visibleThemes.find((t) => t.id === activeTheme || (t.component || t.name) === activeTheme);
       if (theme) {
         const componentName = theme.component || theme.name;
         const ThemeComponent = themeComponents[componentName];
@@ -176,6 +182,12 @@ export default function Sidebar() {
             </Suspense>
           );
           setActiveThemeComponent(component);
+        }
+
+        // Track theme activation once per distinct selection
+        if (trackedThemeRef.current !== activeTheme) {
+          trackedThemeRef.current = activeTheme;
+          trackTheme(theme.name);
         }
       }
     } else if (!activeTheme) {
@@ -203,8 +215,9 @@ export default function Sidebar() {
   // Sync tool component when activeTool changes (for URL parameter activation)
   useEffect(() => {
     if (activeTool && visibleTools.length > 0) {
-      // Find the tool in the list
-      const tool = visibleTools.find((t) => t.id === activeTool);
+      // Find the tool in the list. activeTool may be the item id (default activation)
+      // or the component/name key (sidebar/More menu click), so match either.
+      const tool = visibleTools.find((t) => t.id === activeTool || (t.component || t.name) === activeTool);
       if (tool) {
         const componentName = tool.component || tool.name;
         const ToolComponent = toolComponents[componentName];
@@ -215,6 +228,12 @@ export default function Sidebar() {
             </Suspense>
           );
           setActiveToolComponent(component);
+        }
+
+        // Track tool activation once per distinct selection
+        if (trackedToolRef.current !== activeTool) {
+          trackedToolRef.current = activeTool;
+          trackTool(tool.name);
         }
       }
     } else if (!activeTool) {
@@ -288,6 +307,12 @@ export default function Sidebar() {
 
   const handleTabSelect = (index: number) => {
     setActiveTab(index);
+
+    // Track when the user selects the My Maps tab (not via URL params/programmatic activation)
+    const selectedTab = visibleTabs[index];
+    if (selectedTab === "mymaps") {
+      trackMyMaps();
+    }
   };
 
   // React to pendingActivation from sidebarStore (replaces activateSidebarItem event listener)
