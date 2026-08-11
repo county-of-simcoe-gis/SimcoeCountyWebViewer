@@ -4,7 +4,7 @@
 
 import axios, { AxiosError } from "axios";
 import axiosInstance from "@/lib/axiosInstance";
-import { AddFeatureRequestBody, ArcGisEditResponse, DeleteFeatureRequestBody, UpdateFeatureRequestBody } from "./types";
+import { AddFeatureRequestBody, ArcGisEditResponse, DeleteFeatureRequestBody, SqlFeature, UpdateFeatureRequestBody } from "./types";
 
 export type { ArcGisEditResponse };
 
@@ -44,7 +44,7 @@ async function postFeature<TRequest, TResponse>(
  */
 export function addArcGISFeature(
   url: string,
-  features: Record<string, unknown>[],
+  features: SqlFeature[],
 ): Promise<FeatureEditResult<ArcGisEditResponse>> {
   const body: AddFeatureRequestBody = { url, features };
   return postFeature<AddFeatureRequestBody, ArcGisEditResponse>("/secure/arcgis/feature/add", body);
@@ -55,7 +55,7 @@ export function addArcGISFeature(
  */
 export function updateArcGISFeature(
   url: string,
-  features: Record<string, unknown>[],
+  features: SqlFeature[],
 ): Promise<FeatureEditResult<ArcGisEditResponse>> {
   const body: UpdateFeatureRequestBody = { url, features };
   return postFeature<UpdateFeatureRequestBody, ArcGisEditResponse>("/secure/arcgis/feature/update", body);

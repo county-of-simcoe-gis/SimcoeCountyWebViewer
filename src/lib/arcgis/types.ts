@@ -9,6 +9,16 @@ export interface ArcGisFeature {
   geometry?: Record<string, unknown>;
 }
 
+export interface WktGeometry {
+  wkt: string;
+  srid: number;
+}
+
+export interface SqlFeature {
+  attributes?: Record<string, unknown>;
+  geometry?: WktGeometry | null;
+}
+
 export interface ArcGisEditorTokenResponse {
   token?: string;
   expires?: number;
@@ -44,17 +54,15 @@ export interface ArcGisEditResponse {
 export interface AddFeatureRequestBody {
   /** Feature service layer URL (must be in the approved services list). */
   url: string;
-  /** Array of features to add. Either this or `feature` must be provided. */
-  features?: ArcGisFeature[];
-  /** Legacy URL-encoded JSON string used by AppTrack. */
-  feature?: string;
+  /** Array of features to add. Each feature must use WKT geometry with SRID. */
+  features?: SqlFeature[];
 }
 
 export interface UpdateFeatureRequestBody {
   /** Feature service layer URL (must be in the approved services list). */
   url: string;
-  /** Array of features to update; each must include `attributes.OBJECTID`. */
-  features: ArcGisFeature[];
+  /** Array of features to update; each must include `attributes.OBJECTID` and use WKT geometry with SRID. */
+  features: SqlFeature[];
 }
 
 export interface DeleteFeatureRequestBody {

@@ -261,6 +261,11 @@ describe("BasemapSwitcher", () => {
       const { findByTestId } = render(<BasemapSwitcher />);
       const slider = (await findByTestId("imagery-slider")).querySelector("input") as HTMLInputElement;
 
+      // Wait for async initialization to set the default slider value to the newest imagery
+      await waitFor(() => {
+        expect(slider.parentElement).toHaveAttribute("data-value", "1");
+      });
+
       vi.useFakeTimers();
 
       fireEvent.change(slider, { target: { value: "0" } });

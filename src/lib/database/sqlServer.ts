@@ -49,6 +49,9 @@ export class SQLServer {
     if (dbLower === "weblive") {
       return process.env.SQL_WEBLIVE_USER || "";
     }
+    if (dbLower === "geoedit") {
+      return process.env.SQL_GEOEDIT_USER || "";
+    }
     return "";
   }
 
@@ -62,6 +65,9 @@ export class SQLServer {
     }
     if (dbLower === "weblive") {
       return process.env.SQL_WEBLIVE_PASS || "";
+    }
+    if (dbLower === "geoedit") {
+      return process.env.SQL_GEOEDIT_PASS || "";
     }
     return "";
   }
@@ -131,6 +137,29 @@ export class SQLServer {
   }
 
   /**
+   * Execute a query and return every recordset. Useful for stored procedures that
+   * may emit intermediate debug result sets before the final output set.
+   */
+  async executeWithRecordsets<T = Record<string, unknown>>(query: string, values: Array<{ name: string; type: string; typeOpts?: Record<string, unknown>; value: unknown }>): Promise<T[][]> {
+    try {
+      const pool = await this.getPool();
+      const request = pool.request();
+
+      for (const param of values) {
+        const sqlType = this.getSQLType(param.type, param.typeOpts);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        request.input(param.name, sqlType as any, param.value);
+      }
+
+      const result = await request.query(query);
+      return (result.recordsets || []) as T[][];
+    } catch (error) {
+      console.error("SQL Server executeWithRecordsets error:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Get SQL type from string
    */
   private getSQLType(type: string, typeOpts?: Record<string, unknown>): sql.ISqlType | sql.ISqlTypeFactory {
@@ -173,10 +202,7 @@ export class SQLServer {
    * Execute a statement that does not return a recordset (INSERT / UPDATE / DELETE / EXEC).
    * Returns the number of rows affected.
    */
-  async executeWithValues(
-    query: string,
-    values: Array<{ name: string; type: string; typeOpts?: Record<string, unknown>; value: unknown }>
-  ): Promise<number> {
+  async executeWithValues(query: string, values: Array<{ name: string; type: string; typeOpts?: Record<string, unknown>; value: unknown }>): Promise<number> {
     try {
       const pool = await this.getPool();
       const request = pool.request();
