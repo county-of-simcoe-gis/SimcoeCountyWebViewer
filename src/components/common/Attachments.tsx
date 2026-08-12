@@ -21,6 +21,8 @@ interface AttachmentResponse {
 
 interface AttachmentsProps {
   attachmentUrl: string;
+  /** Called when any attachment item is clicked, before the default open behaviour. */
+  onAttachmentClick?: (attachment: AttachmentInfo) => void;
 }
 
 /**
@@ -28,7 +30,7 @@ interface AttachmentsProps {
  * Images open in a lightbox modal; other types open in a new tab.
  * Migrated from the legacy SimcoeCountyWebViewer Attachments.jsx component.
  */
-const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
+const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl, onAttachmentClick }) => {
   const [attachments, setAttachments] = useState<AttachmentInfo[]>([]);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -92,6 +94,7 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
 
   const handleAttachmentClick = useCallback(
     (attachment: AttachmentInfo) => {
+      onAttachmentClick?.(attachment);
       const url = getAttachmentUrl(attachment.url);
       if (attachment.contentType.includes("image")) {
         showURLWindow(url, false);
@@ -99,7 +102,7 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
         window.open(url, "_blank");
       }
     },
-    [getAttachmentUrl],
+    [getAttachmentUrl, onAttachmentClick],
   );
 
   if (isLoading) {
@@ -122,10 +125,23 @@ const Attachments: React.FC<AttachmentsProps> = ({ attachmentUrl }) => {
   }
 
   if (attachments.length === 1 && attachments[0].contentType.includes("image")) {
+    const singleAttachment = attachments[0];
     return (
-      <span className="text-xs text-gray-400 italic">
-        <img src={getAttachmentUrl(attachments[0].url)} alt={attachments[0].name} />
-      </span>
+      <div className="flex flex-col gap-1">
+        <img src={getAttachmentUrl(singleAttachment.url)} alt={singleAttachment.name} />
+        <span
+          className="text-blue-600 underline cursor-pointer hover:text-blue-800 text-xs w-fit"
+          onClick={() => handleAttachmentClick(singleAttachment)}
+          role="button"
+          tabIndex={0}
+          aria-label={`Open attachment ${singleAttachment.name}`}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") handleAttachmentClick(singleAttachment);
+          }}
+        >
+          {singleAttachment.name}
+        </span>
+      </div>
     );
   }
 

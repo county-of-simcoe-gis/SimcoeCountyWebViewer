@@ -314,6 +314,32 @@ export class AuthenticationRequiredError extends Error {
 }
 
 /**
+ * Custom error class for when the user is authenticated but does not have
+ * access to the requested map (HTTP 403). Redirecting to sign in again would
+ * cause an endless login loop, so this must never trigger signIn().
+ */
+export class MapAccessDeniedError extends Error {
+  mapId: string;
+  constructor(mapId: string) {
+    super(`You don't have access to map "${mapId}"`);
+    this.name = "MapAccessDeniedError";
+    this.mapId = mapId;
+  }
+}
+
+/**
+ * Custom error class for when the requested map does not exist (HTTP 404).
+ */
+export class MapNotFoundError extends Error {
+  mapId: string;
+  constructor(mapId: string) {
+    super(`Map "${mapId}" was not found`);
+    this.name = "MapNotFoundError";
+    this.mapId = mapId;
+  }
+}
+
+/**
  * Load configuration from the map API and translate using JSONTranslation
  */
 async function loadConfigFromApi(mapId: string, mapVersion?: string): Promise<Partial<AppConfig> | null> {
@@ -364,15 +390,23 @@ async function loadConfigFromApi(mapId: string, mapVersion?: string): Promise<Pa
     // console.log("Successfully loaded and translated config from API:", apiConfig);
     return apiConfig;
   } catch (error) {
-    // Check if this is a 401 Unauthorized or 404 Not Found error
-    // Both can indicate a secured map that requires authentication:
-    // - 401: API explicitly says authentication required
-    // - 404: Map may be filtered out for unauthenticated users (appears as "not found")
+    // Map the HTTP status codes returned by the map API to distinct errors:
+    // - 401: secured map, anonymous user — authentication is required
+    // - 403: authenticated user lacks the required role/location — access denied
+    //        (redirecting to sign in again would cause an endless loop)
+    // - 404: the requested map does not exist
     if (error && typeof error === "object" && "response" in error) {
       const axiosError = error as { response?: { status?: number } };
       const status = axiosError.response?.status;
-      if (status === 401 || (status === 404 && mapId && mapId.trim() !== "")) {
+      const hasMapId = mapId && mapId.trim() !== "";
+      if (status === 401) {
         throw new AuthenticationRequiredError(mapId);
+      }
+      if (status === 403 && hasMapId) {
+        throw new MapAccessDeniedError(mapId);
+      }
+      if (status === 404 && hasMapId) {
+        throw new MapNotFoundError(mapId);
       }
     }
     console.error("Error loading config from API:", error);
@@ -696,8 +730,11 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
           }
         }
       } catch (apiError) {
-        // Re-throw authentication errors so the UI can redirect to login
-        if (apiError instanceof AuthenticationRequiredError) {
+        // Re-throw auth/access errors so the UI can handle them explicitly:
+        // - AuthenticationRequiredError (401) → redirect to login
+        // - MapAccessDeniedError (403) → toast + default map fallback
+        // - MapNotFoundError (404) → error message
+        if (apiError instanceof AuthenticationRequiredError || apiError instanceof MapAccessDeniedError || apiError instanceof MapNotFoundError) {
           throw apiError;
         }
         console.warn("Failed to load config from API, using base config:", apiError);

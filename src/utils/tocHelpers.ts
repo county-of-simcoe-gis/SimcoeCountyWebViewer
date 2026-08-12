@@ -1104,7 +1104,7 @@ export function sortGroupsLayers(groups: TOCLayerGroup[], sortAlpha = false, cal
 /**
  * Build ESRI layer with all metadata and properties
  */
-interface BuildESRILayerOptions {
+export interface BuildESRILayerOptions {
   tocType?: "LIST" | "FOLDER";
   group: TOCLayerGroup;
   layer: {
@@ -1186,12 +1186,12 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   const opacity = layer.options.opacity || 1;
 
   // DISCLAIMER
-  const disclaimerTitle = layer.options.disclaimerTitle;
-  const disclaimerUrl = layer.options.disclaimerUrl;
-  const disclaimerWarning = (layer.options as { disclaimerWarning?: string }).disclaimerWarning;
+  const disclaimerTitle = layer.options.disclaimerTitle || "";
+  const disclaimerUrl = layer.options.disclaimerUrl || "";
+  const disclaimerWarning = (layer.options as { disclaimerWarning?: string }).disclaimerWarning || "";
   let disclaimer: LayerDisclaimer | undefined = undefined;
   if (disclaimerUrl !== "" || disclaimerTitle !== "" || disclaimerWarning !== "") {
-    disclaimer = { title: disclaimerTitle || "", url: disclaimerUrl || "", warning: disclaimerWarning || "" };
+    disclaimer = { title: disclaimerTitle, url: disclaimerUrl, warning: disclaimerWarning };
   }
 
   const minScale = layer.options.minScale || 0;

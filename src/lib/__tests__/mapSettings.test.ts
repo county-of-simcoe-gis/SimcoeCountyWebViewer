@@ -66,12 +66,32 @@ describe("mapSettings authorization", () => {
   });
 
   describe("getMap", () => {
-    it("returns undefined for a secured map with empty allowed_roles when the user has no county location", async () => {
+    it("returns the access-denied sentinel for a secured map with empty allowed_roles when the user has no county location", async () => {
       queryRawMock.mockResolvedValueOnce([{ json: "{}", allowed_roles: "", is_secured: true, published: true }]);
 
       const user = makeUser({ roles: ["planning"] });
 
       const result = await mapSettings.getMap("SomeMap", user);
+
+      expect(result).toEqual({ accessDenied: true });
+    });
+
+    it("returns the access-denied sentinel for a secured map when the user is anonymous", async () => {
+      queryRawMock.mockResolvedValueOnce([{ json: "{}", allowed_roles: "", is_secured: true, published: true }]);
+
+      const user = makeUser();
+
+      const result = await mapSettings.getMap("SomeMap", user);
+
+      expect(result).toEqual({ accessDenied: true });
+    });
+
+    it("returns undefined when the map does not exist", async () => {
+      queryRawMock.mockResolvedValueOnce([]);
+
+      const user = makeUser({ roles: ["planning"] });
+
+      const result = await mapSettings.getMap("MissingMap", user);
 
       expect(result).toBeUndefined();
     });
@@ -84,6 +104,7 @@ describe("mapSettings authorization", () => {
       const result = await mapSettings.getMap("SomeMap", user);
 
       expect(result).toBeDefined();
+      expect(result).not.toEqual({ accessDenied: true });
     });
   });
 
@@ -95,7 +116,7 @@ describe("mapSettings authorization", () => {
 
       const result = await new Promise((resolve) => mapSettings.getDefaultMap(user, resolve));
 
-      expect(result).toBeUndefined();
+      expect(result).toEqual({ accessDenied: true });
     });
 
     it("returns a non-secured default map even if allowed_roles happens to be populated", async () => {

@@ -46,7 +46,9 @@ export default function ProfileButton() {
 
   const handleSignOut = () => {
     setIsDropdownOpen(false);
-    signOut();
+    // Land on the app root (no MAP_ID) after sign-out so any automatic
+    // re-authentication doesn't loop back to a secured map.
+    signOut({ callbackUrl: window.location.origin + (process.env.NEXT_PUBLIC_BASE_PATH || "") });
   };
 
   const toggleDropdown = () => {

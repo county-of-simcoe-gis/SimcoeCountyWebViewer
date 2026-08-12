@@ -26,9 +26,23 @@ export interface DatabaseError {
   error: string;
 }
 
+/**
+ * Sentinel returned by mapSettings lookups when the map exists but the user
+ * is not authorized to access it. Distinguished from `undefined` (map not
+ * found) so API routes can return 401/403 instead of a misleading 404.
+ */
+export interface AccessDenied {
+  accessDenied: true;
+}
+
+/** Type guard for the AccessDenied sentinel. */
+export function isAccessDenied(value: unknown): value is AccessDenied {
+  return typeof value === "object" && value !== null && (value as AccessDenied).accessDenied === true;
+}
+
 export type MapResult = MapConfig | undefined;
 export type AllMapsResult = MapItem[] | DatabaseError;
-export type CallbackResult<T> = T | DatabaseError | undefined;
+export type CallbackResult<T> = T | DatabaseError | AccessDenied | undefined;
 
 // API Response types
 export interface ApiSuccessResponse<T> {

@@ -1,6 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import type { MapItem, MapConfig, User, CallbackResult } from "@/types/mapSettings";
+import type { AccessDenied, MapItem, MapConfig, User, CallbackResult } from "@/types/mapSettings";
 import { checkUserAccess, COUNTY_OF_SIMCOE_LOCATION } from "@/types/mapSettings";
+
+/** Sentinel returned when a map exists but the user is not authorized to access it. */
+const ACCESS_DENIED: AccessDenied = { accessDenied: true };
 
 /**
  * Split a comma-separated allowed_roles string into a clean list of role/location
@@ -125,17 +128,19 @@ export const mapSettings = {
   },
 
   /**
-   * Get a specific map configuration by map name
+   * Get a specific map configuration by map name.
+   * Returns undefined when the map does not exist, and the ACCESS_DENIED
+   * sentinel when it exists but the user is not authorized to view it.
    */
-  getMap: async function (mapName: string, user: User): Promise<MapConfig | undefined> {
+  getMap: async function (mapName: string, user: User): Promise<MapConfig | AccessDenied | undefined> {
     try {
       console.log("Get Map Settings using stored procedure for map:", mapName);
 
-      // Determine if user needs secured maps based on roles or locations
-      const isSecured = needsSecuredContent(user);
-
-      // Call stored procedure to get map settings
-      console.log("Calling stored procedure to get map settings for map:", mapName, isSecured);
+      // Always fetch the row regardless of its is_secured flag (secured=true makes
+      // the SP's `is_secured = secured OR secured = true` clause match any row).
+      // This is required so a secured map the user can't access returns the row
+      // (→ ACCESS_DENIED) instead of zero rows (→ indistinguishable from "not found").
+      // Access is still enforced below by canAccessSecuredItem, so nothing leaks.
       const mapResults = await prisma.$queryRaw<
         {
           json: string | null;
@@ -143,7 +148,7 @@ export const mapSettings = {
           is_secured: boolean;
           published: boolean;
         }[]
-      >`SELECT * FROM public.usp_get_map_settings(${mapName}::varchar, NULL::varchar, ${isSecured}::boolean)`;
+      >`SELECT * FROM public.usp_get_map_settings(${mapName}::varchar, NULL::varchar, ${true}::boolean)`;
 
       if (!mapResults || mapResults.length === 0) {
         return undefined;
@@ -157,7 +162,7 @@ export const mapSettings = {
         published: map.published,
       };
 
-      return canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : undefined;
+      return canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : ACCESS_DENIED;
     } catch (error) {
       console.error("Error in getMap function:", error);
       throw new Error("Internal server error while retrieving map");
@@ -165,16 +170,15 @@ export const mapSettings = {
   },
 
   /**
-   * Get a specific version of a map configuration
+   * Get a specific version of a map configuration.
+   * Calls back with undefined when not found, ACCESS_DENIED when unauthorized.
    */
   getMapVersion: async function (mapName: string, version: string, user: User, callback: (result: CallbackResult<MapConfig>) => void): Promise<void> {
     try {
       console.log("Get Map Version Settings using stored procedure for map:", mapName, "version:", version);
 
-      // Determine if user needs secured maps based on roles or locations
-      const isSecured = needsSecuredContent(user);
-
-      // Call stored procedure to get map settings with specific version
+      // Fetch regardless of is_secured (see getMap) so access-denied is distinguishable
+      // from not-found; access is enforced by canAccessSecuredItem below.
       const mapResults = await prisma.$queryRaw<
         {
           json: string | null;
@@ -182,7 +186,7 @@ export const mapSettings = {
           is_secured: boolean;
           published: boolean;
         }[]
-      >`SELECT * FROM public.usp_get_map_settings(${mapName}::varchar, ${version}::varchar, ${isSecured}::boolean)`;
+      >`SELECT * FROM public.usp_get_map_settings(${mapName}::varchar, ${version}::varchar, ${true}::boolean)`;
 
       if (!mapResults || mapResults.length === 0) {
         return callback(undefined);
@@ -196,7 +200,7 @@ export const mapSettings = {
         published: map.published,
       };
 
-      callback(canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : undefined);
+      callback(canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : ACCESS_DENIED);
     } catch (error) {
       console.error("Error in getMapVersion function:", error);
       callback({ error: "Internal server error while retrieving map version" });
@@ -204,16 +208,15 @@ export const mapSettings = {
   },
 
   /**
-   * Get the default map configuration
+   * Get the default map configuration.
+   * Calls back with undefined when not found, ACCESS_DENIED when unauthorized.
    */
   getDefaultMap: async function (user: User, callback: (result: CallbackResult<MapConfig>) => void): Promise<void> {
     try {
       console.log("Get Default Map Settings using stored procedure");
 
-      // Determine if user needs secured maps based on roles or locations
-      const isSecured = needsSecuredContent(user);
-
-      // Call stored procedure to get default map (null map_name means get default)
+      // Fetch regardless of is_secured (see getMap) so access-denied is distinguishable
+      // from not-found; access is enforced by canAccessSecuredItem below.
       const mapResults = await prisma.$queryRaw<
         {
           json: string | null;
@@ -221,7 +224,7 @@ export const mapSettings = {
           is_secured: boolean;
           published: boolean;
         }[]
-      >`SELECT * FROM public.usp_get_map_settings(NULL::varchar, NULL::varchar, ${isSecured}::boolean)`;
+      >`SELECT * FROM public.usp_get_map_settings(NULL::varchar, NULL::varchar, ${true}::boolean)`;
 
       if (!mapResults || mapResults.length === 0) {
         return callback(undefined);
@@ -235,7 +238,7 @@ export const mapSettings = {
         published: map.published,
       };
 
-      callback(canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : undefined);
+      callback(canAccessSecuredItem(user, mapResult.is_secured, mapResult.allowed_roles) ? mapResult : ACCESS_DENIED);
     } catch (error) {
       console.error("Error in getDefaultMap function:", error);
       callback({ error: "Internal server error while retrieving default map" });

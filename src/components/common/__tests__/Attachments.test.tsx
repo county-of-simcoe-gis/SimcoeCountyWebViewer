@@ -75,6 +75,50 @@ describe("Attachments", () => {
     expect(container.querySelector(".flex")).toBeNull();
   });
 
+  it("renders image and filename link for a single image attachment", async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve({
+          attachmentGroups: [
+            {
+              attachmentInfos: [{ url: "https://example.com/att/photo.jpg", name: "photo.jpg", contentType: "image/jpeg", size: 1024 }],
+            },
+          ],
+        }),
+    } as Response);
+
+    render(<Attachments attachmentUrl="https://example.com/attachments?f=json&token=abc123" />);
+
+    await waitFor(() => {
+      expect(screen.getByAltText("photo.jpg")).toBeInTheDocument();
+    });
+
+    const link = screen.getByRole("button", { name: "Open attachment photo.jpg" });
+    expect(link).toHaveTextContent("photo.jpg");
+
+    fireEvent.click(link);
+    expect(showURLWindow).toHaveBeenCalledWith("https://example.com/att/photo.jpg?token=abc123", false);
+  });
+
+  it("renders list view for multiple image attachments instead of the single-image branch", async () => {
+    fetchSpy.mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve(mockAttachmentResponse),
+    } as Response);
+
+    render(<Attachments attachmentUrl="https://example.com/attachments?f=json" />);
+
+    await waitFor(() => {
+      expect(screen.getByText("photo.jpg")).toBeInTheDocument();
+      expect(screen.getByText("diagram.png")).toBeInTheDocument();
+    });
+
+    // No single rendered image should appear in the multi-attachment list view
+    expect(screen.queryByAltText("photo.jpg")).toBeNull();
+    expect(screen.queryByAltText("diagram.png")).toBeNull();
+  });
+
   it("opens image attachments via showURLWindow", async () => {
     fetchSpy.mockResolvedValue({
       ok: true,

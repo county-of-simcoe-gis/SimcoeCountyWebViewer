@@ -28,9 +28,7 @@ const AttributeTableAttachmentsDialog: React.FC<Props> = ({ isOpen, onClose, tit
           <FaTimes size={12} />
         </button>
       </div>
-      <div className="text-sm">
-        {attachmentUrl ? <Attachments attachmentUrl={attachmentUrl} /> : <span className="opacity-60">No attachment URL available.</span>}
-      </div>
+      <div className="text-sm">{attachmentUrl ? <Attachments attachmentUrl={attachmentUrl} onAttachmentClick={onClose} /> : <span className="opacity-60">No attachment URL available.</span>}</div>
     </Modal>
   );
 };

@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { GeoJSON, WKT, EsriJSON } from "ol/format";
+import { GeoJSON, WKT } from "ol/format";
 import Feature from "ol/Feature";
 import Geometry from "ol/geom/Geometry";
+import { geometryToEsriJSON, getEsriGeometryType } from "@/utils/identifyGeometry";
 import MultiPolygon from "ol/geom/MultiPolygon";
 import { useMapStore } from "@/stores/mapStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
@@ -102,12 +103,6 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
     return wktFormat.writeGeometry(geom);
   }, []);
 
-  // Generate ESRI JSON for ArcGIS queries
-  const generateEsriJSON = useCallback((geom: Geometry): string => {
-    const esriFormat = new EsriJSON();
-    return JSON.stringify(esriFormat.writeGeometry(geom));
-  }, []);
-
   // Query layers for features
   const refreshLayers = useCallback(async () => {
     if (!map) {
@@ -170,8 +165,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       const source = layer.getSource() as TileWMS | ImageWMS;
       if (!wfsUrl && source && useGeometryQuery) {
         let wmsUrl: string | undefined;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sourceAny = source as any;
+        const sourceAny = source as unknown as { getUrls?: () => string[] | undefined; getUrl?: () => string | undefined };
         if (typeof sourceAny.getUrls === "function") {
           wmsUrl = sourceAny.getUrls()?.[0];
         } else if (typeof sourceAny.getUrl === "function") {
@@ -189,11 +183,11 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
 
           if (isArcGISLayer) {
             // Use ESRI JSON for ArcGIS layers
-            const esriGeometry = generateEsriJSON(geometry);
+            const esriGeometry = geometryToEsriJSON(geometry);
             const mapSize = map.getSize() || [0, 0];
             const resolution = `${mapSize[0]},${mapSize[1]},96`;
             const extent = map.getView().calculateExtent();
-            const geometryType = geometry.getType() !== "Point" ? "esriGeometryPolygon" : "esriGeometryPoint";
+            const geometryType = getEsriGeometryType(geometry);
 
             queryUrl = queryUrl
               .replace("#GEOMETRY#", encodeURIComponent(esriGeometry))
@@ -410,7 +404,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
 
     setLayers(layerList);
     setIsLoading(false);
-  }, [map, geometry, queryPoint, layerFilter, getAllLayers, getDisplayNameFromFeature, generateWKT, generateEsriJSON]);
+  }, [map, geometry, queryPoint, layerFilter, getAllLayers, getDisplayNameFromFeature, generateWKT]);
 
   // Refresh layers when component mounts or geometry changes
   useEffect(() => {

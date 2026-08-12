@@ -5,6 +5,16 @@
 import { NextResponse } from "next/server";
 import { mapSettings } from "@/lib/mapSettings";
 import type { User, MapConfig, MapItem, CallbackResult } from "@/types/mapSettings";
+import { isAccessDenied } from "@/types/mapSettings";
+
+/**
+ * Resolve an access-denied result to the appropriate HTTP response:
+ * 401 for anonymous users (they can sign in), 403 for authenticated users
+ * who simply lack the required role/location (signing in again would loop).
+ */
+function accessDeniedResponse(isAuthenticated: boolean, message: string): NextResponse {
+  return NextResponse.json({ error: message }, { status: isAuthenticated ? 403 : 401 });
+}
 
 /**
  * Extract user information from the request using NextAuth session
@@ -108,16 +118,15 @@ export function getDefaultMap(user: User | null): Promise<NextResponse> {
           return;
         }
 
+        if (isAccessDenied(result)) {
+          resolve(accessDeniedResponse(isAuthenticated, "Default map requires authentication"));
+          return;
+        }
+
         // Check if result contains an error
         if (result && typeof result === "object" && "error" in result) {
           console.error("getDefaultMap returned error:", result.error);
           resolve(NextResponse.json({ error: result.error }, { status: 500 }));
-          return;
-        }
-
-        // For anonymous users, check if the default map is secured
-        if (!isAuthenticated && result && typeof result === "object" && "is_secured" in result && result.is_secured) {
-          resolve(NextResponse.json({ error: "Default map requires authentication" }, { status: 401 }));
           return;
         }
 
@@ -141,33 +150,31 @@ export function getMap(id: string, user: User | null): Promise<NextResponse> {
 
     console.log(`getMap request for ID: ${id} from ${isAuthenticated ? "authenticated" : "anonymous"} user:`, requestUser.id);
 
-    mapSettings.getMap(id, requestUser, (result: CallbackResult<MapConfig>) => {
-      try {
-        if (result === undefined) {
-          resolve(NextResponse.json({ error: "Map not found" }, { status: 404 }));
-          return;
-        }
+    mapSettings
+      .getMap(id, requestUser)
+      .then((result) => {
+        try {
+          if (result === undefined) {
+            resolve(NextResponse.json({ error: "Map not found" }, { status: 404 }));
+            return;
+          }
 
-        // Check if result contains an error
-        if (result && typeof result === "object" && "error" in result) {
-          console.error("getMap returned error:", result.error);
-          resolve(NextResponse.json({ error: result.error }, { status: 500 }));
-          return;
-        }
+          if (isAccessDenied(result)) {
+            resolve(accessDeniedResponse(isAuthenticated, "Map requires authentication"));
+            return;
+          }
 
-        // For anonymous users, check if the map is secured
-        if (!isAuthenticated && result && typeof result === "object" && "is_secured" in result && result.is_secured) {
-          resolve(NextResponse.json({ error: "Map requires authentication" }, { status: 401 }));
-          return;
+          // Success - return the map config
+          resolve(NextResponse.json(result, { status: 200 }));
+        } catch (processingError) {
+          console.error("Error processing getMap result:", processingError);
+          resolve(NextResponse.json({ error: "Internal server error processing map" }, { status: 500 }));
         }
-
-        // Success - return the map config
-        resolve(NextResponse.json(result, { status: 200 }));
-      } catch (callbackError) {
-        console.error("Error processing getMap callback:", callbackError);
-        resolve(NextResponse.json({ error: "Internal server error processing map" }, { status: 500 }));
-      }
-    });
+      })
+      .catch((error) => {
+        console.error("Error in getMap:", error);
+        resolve(NextResponse.json({ error: "Internal server error while retrieving map" }, { status: 500 }));
+      });
   });
 }
 
@@ -188,16 +195,15 @@ export function getMapVersion(id: string, version: string, user: User | null): P
           return;
         }
 
+        if (isAccessDenied(result)) {
+          resolve(accessDeniedResponse(isAuthenticated, "Map version requires authentication"));
+          return;
+        }
+
         // Check if result contains an error
         if (result && typeof result === "object" && "error" in result) {
           console.error("getMapVersion returned error:", result.error);
           resolve(NextResponse.json({ error: result.error }, { status: 500 }));
-          return;
-        }
-
-        // For anonymous users, check if the map version is secured
-        if (!isAuthenticated && result && typeof result === "object" && "is_secured" in result && result.is_secured) {
-          resolve(NextResponse.json({ error: "Map version requires authentication" }, { status: 401 }));
           return;
         }
 
