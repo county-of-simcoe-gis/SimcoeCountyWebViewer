@@ -42,8 +42,8 @@ import BasemapSwitcher from "@/components/BasemapSwitcher";
 // Import property report click functionality
 import PropertyReportClick from "@/components/PropertyReportClick";
 import LiveLayerClick from "@/components/LiveLayerClick";
-import MapPopup from "@/components/MapPopup";
-import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
+import MapPopup from "@/components/map/MapPopup";
+import { MapContextMenuContainer } from "@/components/map/MapContextMenuContainer";
 import ResultsPopup, { type Result } from "@/components/ResultsPopup";
 import ReportsFeatureList from "@/components/ReportsFeatureList";
 import { useReportsStore } from "@/stores/reportsStore";

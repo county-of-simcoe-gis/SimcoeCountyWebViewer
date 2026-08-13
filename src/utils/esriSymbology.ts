@@ -3,18 +3,17 @@
  * into an OpenLayers style, so client-side vector layers (rendered from GeoJSON, e.g. for
  * editing/selection) reflect the symbology actually configured on the FeatureServer instead of a
  * hardcoded client-side color. Unlike the TOC/theme ArcGIS layers (which render server-side via
- * ImageArcGISRest/TileArcGISRest and never need this), RoadClosures loads individual OL Features
- * so the renderer must be translated to an OL style client-side.
+ * ImageArcGISRest/TileArcGISRest and never need this)
  *
  * Legend swatches are ALSO derived from this same renderer JSON (`buildEsriLegendItems`) rather
- * than the ArcGIS `/legend` endpoint used by TOC/ThemeServiceToggler: the RoadClosures
- * FeatureServer sits behind a secured gateway that only allow-lists a small set of routes
+ * than the ArcGIS `/legend` endpoint used by TOC/ThemeServiceToggler: some secured editing
+ * FeatureServers sit behind a gateway that only allow-lists a small set of routes
  * (query/addFeatures/updateFeatures/deleteFeatures/layer-info), and `/legend` isn't one of them
  * (returns a generic "Invalid URL" error regardless of token). Deriving the legend from the
  * renderer we already fetch for styling also guarantees the swatch visually matches what's
  * actually drawn on the map.
  *
- * Supports the renderer/symbol shapes actually returned by the RoadClosures FeatureServer layers
+ * Supports the renderer/symbol shapes returned by secured editing FeatureServer layers
  * (simple + uniqueValue renderers; esriSLS line symbols and esriPMS picture-marker symbols), plus
  * a best-effort fallback for esriSMS/esriSFS. Scale-dependent sizing (`visualVariables` of type
  * "sizeInfo") is approximated by converting the OL render resolution to an Esri map scale

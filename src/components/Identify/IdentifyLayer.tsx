@@ -8,8 +8,6 @@ import { downloadFile } from "@/utils/helpersBrowser";
 import Feature from "ol/Feature";
 import type Geometry from "ol/geom/Geometry";
 
-// Re-export from shared utility for backward compatibility
-export { filterFeatureKeys } from "@/utils/identifyHelpers";
 import { filterFeatureKeys } from "@/utils/identifyHelpers";
 
 /** Export layer features to a CSV file */

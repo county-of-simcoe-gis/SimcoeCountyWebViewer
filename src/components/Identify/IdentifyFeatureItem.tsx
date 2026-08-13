@@ -2,9 +2,8 @@
 
 import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
-import { filterFeatureKeys } from "./IdentifyLayer";
 import { useMapStore } from "@/stores/mapStore";
-import { formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
+import { filterFeatureKeys, formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 import { useMyMapsStore, createMyMapsItem, type DrawType } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";

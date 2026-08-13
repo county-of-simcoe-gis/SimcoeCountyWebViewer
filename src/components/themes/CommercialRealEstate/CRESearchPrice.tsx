@@ -1,6 +1,6 @@
 "use client";
 
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { getPriceFromItems, getPriceToItems } from "./creObjects";
 
 const fromItems = getPriceFromItems();

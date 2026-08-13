@@ -306,7 +306,16 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
   if (!tab.schema || !tab.store) {
     return (
       <div className="flex items-center justify-center h-full text-sm opacity-60">
-        {tab.loading ? "Loading attribute data…" : tab.error ? <span className="text-error">{tab.error}</span> : "No data"}
+        {tab.loading ? (
+          <span className="flex items-center gap-2">
+            <span className="loading loading-spinner loading-md" />
+            Loading attribute data…
+          </span>
+        ) : tab.error ? (
+          <span className="text-error">{tab.error}</span>
+        ) : (
+          "No data"
+        )}
       </div>
     );
   }

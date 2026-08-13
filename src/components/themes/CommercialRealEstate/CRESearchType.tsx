@@ -1,6 +1,6 @@
 "use client";
 
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { getTypes } from "./creObjects";
 
 const types = getTypes();

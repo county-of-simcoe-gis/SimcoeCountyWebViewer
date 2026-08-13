@@ -24,7 +24,7 @@ const mockRegisterHandler = vi.fn();
 const mockUnregisterHandler = vi.fn();
 
 // Mock useInteractionManager hook
-vi.mock("@/components/MapContainer", () => ({
+vi.mock("@/components/map/MapContainer", () => ({
   useInteractionManager: vi.fn(() => ({
     registerHandler: mockRegisterHandler,
     unregisterHandler: mockUnregisterHandler,

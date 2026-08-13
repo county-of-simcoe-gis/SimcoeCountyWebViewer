@@ -16,7 +16,7 @@ import { trackMapLoad } from "@/lib/appStats";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import SidebarSlim from "@/components/SidebarSlim";
-import MapContainer from "@/components/MapContainer";
+import MapContainer from "@/components/map/MapContainer";
 import LoadingScreen from "@/components/LoadingScreen";
 import MyMapsService from "@/components/myMaps/MyMapsService";
 import GlobalDrawingOptionsPopup from "@/components/myMaps/GlobalDrawingOptionsPopup";

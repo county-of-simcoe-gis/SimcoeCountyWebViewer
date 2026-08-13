@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useSearchStore } from "@/stores/searchStore";
-import type { SearchResult } from "@/interfaces/searchResult";
+import type { SearchResult } from "@/types/searchResult";
 
 describe("searchStore", () => {
   beforeEach(() => {

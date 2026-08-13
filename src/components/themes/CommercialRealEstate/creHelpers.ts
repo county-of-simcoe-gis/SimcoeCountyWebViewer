@@ -4,7 +4,7 @@ import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
 import { GeoJSON } from "ol/format";
 import { PROPERTY_TYPES, type PropertyType } from "./creObjects";
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { showMessage } from "@/utils/helpersUI";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import creConfig from "./config.json";

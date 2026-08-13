@@ -17,7 +17,7 @@ import { SectionTitle } from "@/components/ui";
 
 // Lazy load tool components
 const MeasureTool = lazy(() => import("@/components/tools/Measure/MeasureTool"));
-const CoordinatesTool = lazy(() => import("@/components/tools/Coorfinates/CoordinatesTool"));
+const CoordinatesTool = lazy(() => import("@/components/tools/Coordinates/CoordinatesTool"));
 const SettingsTool = lazy(() => import("@/components/tools/Settings/SettingsTool"));
 const PrintTool = lazy(() => import("@/components/tools/Print/PrintTool"));
 const PrintLocalTool = lazy(() => import("@/components/tools/PrintLocal/PrintLocalTool"));

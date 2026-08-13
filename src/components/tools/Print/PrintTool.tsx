@@ -21,6 +21,7 @@ import { printConfig, PrintSize, PrintFormat } from "./printConfig";
 import { buildPrintRequest, PrintState } from "./printRequest";
 import { getBaseUrl, mergePrintSizes } from "./printUtils";
 import { useToast } from "@/hooks/useToast";
+import { getAccessToken } from "@/utils/auth";
 import { Layer } from "ol/layer";
 
 interface PrintToolProps {
@@ -327,8 +328,15 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
       };
 
       if (useBearerToken) {
-        // Add authorization header if needed
-        // requestOptions.headers['Authorization'] = `Bearer ${token}`;
+        // Attach the bearer token so the MapFish print server (and the secured
+        // GeoServer fetches it performs) can authenticate. Mirrors the legacy
+        // app's post() useBearerToken flow.
+        const token = await getAccessToken();
+        if (token) {
+          (requestOptions.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
+        } else {
+          console.warn("[Print] Secured layers present but no access token available");
+        }
       }
 
       const response = await fetch(url, requestOptions);

@@ -15,7 +15,7 @@ import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { InteractionManager } from "@/utils/openlayers/InteractionManager";
 import ResultsPopup, { createPropertyResult, createCondoResult, type Result } from "@/components/ResultsPopup";
 import { getAxiosClient as getAxiosClientUtil } from "@/lib/axiosInstance";
-import { useInteractionManager } from "@/components/MapContainer";
+import { useInteractionManager } from "@/components/map/MapContainer";
 
 // Parcel URL template for WFS queries
 const parcelURLTemplate = (mainURL: string, x: number, y: number) => `${mainURL}&cql_filter=INTERSECTS(geom,%20POINT%20(${x}%20${y}))`;

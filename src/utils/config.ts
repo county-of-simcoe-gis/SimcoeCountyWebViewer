@@ -1,6 +1,6 @@
 // Configuration types and utilities for the Simcoe County Web Viewer
 import { JSONToSettings } from "@/lib/JSONTranslation";
-import type { SettingsType } from "@/interfaces/SettingsType";
+import type { SettingsType } from "@/types/SettingsType";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import localConfig from "@/config.json";
 import { getPublicPath } from "@/utils/getPublicPath";
@@ -588,7 +588,9 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
 }
 
 /**
- * Load configuration from the public config.json file and process URL parameters
+ * Load configuration from the bundled src/config.json and process URL parameters.
+ * (public/config.json is a build-time artifact produced by scripts/strip-secure-blocks.py
+ * for the public deployment; the app itself always uses the bundled src/config.json.)
  */
 export async function loadConfig(configSecured: Record<string, unknown> = {}): Promise<AppConfig> {
   try {

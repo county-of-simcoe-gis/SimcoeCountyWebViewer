@@ -32,16 +32,6 @@ vi.mock("@/stores/legendStore", () => ({
   }),
 }));
 
-vi.mock("@/stores/helpModalStore", () => ({
-  useHelpModalStore: Object.assign(
-    vi.fn((selector?: any) => {
-      const state = { openHelp: vi.fn() };
-      return typeof selector === "function" ? selector(state) : state;
-    }),
-    { getState: () => ({ openHelp: vi.fn() }) },
-  ),
-}));
-
 vi.mock("@/stores/tocStore", () => ({
   useTOCStore: Object.assign(
     vi.fn((selector?: any) => {

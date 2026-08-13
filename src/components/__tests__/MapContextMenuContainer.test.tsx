@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, waitFor } from "@testing-library/react";
-import { MapContextMenuContainer } from "@/components/MapContextMenuContainer";
+import { MapContextMenuContainer } from "@/components/map/MapContextMenuContainer";
 import { useMapStore } from "@/stores/mapStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { useMyMapsStore } from "@/stores/myMapsStore";
@@ -80,7 +80,7 @@ vi.mock("@/config.json", () => ({
 }));
 
 // Mock useInteractionManager hook
-vi.mock("@/components/MapContainer", () => ({
+vi.mock("@/components/map/MapContainer", () => ({
   useInteractionManager: vi.fn(() => ({
     registerHandler: vi.fn(),
     unregisterHandler: vi.fn(),
@@ -202,7 +202,7 @@ describe("MapContextMenuContainer", () => {
 
   it("adds ContextMenuInteraction to map on mount", async () => {
     // Get the mocked useInteractionManager function
-    const { useInteractionManager: mockUseInteractionManager } = await import("@/components/MapContainer");
+    const { useInteractionManager: mockUseInteractionManager } = await import("@/components/map/MapContainer");
 
     render(<MapContextMenuContainer />);
 

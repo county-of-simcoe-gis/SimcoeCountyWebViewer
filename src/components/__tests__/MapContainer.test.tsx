@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
-import MapContainer from "@/components/MapContainer";
+import MapContainer from "@/components/map/MapContainer";
 import { useAppStore } from "@/stores/appStore";
 
 // Mock CSS imports

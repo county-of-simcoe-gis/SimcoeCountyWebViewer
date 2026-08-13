@@ -1,6 +1,6 @@
 "use client";
 
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { useMapStore } from "@/stores/mapStore";
 import { showURLWindow } from "@/utils/helpersUI";
 import { numberWithCommas } from "./creHelpers";

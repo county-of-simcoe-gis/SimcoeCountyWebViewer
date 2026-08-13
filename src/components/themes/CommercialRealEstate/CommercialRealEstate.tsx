@@ -6,7 +6,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useInteractionManagerStore, type InteractionResult } from "@/stores/interactionManagerStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { PROPERTY_TYPES } from "./creObjects";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { updateAllLayerFilters, fetchAllResults } from "./creHelpers";

@@ -6,7 +6,7 @@ import { useTOCStore } from "@/stores/tocStore";
 import { GeoJSON } from "ol/format";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken } from "@/utils/auth";
-import { useInteractionManager } from "@/components/MapContainer";
+import { useInteractionManager } from "@/components/map/MapContainer";
 import { createIdentifyResult } from "@/components/ResultsPopup";
 import type { IdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";

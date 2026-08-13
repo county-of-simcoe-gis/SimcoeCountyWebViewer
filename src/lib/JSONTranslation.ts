@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SettingsType } from "@/interfaces/SettingsType";
+import { SettingsType } from "@/types/SettingsType";
 
 /**
  * Interface for mapping configuration that defines how to translate between

@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import CRESearch from "../CRESearch";
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "../stores/creStore";
 
 // Mock sub-components to isolate CRESearch tests
 vi.mock("../CRESearchPropTypes", () => ({

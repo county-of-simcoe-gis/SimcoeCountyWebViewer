@@ -1,6 +1,6 @@
 "use client";
 
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { useMapStore } from "@/stores/mapStore";
 import { PROPERTY_TYPES, PROPERTY_TYPE_COLORS, type PropertyType } from "./creObjects";
 import { fetchAllResults } from "./creHelpers";

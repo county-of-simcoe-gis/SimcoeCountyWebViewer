@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { buildCqlFilterForType, numberWithCommas, fetchAllResults } from "../creHelpers";
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "../stores/creStore";
 import * as helpersUI from "@/utils/helpersUI";
 import { getAxiosClient } from "@/lib/axiosInstance";
 

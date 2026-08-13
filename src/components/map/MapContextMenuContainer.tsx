@@ -8,7 +8,7 @@ import { useReportsStore } from "@/stores/reportsStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
-import { useInteractionManager } from "@/components/MapContainer";
+import { useInteractionManager } from "@/components/map/MapContainer";
 import { useAppStore } from "@/stores/appStore";
 import { toLonLat } from "ol/proj";
 import { FaFileAlt, FaMapMarkerAlt, FaExclamationTriangle, FaInfoCircle, FaGoogle, FaEllipsisH, FaCompressArrowsAlt } from "react-icons/fa";

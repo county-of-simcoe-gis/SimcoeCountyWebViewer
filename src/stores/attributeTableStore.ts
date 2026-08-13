@@ -168,7 +168,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
     store: null,
     totalCount: null,
     loadedCount: 0,
-    loading: false,
+    loading: true,
     error: null,
     sort: null,
     filters: {},
@@ -322,7 +322,7 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
 
   setError: (layerId, error) =>
     set((s) => ({
-      tabs: s.tabs.map((t) => (t.layerId === layerId ? { ...t, error, loading: false } : t)),
+      tabs: s.tabs.map((t) => (t.layerId === layerId ? { ...t, error, ...(error ? { loading: false } : {}) } : t)),
     })),
 
   setAbortController: (layerId, ctrl) =>

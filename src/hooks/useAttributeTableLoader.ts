@@ -309,7 +309,10 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
       const msg = err instanceof WfsPrimaryKeyError ? "This layer cannot be paged (no primary key and no sortable attribute found)." : err instanceof Error ? err.message : String(err);
       useAttributeTableStore.getState().setError(layerId, msg);
     } finally {
-      if (!ctrl.signal.aborted) useAttributeTableStore.getState().setLoading(layerId, false);
+      const current = useAttributeTableStore.getState().tabs.find((t) => t.layerId === layerId);
+      if (current && current.abortController === ctrl) {
+        useAttributeTableStore.getState().setLoading(layerId, false);
+      }
     }
   }, []);
 
@@ -377,7 +380,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
     const prev = lastKeyByTab.current.get(active.layerId);
     if (prev === undefined) {
       lastKeyByTab.current.set(active.layerId, activeKey);
-      if (active.store === null && !active.loading && !active.error) {
+      if (active.store === null && !active.error) {
         void runReload(active.layerId);
       }
       return;
@@ -395,15 +398,6 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
       if (!open.has(k)) lastKeyByTab.current.delete(k);
     }
   }, [openLayerIds]);
-
-  useEffect(() => {
-    return () => {
-      const id = activeIdRef.current;
-      if (!id) return;
-      const tab = useAttributeTableStore.getState().tabs.find((t) => t.layerId === id);
-      tab?.abortController?.abort();
-    };
-  }, []);
 
   const loadMore = useCallback(async () => {
     const id = activeIdRef.current;

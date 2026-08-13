@@ -8,7 +8,7 @@ vi.mock("@/components/Header", () => ({
 }));
 
 // Mock MapContainer to avoid OpenLayers complexity
-vi.mock("@/components/MapContainer", () => ({
+vi.mock("@/components/map/MapContainer", () => ({
   default: () => <div id="map" role="presentation" />,
 }));
 
@@ -44,10 +44,6 @@ vi.mock("@/components/Legend/LegendModal", () => ({
 
 vi.mock("@/components/AttributeTable/AttributeTablePanel", () => ({
   default: () => <div data-testid="attribute-table" />,
-}));
-
-vi.mock("@/components/HelpModal", () => ({
-  default: () => <div data-testid="help-modal" />,
 }));
 
 vi.mock("@/components/MoreMenu", () => ({

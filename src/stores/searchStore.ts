@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import type { SearchResult } from "@/interfaces/searchResult";
+import type { SearchResult } from "@/types/searchResult";
 
 interface PendingSearch {
   value: string;

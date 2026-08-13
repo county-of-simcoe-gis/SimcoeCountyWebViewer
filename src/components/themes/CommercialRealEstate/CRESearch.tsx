@@ -1,6 +1,6 @@
 "use client";
 
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { useMapStore } from "@/stores/mapStore";
 import { updateAllLayerFilters, fetchAllResults } from "./creHelpers";
 import CRESearchPropTypes from "./CRESearchPropTypes";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "./stores/creStore";
 import { getLandSizeFromItems, getLandSizeToItems } from "./creObjects";
 
 const fromItems = getLandSizeFromItems();

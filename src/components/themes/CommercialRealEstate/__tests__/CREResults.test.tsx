@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import CREResults from "../CREResults";
-import { useCREStore } from "@/stores/creStore";
+import { useCREStore } from "../stores/creStore";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
 import * as helpersUI from "@/utils/helpersUI";

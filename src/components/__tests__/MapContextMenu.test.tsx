@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MapContextMenu, ContextMenuItem } from "@/components/MapContextMenu";
+import { MapContextMenu, ContextMenuItem } from "@/components/map/MapContextMenu";
 import React from "react";
 
 describe("MapContextMenu", () => {
