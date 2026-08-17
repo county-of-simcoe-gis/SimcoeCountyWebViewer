@@ -983,7 +983,7 @@ export default function BasemapSwitcher() {
             <button
               className="absolute bottom-0 right-0 !bg-base-300 !border !border-base-content/50 rounded-sm cursor-pointer !p-px flex items-center justify-center text-base-content transition-all duration-200 !w-5 !h-5 z-[3] hover:bg-base-200 hover:text-base-content hover:scale-110"
               onClick={onSettingsClick}
-              title="Imagery Settings"
+              title="Select imagery year and settings"
             >
               <MdManageHistory size={14} className="ml-[1px]" />
             </button>
