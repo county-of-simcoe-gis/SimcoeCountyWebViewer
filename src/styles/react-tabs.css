@@ -1,0 +1,103 @@
+/* React Tabs overrides — 3rd-party library, kept as CSS */
+.react-tabs__tab-list {
+  margin: 0 !important;
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  white-space: nowrap;
+  display: table;
+  table-layout: fixed;
+  border-bottom: 2px solid #aaa !important;
+}
+
+.react-tabs__tab {
+  box-sizing: border-box;
+  display: table-cell !important;
+  border-bottom: none;
+  bottom: -1px;
+  position: relative;
+  list-style: none;
+  padding: 6px 8px !important;
+  cursor: pointer;
+  font-size: 10pt;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1) 0%, rgba(229, 229, 229, 1) 100%);
+  user-select: none;
+  border-color: #aaa;
+  border-right: 1px solid #ddd !important;
+  vertical-align: top;
+  height: 70px;
+}
+
+.react-tabs__tab .tab-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 4px;
+}
+
+.react-tabs__tab .tab-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.react-tabs__tab .tab-text {
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.react-tabs__tab .tab-dot {
+  height: 10px;
+  width: 10px;
+  background-color: rgb(120, 204, 50);
+  border-radius: 50%;
+  display: inline-block;
+  position: absolute;
+  top: 3px;
+  right: 5px;
+}
+
+.react-tabs__tab:focus:after {
+  background: none !important;
+}
+
+.react-tabs__tab--selected {
+  box-shadow: 1px 1px 0px 0px #ccc !important;
+  background: linear-gradient(to bottom, rgba(240, 249, 255, 1) 0%, rgb(191, 214, 228) 100%) !important;
+  color: #000000 !important;
+  border: 1px solid #90b5d5 !important;
+}
+
+.react-tabs__tab-panel {
+  display: none;
+}
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .react-tabs__tab-list {
+  border-bottom-color: #2a323c !important;
+}
+
+[data-theme="dark"] .react-tabs__tab {
+  background: linear-gradient(to bottom, #1d232a 0%, #15191e 100%);
+  border-color: #2a323c;
+  border-right-color: #2a323c !important;
+  color: #a6adbb;
+}
+
+[data-theme="dark"] .react-tabs__tab--selected {
+  background: linear-gradient(to bottom, #1e293b 0%, #1e3a5f 100%) !important;
+  color: #e5e7eb !important;
+  border-color: #3b82f6 !important;
+  box-shadow: 1px 1px 0px 0px #1a1a2e !important;
+}
+
+.react-tabs__tab-panel--selected {
+  display: block;
+}

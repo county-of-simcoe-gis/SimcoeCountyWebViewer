@@ -1,0 +1,185 @@
+/* Map Control Zone System */
+
+/* Individual zone styles - each zone is now its own OpenLayers control */
+.map-control-zone {
+  position: absolute;
+}
+
+.ol-control {
+  background: none;
+  box-shadow: none;
+}
+/* Zone content wrapper */
+.map-control-zone-content {
+  width: 0px; /* prevent wrapper from interfering with map interaction */
+  display: flex;
+  gap: 0.5em;
+  pointer-events: none; /* Allow map interaction through empty space */
+  background: none;
+  box-shadow: none;
+}
+
+/* Control item wrapper */
+.map-control-item {
+  pointer-events: auto; /* Enable interaction for controls */
+}
+
+/* Top-left zone */
+.map-control-zone-top-left {
+  top: 0.5em;
+  left: 0.5em;
+}
+
+.map-control-zone-top-left .map-control-zone-content {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* Top-right zone */
+.map-control-zone-top-right {
+  top: 0.5em;
+  right: 0.5em;
+}
+
+.map-control-zone-top-right .map-control-zone-content {
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+/* Bottom-left zone */
+.map-control-zone-bottom-left {
+  bottom: 0.5em;
+  left: 0.5em;
+}
+
+.map-control-zone-bottom-left .map-control-zone-content {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+/* Bottom-right zone */
+.map-control-zone-bottom-right {
+  bottom: 2em;
+  right: 0em;
+}
+
+/* When ScaleLine is hidden, drop the bottom-right zone to the bottom */
+.no-scale-line .map-control-zone-bottom-right {
+  bottom: 0.5em;
+}
+
+.map-control-zone-bottom-right .map-control-zone-content {
+  flex-direction: column-reverse;
+  align-items: flex-end;
+}
+
+/* Legacy control positioning for OpenLayers built-in controls */
+/* GitHub Button - to the right of zoom controls */
+.github-button-control {
+  position: absolute;
+  top: 0.5em;
+  left: 2.5em; /* Right of zoom controls */
+}
+
+/* Current Location Control - below zoom controls */
+.current-location-control {
+  position: absolute;
+  top: 3.5em; /* Below zoom controls (zoom controls are ~3em tall) */
+  left: 0.5em; /* Same left position as zoom controls */
+}
+
+/* Extent History Controls - below current location */
+.extent-history-control {
+  position: absolute;
+  top: 6.5em; /* Below current location control */
+  left: 0.5em; /* Same left position as zoom/current location */
+}
+
+.grid-control {
+  position: absolute;
+  top: 6em; /* Above scale control */
+  left: 0.5em;
+}
+.zoom-extent-control {
+  position: absolute;
+  top: 8.5em; /* Above scale control */
+  left: 0.5em;
+}
+
+/* Scale Control - above built-in scalebar */
+.scale-control {
+  position: absolute;
+  bottom: 2em; /* Above scalebar (scalebar is usually ~2em high) */
+  right: 0.5em;
+}
+
+/* Scale Selector Control - above scale control and scalebar */
+.scale-selector-control {
+  position: absolute;
+  bottom: 4em; /* Above scalebar (scalebar is usually ~2em high) */
+  right: 0.5em;
+}
+
+/* Override the default OpenLayers control styles to work with zones */
+.ol-scale-line {
+  right: 5px;
+  left: auto !important;
+  bottom: 5px;
+}
+.ol-full-screen {
+  left: 5px;
+  bottom: 5px;
+  right: auto;
+  top: auto;
+}
+
+/* Rotate Control - positioned in bottom-left zone above fullscreen */
+.ol-rotate {
+  left: 0.5em;
+  bottom: 2em;
+  position: absolute;
+}
+
+/* Responsive adjustments for control zones */
+@media (max-width: 768px) {
+  /* Adjust zone spacing and positioning for mobile */
+  .map-control-zone-top-left {
+    top: 0.3em;
+    left: 0.3em;
+  }
+
+  .map-control-zone-top-right {
+    top: 0.3em;
+    right: 0.3em;
+  }
+
+  .map-control-zone-bottom-left {
+    bottom: 0.3em;
+    left: 0.3em;
+  }
+
+  .map-control-zone-bottom-right {
+    bottom: 0.3em;
+    right: 0.3em;
+  }
+
+  /* Adjust zone content spacing for mobile */
+  .map-control-zone-content {
+    gap: 0.3em;
+  }
+
+  /* Legacy responsive adjustments for compatibility */
+  .current-location-control {
+    left: 4.5em; /* Closer on mobile */
+  }
+
+  .grid-control {
+    top: 3.5em; /* Stack vertically on mobile */
+    left: 7em;
+  }
+
+  .zoom-extent-control {
+    top: 3.5em; /* Stack vertically on mobile */
+    left: 0.5em;
+  }
+}

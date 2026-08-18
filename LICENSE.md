@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) [2019] [Corporation of the the County of Simcoe]
+Copyright (c) [2026] [Corporation of the the County of Simcoe]
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

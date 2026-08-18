@@ -1,0 +1,49 @@
+/* Measure Tool Styles - Map Overlay Tooltips Only */
+/* These styles are required for OpenLayers overlay positioning */
+
+/* Help tooltip for map overlay */
+.measure-tooltip-help {
+  position: relative;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.measure-tooltip-help::before {
+  border-top: 6px solid rgba(0, 0, 0, 0.7);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  margin-left: -6px;
+  left: 50%;
+}
+
+/* Measure tooltip for map overlay */
+.measure-tooltip {
+  position: relative;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 4px;
+  color: white;
+  padding: 4px 8px;
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.measure-tooltip::before {
+  border-top: 6px solid rgba(0, 0, 0, 0.8);
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  content: "";
+  position: absolute;
+  bottom: -6px;
+  margin-left: -6px;
+  left: 50%;
+}

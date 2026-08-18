@@ -1,0 +1,194 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+@plugin "daisyui";
+
+/* Configure dark: variant to respond to [data-theme="dark"] (set by ThemeProvider)
+   instead of Tailwind v4's default @media (prefers-color-scheme: dark).
+   This ensures manually selecting "Light" in the app overrides the OS dark preference. */
+@variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Simcoe County custom DaisyUI theme */
+@plugin "daisyui/theme" {
+  name: "simcoe";
+  default: true;
+  color-scheme: light;
+  --color-primary: #3980cc;
+  --color-primary-content: #ffffff;
+  --color-secondary: #6ea8cf;
+  --color-secondary-content: #ffffff;
+  --color-accent: #e7a614;
+  --color-accent-content: #ffffff;
+  --color-neutral: #5b5b5b;
+  --color-neutral-content: #ffffff;
+  --color-base-100: #ffffff;
+  --color-base-200: #f9f9f9;
+  --color-base-300: #e5e5e5;
+  --color-base-content: #2d343c;
+  --color-info: #007bff;
+  --color-info-content: #ffffff;
+  --color-success: #28a745;
+  --color-success-content: #ffffff;
+  --color-warning: #f9c280;
+  --color-warning-content: #2d343c;
+  --color-error: #dc3545;
+  --color-error-content: #ffffff;
+}
+
+/* Dark theme variant — keeps brand colors, inverts base surfaces */
+@plugin "daisyui/theme" {
+  name: "dark";
+  color-scheme: dark;
+  --color-primary: #4a9ae5;
+  --color-primary-content: #ffffff;
+  --color-secondary: #6ea8cf;
+  --color-secondary-content: #ffffff;
+  --color-accent: #e7a614;
+  --color-accent-content: #ffffff;
+  --color-neutral: #b8bfc9;
+  --color-neutral-content: #1d232a;
+  --color-base-100: #1d232a;
+  --color-base-200: #191e24;
+  --color-base-300: #15191e;
+  --color-base-content: #d0d6e0;
+  --color-info: #3b82f6;
+  --color-info-content: #ffffff;
+  --color-success: #34d399;
+  --color-success-content: #ffffff;
+  --color-warning: #f9c280;
+  --color-warning-content: #1d232a;
+  --color-error: #ef4444;
+  --color-error-content: #ffffff;
+}
+
+/* Custom CSS properties for brand gradients */
+:root,
+[data-theme="simcoe"] {
+  --sc-gradient-default: linear-gradient(to bottom, #ffffff 0%, #e5e5e5 100%);
+  --sc-gradient-active: linear-gradient(to bottom, #f0f9ff 0%, #bfd6e4 100%);
+  --sc-gradient-hover: linear-gradient(to bottom, #f2f5f6 0%, #c8d7dc 100%);
+  --sc-gradient-header: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
+}
+
+[data-theme="dark"] {
+  --sc-gradient-default: linear-gradient(to bottom, #1d232a 0%, #15191e 100%);
+  --sc-gradient-active: linear-gradient(to bottom, #1e293b 0%, #1e3a5f 100%);
+  --sc-gradient-hover: linear-gradient(to bottom, #252d37 0%, #1e293b 100%);
+  --sc-gradient-header: linear-gradient(to bottom, #1e3a5f 0%, #162d4a 100%);
+}
+
+/* Global base styles */
+body {
+  overflow: hidden;
+  font-family: Arial, sans-serif;
+}
+
+/* Map positioning */
+.app-map {
+  position: absolute;
+  top: 52px;
+  left: 370px;
+  right: 0px;
+  bottom: 0px;
+  background-color: #f0f0f0;
+  transition: left 0.3s ease-in-out;
+}
+
+.app-map.sidebar-closed {
+  left: 65px;
+}
+
+/* Mobile: map always full width, sidebar overlays */
+@media (max-width: 770px) {
+  .app-map,
+  .app-map.sidebar-closed {
+    left: 0 !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  #map,
+  .app-map,
+  .basemap-switcher,
+  .ol-control,
+  .ol-viewport {
+    display: none !important;
+  }
+
+  .fixed.inset-0 {
+    position: static !important;
+    background: white !important;
+    padding: 0 !important;
+  }
+}
+
+/* Glow animations - applied dynamically via DOM classList */
+@keyframes glow-green {
+  0% {
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+    border-color: rgb(34, 197, 94);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+    border-color: rgb(34, 197, 94);
+  }
+  100% {
+    box-shadow: none;
+    border-color: inherit;
+  }
+}
+
+@keyframes glow-blue {
+  0% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+    border-color: rgb(59, 130, 246);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8);
+    border-color: rgb(59, 130, 246);
+  }
+  100% {
+    box-shadow: none;
+    border-color: inherit;
+  }
+}
+
+.glow-container-green {
+  animation: glow-green 1s ease-out;
+}
+.glow-container-blue {
+  animation: glow-blue 1s ease-out;
+}
+
+/* DRAFT overlay (legacy styling) */
+.sc-draft-header {
+  position: relative;
+}
+
+.sc-draft-header::after {
+  content: "DRAFT";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(15deg);
+  color: red;
+  font-size: 22px;
+  font-weight: 900;
+  font-style: normal;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 1;
+  text-shadow:
+    -1px -1px 0 #444,
+    1px -1px 0 #444,
+    -1px 1px 0 #444,
+    1px 1px 0 #444;
+}
+
+/* Utility: clamp text to 2 lines with ellipsis (cross-browser fallback) */
+.sc-line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

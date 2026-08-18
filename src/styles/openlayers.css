@@ -1,0 +1,270 @@
+/* OpenLayers Override Styles
+   These styles customize OpenLayers default UI controls and popup elements.
+   Kept as CSS because they target OL's internal DOM structure. */
+
+/* Ensure OpenLayers map fills container */
+.app-map .ol-viewport {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Zoom controls */
+.app-map .ol-zoom {
+  top: 0.5em;
+  left: 0.5em;
+}
+
+/* Rotate control */
+.app-map .ol-rotate {
+  top: 0.5em;
+  right: 0.5em;
+}
+
+/* Full screen button - bottom left */
+.app-map .ol-full-screen {
+  position: absolute !important;
+  bottom: 0.5em !important;
+  left: 0.5em !important;
+  top: auto !important;
+  right: auto !important;
+  width: auto !important;
+  height: auto !important;
+  z-index: 100;
+}
+
+.app-map .ol-full-screen button {
+  width: 1.375em !important;
+  height: 1.375em !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  border: none !important;
+  border-radius: 2px !important;
+}
+
+/* Scale line positioning - bottom right */
+.app-map .ol-scale-line {
+  position: absolute !important;
+  bottom: 0.5em !important;
+  right: 0.5em !important;
+  left: auto !important;
+  top: auto !important;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* Basemap switcher positioning */
+.basemap-switcher {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+/* Loading state overlay */
+.app-map.loading::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  z-index: 999;
+}
+
+.app-map.loading::after {
+  content: "Loading map...";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* OpenLayers Overlay Container */
+.ol-overlay-container.ol-selectable {
+  position: absolute;
+  pointer-events: auto;
+}
+
+/* OL Popup container */
+.ol-popup {
+  display: block;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #cccccc;
+  bottom: 12px;
+  left: -50px;
+  max-width: 270px !important;
+  border-radius: 3px !important;
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+
+/* Popup arrow pointer */
+.ol-popup:after,
+.ol-popup:before {
+  top: 100%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
+}
+
+.ol-popup:after {
+  border-top-color: white;
+  border-width: 10px;
+  left: 48px;
+  margin-left: -10px;
+}
+
+.ol-popup:before {
+  border-top-color: #cccccc;
+  border-width: 11px;
+  left: 48px;
+  margin-left: -11px;
+}
+
+/* Popup header */
+.popup-header {
+  height: 25px;
+  background: linear-gradient(to bottom, #3980cc 0%, #2865a2 100%);
+  border-bottom: 2px solid #e7a614;
+  color: #fff !important;
+  padding-left: 6px;
+  cursor: grab;
+  font-size: 15px;
+  border-radius: 3px !important;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.popup-header:active {
+  cursor: grabbing;
+}
+
+/* Popup navigation/close buttons */
+.ol-popup-closer {
+  position: absolute;
+  top: -3px;
+  right: 2px;
+  font-size: 15pt;
+  padding: 0 4px;
+  color: white;
+  text-decoration: none;
+}
+
+.ol-popup-previous {
+  position: absolute;
+  top: -3px;
+  right: 48px;
+  font-size: 15pt;
+  padding: 0 4px;
+  color: white;
+  text-decoration: none;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+
+.ol-popup-next {
+  position: absolute;
+  top: -3px;
+  right: 27px;
+  font-size: 15pt;
+  padding: 0 4px;
+  color: white;
+  text-decoration: none;
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+}
+
+.ol-popup-previous:after {
+  content: "\23F4";
+}
+
+.ol-popup-next:after {
+  content: "\23F5";
+}
+
+.ol-popup-closer:after {
+  content: "\2716";
+}
+
+.popup-nav-disabled .ol-popup-previous {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ol-popup-closer:hover,
+.ol-popup-next:hover,
+.ol-popup-previous:hover {
+  opacity: 0.8;
+}
+
+/* Popup content area */
+.ol-popup-content {
+  position: relative;
+  width: 258px;
+  max-width: 258px !important;
+  z-index: 1;
+  padding: 6px !important;
+  background-color: #fff !important;
+  min-height: 50px !important;
+  overflow: hidden;
+}
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .ol-full-screen button {
+  background-color: rgba(29, 35, 42, 0.85) !important;
+  color: #d0d6e0 !important;
+}
+
+[data-theme="dark"] .ol-scale-line {
+  background: rgba(29, 35, 42, 0.85);
+  color: #d0d6e0;
+}
+
+[data-theme="dark"] .ol-scale-line-inner {
+  border-color: #d0d6e0;
+  color: #d0d6e0;
+}
+
+[data-theme="dark"] .app-map.loading::before {
+  background: rgba(29, 35, 42, 0.8);
+}
+
+[data-theme="dark"] .app-map.loading::after {
+  background: #1d232a;
+  color: #d0d6e0;
+}
+
+[data-theme="dark"] .ol-popup {
+  background-color: #1d232a;
+  border-color: #2a323c;
+}
+
+[data-theme="dark"] .ol-popup:after {
+  border-top-color: #1d232a;
+}
+
+[data-theme="dark"] .ol-popup:before {
+  border-top-color: #2a323c;
+}
+
+[data-theme="dark"] .popup-header {
+  background: linear-gradient(to bottom, #1e3a5f 0%, #162d4a 100%);
+}
+
+[data-theme="dark"] .ol-popup-content {
+  background-color: #1d232a !important;
+  color: #d0d6e0;
+}

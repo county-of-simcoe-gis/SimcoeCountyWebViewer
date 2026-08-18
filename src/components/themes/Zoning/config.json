@@ -1,0 +1,15 @@
+{
+  "themeColor": "#C9E7F9",
+  "termsUrl": "",
+  "byLawUrl": "",
+  "contactUsEmail": "",
+  "queryLayers": [
+    {
+      "title": "Zoning",
+      "featureTitleColumn": "label",
+      "serviceUrl": "https://opengis.simcoe.ca/geoserver/ows",
+      "layerName": "simcoe:zoning",
+      "geometryField": "geom"
+    }
+  ]
+}

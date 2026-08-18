@@ -1,0 +1,5 @@
+@reference "../../../app/globals.css";
+
+.github-button-link {
+  @apply inline-flex items-center h-[26px] px-2.5 py-1.5 text-xs font-semibold leading-4 text-base-content bg-gradient-to-b from-base-100 to-base-300 border border-base-300 rounded cursor-pointer select-none hover:bg-gradient-to-b hover:from-base-200 hover:to-base-300 hover:border-base-content/30 active:bg-base-300 active:border-base-content/30 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[-2px] transition-all duration-150;
+}

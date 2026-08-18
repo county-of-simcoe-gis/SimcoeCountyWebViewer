@@ -1,0 +1,158 @@
+{
+  "showBearingButton": true,
+  "showMeasureButton": false,
+  "nonPointCursorSize": 1,
+  "defaultDrawColor": "#e809e5",
+  "defaultOpacity": 0.8,
+  "enableAdvancedFeatures": true,
+  "enableImportExport": true,
+  "enableBufferTool": true,
+  "maxItemsPerSession": 1000,
+  "autoSaveEnabled": true,
+  "autoSaveInterval": 5000,
+  "drawingTools": [
+    {
+      "id": "point",
+      "name": "Point",
+      "drawType": "Point",
+      "title": "Draw a point on the map",
+      "imageName": "/images/point.png",
+      "enabled": true,
+      "order": 1
+    },
+    {
+      "id": "line",
+      "name": "Line",
+      "drawType": "LineString",
+      "title": "Draw a line on the map (Hold Shift key for Freehand Drawing)",
+      "imageName": "/images/polyline.png",
+      "enabled": true,
+      "order": 2
+    },
+    {
+      "id": "polygon",
+      "name": "Polygon",
+      "drawType": "Polygon",
+      "title": "Draw a polygon on the map (Hold Shift key for Freehand Drawing)",
+      "imageName": "/images/polygon.png",
+      "enabled": true,
+      "order": 3
+    },
+    {
+      "id": "circle",
+      "name": "Circle",
+      "drawType": "Circle",
+      "title": "Draw a circle on the map",
+      "imageName": "/images/circle.png",
+      "enabled": true,
+      "order": 4
+    },
+    {
+      "id": "rectangle",
+      "name": "Rectangle",
+      "drawType": "Rectangle",
+      "title": "Draw a rectangle on the map",
+      "imageName": "/images/rectangle.png",
+      "enabled": true,
+      "order": 5
+    },
+    {
+      "id": "arrow",
+      "name": "Arrow",
+      "drawType": "Arrow",
+      "title": "Draw an arrow on the map",
+      "imageName": "/images/arrow.png",
+      "enabled": true,
+      "order": 6
+    },
+    {
+      "id": "text",
+      "name": "Text",
+      "drawType": "Text",
+      "title": "Add text on the map",
+      "imageName": "/images/text.png",
+      "enabled": true,
+      "order": 7
+    },
+    {
+      "id": "callout",
+      "name": "Callout",
+      "drawType": "Callout",
+      "title": "Add a callout box on the map",
+      "imageName": "/images/callout.svg",
+      "enabled": true,
+      "order": 8
+    },
+    {
+      "id": "bearing",
+      "name": "Bearing",
+      "drawType": "Bearing",
+      "title": "Add Bearing Line",
+      "imageName": "/images/compass.png",
+      "enabled": true,
+      "visible": true,
+      "order": 9
+    },
+    {
+      "id": "measure",
+      "name": "Measure",
+      "drawType": "Measure",
+      "title": "Add Measure Line",
+      "imageName": "/images/measure-tool.png",
+      "enabled": true,
+      "visible": false,
+      "order": 10
+    },
+    {
+      "id": "eraser",
+      "name": "Eraser",
+      "drawType": "Eraser",
+      "title": "Erase items on the map",
+      "imageName": "/images/eraser.png",
+      "enabled": true,
+      "order": 11
+    },
+    {
+      "id": "cancel",
+      "name": "Cancel",
+      "drawType": "Cancel",
+      "title": "Cancel current drawing tool",
+      "imageName": "/images/none.png",
+      "enabled": true,
+      "order": 12
+    }
+  ],
+  "colorPalette": ["#e809e5", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff8000", "#800080", "#008080", "#000000", "#ffffff", "#808080", "#ffc0cb"],
+  "styleDefaults": {
+    "pointRadius": 8,
+    "strokeWidth": 2,
+    "fillOpacity": 0.3,
+    "strokeOpacity": 0.8
+  },
+  "exportFormats": [
+    {
+      "id": "geojson",
+      "name": "GeoJSON",
+      "extension": "geojson",
+      "mimeType": "application/geo+json"
+    },
+    {
+      "id": "kml",
+      "name": "KML",
+      "extension": "kml",
+      "mimeType": "application/vnd.google-earth.kml+xml"
+    },
+    {
+      "id": "esrijson",
+      "name": "EsriJSON",
+      "extension": "json",
+      "mimeType": "application/json"
+    }
+  ],
+  "bufferDefaults": {
+    "distance": 100,
+    "units": "meters",
+    "color": "#ff0000",
+    "opacity": 0.3
+  }
+}

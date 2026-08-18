@@ -1,36 +1,40 @@
 {
   "useMapConfigApi": true,
-  "mapId": "",
-  "headerLogoImageName": "logo.png",
+  "mapId": "public",
+  "headerLogoImageName": "countyofsimcoelogo.png",
+  "logoOverlayText": "BETA",
   "title": "Interactive Map - County of Simcoe (GIS)",
+  "description": "Interactive web mapping application for Simcoe County GIS data",
   "favicon": "simcoe_favicon.ico",
   "originUrl": "https://opengis.simcoe.ca",
   "feedbackUrl": "https://opengis.simcoe.ca/feedback",
-  "geoserverUrl": "https://opengis.simcoe.ca/geoserver/",
+  "geoserverUrl": "https://opengis2.simcoe.ca/geoserver/",
+  "publicUrl": "https://opengis.simcoe.ca/public/",
   "geoserverPath": "geoserver",
   "printUrl": "https://opengis.simcoe.ca/print",
   "includeAppStats": true,
   "htmlIdentify": false,
   "leftClickIdentify": false,
   "excludeIdentifyTitleName": false,
-  "allowIdentifyExport": false,
+  "allowIdentifyExport": true,
   "showFeedbackMessageOnStartup": false,
   "showWhatsNewOnStartup": false,
   "showWhatsNewPopupOnStartup": false,
   "showTermsOnStartup": true,
   "googleAnalyticsID": "G-GC5RRXFML6",
-  "appStatsUrl": "https://opengis.simcoe.ca/api_v2/public/stats/write/",
-  "apiUrl": "https://opengis.simcoe.ca/api_v2/",
-  "apiUrlDev": "http://localhost:8085/",
+  "appStatsUrl": "",
+  "apiUrl": "",
+  "apiUrlDev": "",
+  "apiUrlSecured": "",
+  "apiUrlSecuredDev": "",
   "termsUrl": "https://maps.simcoe.ca/terms.html",
-  "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
-  "whatsNewUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/WhatsNew/2021-03-22",
-  "helpUrl": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer",
   "reportUrl": "https://opengis.simcoe.ca/reports/",
+  "openLicenseUrl": "http://maps.simcoe.ca/openlicense.html",
+  "whatsNewUrl": "/help#revision-history",
+  "helpUrl": "/help",
   "ieWarningUrl": "https://opengis.simcoe.ca/public/ieWarning.html",
-  "propertyReportUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/",
-  "condoUrl": "https://opengis.simcoe.ca/api_v2/public/reports/property/CondoChildren/",
-  "weatherRadarApiUrl": "https://opengis.simcoe.ca/api_v2/public/map/tool/weather/RadarImages/",
+  "propertyReportUrl": "/api/public/reports/property/",
+  "weatherRadarApiUrl": "",
   "parcelLayer": {
     "url": "https://opengis.simcoe.ca/geoserver/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=simcoe:Assessment%20Parcel&outputFormat=application/json",
     "rollNumberFieldName": "ARN"
@@ -38,19 +42,19 @@
   "gitHubFollowUrl": "https://github.com/county-of-simcoe-gis",
   "gitHubFollowHandle": "Follow @simcoecountygis",
   "pushMapNotifications": false,
-  "pushMapNotificationIDs": [1, 5, 6],
+  "pushMapNotificationIDs": [
+    1,
+    5,
+    6
+  ],
   "showHelpButtonInsteadOfFeedback": false,
   "onCoordinateZoomID": false,
-  "centerCoords": [-8878504.68, 5543492.45],
+  "centerCoords": [
+    -8878504.68,
+    5543492.45
+  ],
   "defaultZoom": 10,
   "maxZoom": 20,
-  "search": {
-    "hideTypes": false,
-    "defaultSearchType": {
-      "label": "All",
-      "value": "All"
-    }
-  },
   "controls": {
     "rotate": false,
     "fullScreen": true,
@@ -63,7 +67,9 @@
     "gitHubButton": true,
     "scaleSelector": false,
     "showGrid": true,
-    "extentHistory": true
+    "extentHistory": true,
+    "attribution": false,
+    "attributeTable": true
   },
   "mapTheme": "SIMCOE_COUNTY",
   "showFloatingMenuHeader": false,
@@ -100,7 +106,6 @@
     "sc-floating-menu-report-problem": true,
     "sc-floating-menu-identify": true
   },
-
   "toc": {
     "tocType": "LIST",
     "geoserverLayerGroupsUrl": "",
@@ -112,7 +117,9 @@
         "group": {
           "name": "Popular",
           "displayName": "Popular",
-          "visibleLayers": ["simcoe:Assessment Parcel"]
+          "visibleLayers": [
+            "simcoe:Assessment Parcel"
+          ]
         },
         "layerUrl": "https://opengis.simcoe.ca/geoserver/simcoe/Popular/ows?service=wms&version=1.3.0&request=GetCapabilities",
         "secure": false,
@@ -136,7 +143,9 @@
         "group": {
           "name": "All_Layers_Public",
           "displayName": "All Layers Public",
-          "visibleLayers": ["simcoe:Assessment Parcel"]
+          "visibleLayers": [
+            "simcoe:Assessment Parcel"
+          ]
         },
         "layerUrl": "https://opengis.simcoe.ca/geoserver/simcoe/All_Layers_Public/ows?service=wms&version=1.3.0&request=GetCapabilities",
         "secure": false,
@@ -155,33 +164,131 @@
         "primary": false,
         "urlType": "root",
         "type": "geoserver"
+      },
+      {
+        "layerUrl": "https://maps.simcoe.ca/arcgis/rest/services/Public/Operational_Layers_Dynamic/MapServer",
+        "primary": false,
+        "type": "arcgis",
+        "open": true,
+        "useRedFolder": true
       }
     ],
-    "helpLink": "https://county-of-simcoe-gis.github.io/SimcoeCountyWebViewer/Layers",
+    "helpLink": "/help",
     "layerInfoURL": "https://opengis.simcoe.ca/layerInfo/?URL=",
     "keywords": {
-      "DEFAULT_GROUP": { "keyword": "DEFAULT_GROUP", "type": "string", "value": "" },
-      "LIVE_LAYER": { "keyword": "LIVE_LAYER", "type": "bool", "value": false },
-      "GROUP_PREFIX": { "keyword": "GROUP_PREFIX", "type": "string", "value": "" },
-      "DISPLAY_NAME": { "keyword": "DISPLAY_NAME", "type": "string", "value": "" },
-      "IDENTIFY_TITLE_COLUMN": { "keyword": "IDENTIFY_TITLE_COLUMN", "type": "string", "value": "" },
-      "IDENTIFY_DISPLAY_NAME": { "keyword": "IDENTIFY_DISPLAY_NAME", "type": "string", "value": "" },
-      "WARNING": { "keyword": "WARNING", "type": "string", "value": "", "splitChar": "”" },
-      "DISCLAIMER_URL": { "keyword": "DISCLAIMER_URL", "type": "string", "value": "", "splitChar": "”" },
-      "DISCLAIMER_TITLE": { "keyword": "DISCLAIMER_TITLE", "type": "string", "value": "", "splitChar": "”" },
-      "IDENTIFY_ID_COLUMN": { "keyword": "IDENTIFY_ID_COLUMN", "type": "string", "value": "" },
-      "VISIBLE_LAYERS": { "keyword": "VISIBLE_LAYERS", "type": "array", "value": [], "splitChar": ",", "relatedKeys": ["All_VISIBLE_LAYERS"] },
-      "All_VISIBLE_LAYERS": { "keyword": "VISIBLE_LAYERS", "type": "bool", "value": false, "checkValue": "ALL" },
-      "MAP_CENTER": { "keyword": "MAP_CENTER", "type": "array", "value": [], "splitChar": "," },
-      "MAP_ZOOM": { "keyword": "MAP_ZOOM", "type": "int", "value": 1 },
-      "OPACITY": { "keyword": "OPACITY", "type": "float", "value": 1 },
-      "DOWNLOAD": { "keyword": "DOWNLOAD", "type": "bool", "value": false },
-      "NO_ATTRIBUTE_TABLE": { "keyword": "NO_ATTRIBUTE_TABLE", "type": "bool", "value": false },
-      "STATIC_IMAGE_LEGEND": { "keyword": "STATIC_IMAGE_LEGEND", "type": "bool", "value": false }
+      "DEFAULT_GROUP": {
+        "keyword": "DEFAULT_GROUP",
+        "type": "string",
+        "value": ""
+      },
+      "LIVE_LAYER": {
+        "keyword": "LIVE_LAYER",
+        "type": "bool",
+        "value": false
+      },
+      "GROUP_PREFIX": {
+        "keyword": "GROUP_PREFIX",
+        "type": "string",
+        "value": ""
+      },
+      "DISPLAY_NAME": {
+        "keyword": "DISPLAY_NAME",
+        "type": "string",
+        "value": ""
+      },
+      "IDENTIFY_TITLE_COLUMN": {
+        "keyword": "IDENTIFY_TITLE_COLUMN",
+        "type": "string",
+        "value": ""
+      },
+      "IDENTIFY_DISPLAY_NAME": {
+        "keyword": "IDENTIFY_DISPLAY_NAME",
+        "type": "string",
+        "value": ""
+      },
+      "WARNING": {
+        "keyword": "WARNING",
+        "type": "string",
+        "value": "",
+        "splitChar": "”"
+      },
+      "DISCLAIMER_URL": {
+        "keyword": "DISCLAIMER_URL",
+        "type": "string",
+        "value": "",
+        "splitChar": "”"
+      },
+      "DISCLAIMER_TITLE": {
+        "keyword": "DISCLAIMER_TITLE",
+        "type": "string",
+        "value": "",
+        "splitChar": "”"
+      },
+      "IDENTIFY_ID_COLUMN": {
+        "keyword": "IDENTIFY_ID_COLUMN",
+        "type": "string",
+        "value": ""
+      },
+      "VISIBLE_LAYERS": {
+        "keyword": "VISIBLE_LAYERS",
+        "type": "array",
+        "value": [],
+        "splitChar": ",",
+        "relatedKeys": [
+          "All_VISIBLE_LAYERS"
+        ]
+      },
+      "All_VISIBLE_LAYERS": {
+        "keyword": "VISIBLE_LAYERS",
+        "type": "bool",
+        "value": false,
+        "checkValue": "ALL"
+      },
+      "MAP_CENTER": {
+        "keyword": "MAP_CENTER",
+        "type": "array",
+        "value": [],
+        "splitChar": ","
+      },
+      "MAP_ZOOM": {
+        "keyword": "MAP_ZOOM",
+        "type": "int",
+        "value": 1
+      },
+      "OPACITY": {
+        "keyword": "OPACITY",
+        "type": "float",
+        "value": 1
+      },
+      "DOWNLOAD": {
+        "keyword": "DOWNLOAD",
+        "type": "bool",
+        "value": false
+      },
+      "NO_ATTRIBUTE_TABLE": {
+        "keyword": "NO_ATTRIBUTE_TABLE",
+        "type": "bool",
+        "value": false
+      },
+      "STATIC_IMAGE_LEGEND": {
+        "keyword": "STATIC_IMAGE_LEGEND",
+        "type": "bool",
+        "value": false
+      },
+      "SAR": {
+        "keyword": "SAR",
+        "type": "bool",
+        "value": false
+      },
+      "CATEGORY": {
+        "keyword": "CATEGORY",
+        "type": "array",
+        "value": [],
+        "splitChar": ","
+      }
     }
   },
   "wmsGeoJsonTemplate": "https://maps.simcoe.ca/ESRIWMSTemplates/featureinfo_application_geojson.xsl",
-
   "sidebarToolComponents": [
     {
       "id": 11,
@@ -212,6 +319,14 @@
       "imageName": "print.png"
     },
     {
+      "id": 13,
+      "name": "Print Local (Beta)",
+      "componentName": "PrintLocal",
+      "description": "This tool allows users to print their map view in a variety of formats such as pdf and jpeg locally.",
+      "imageName": "print.png",
+      "disable": true
+    },
+    {
       "id": 9,
       "name": "Add Data",
       "componentName": "AddLayer",
@@ -224,14 +339,16 @@
       "name": "Search Addresses",
       "componentName": "SearchAddresses",
       "description": "This tool allows you to search Addresses.",
-      "imageName": "searchAddresses.png"
+      "imageName": "searchAddresses.png",
+      "disable": true
     },
     {
       "id": 5,
       "name": "Search History",
       "componentName": "SearchHistory",
       "description": "This tool provides users with a list of their 25 most recent searches.",
-      "imageName": "searchHistory.png"
+      "imageName": "searchHistory.png",
+      "disable": true
     },
     {
       "id": 6,
@@ -262,7 +379,6 @@
       "imageName": "settings.png"
     }
   ],
-
   "sidebarThemeComponents": [
     {
       "id": 1,
@@ -317,7 +433,8 @@
       "name": "Commercial Real Estate",
       "componentName": "CommercialRealEstate",
       "description": "Search commercial real estate throughout the County of Simcoe.",
-      "imageName": "commercialRealEstate.png"
+      "imageName": "commercialRealEstate.png",
+      "disable": false
     },
     {
       "id": 8,
@@ -330,7 +447,7 @@
       "id": 9,
       "name": "Zoning",
       "componentName": "Zoning",
-      "description": "",
+      "description": "View zoning information for properties within the County.",
       "imageName": "zoning.png",
       "disable": true
     },
@@ -338,7 +455,7 @@
       "id": 10,
       "name": "Broadband",
       "componentName": "Broadband",
-      "description": "",
+      "description": "View broadband coverage information for properties.",
       "imageName": "broadband_icon.png",
       "disable": true
     },
@@ -347,15 +464,16 @@
       "name": "511 Live Feeds",
       "componentName": "Five11LiveFeeds",
       "description": "View Live Feeds from the MTO and Waze.",
-      "imageName": "511.png"
+      "imageName": "511.png",
+      "disable": false
     },
     {
       "id": 12,
-      "name": "CouchichingOHT",
+      "name": "Couchiching OHT",
       "componentName": "CouchichingOHT",
-      "description": "Couchiching OHT theme",
+      "description": "View Couchiching Ontario Health Team healthcare locations across the County.",
       "imageName": "CouchichingOHT-logo.png",
-      "enabled": false
+      "disable": true
     }
   ],
   "sidebarShortcutParams": [
@@ -381,7 +499,8 @@
       "id": 4,
       "url_param": "MUNI",
       "type": "search",
-      "component": "Municipality"
+      "component": "Municipality",
+      "hidden": true
     },
     {
       "id": 5,
@@ -450,6 +569,20 @@
       "id": 14,
       "url_param": "MYMAPS",
       "type": "MYMAPS"
+    },
+    {
+      "id": 15,
+      "url_param": "SEGMENTID",
+      "type": "search",
+      "component": "Road Segment Id",
+      "hidden": true,
+      "timeout": 5000
+    },
+    {
+      "id": 16,
+      "url_param": "room",
+      "type": "themes",
+      "component": "Campus"
     }
   ]
 }
