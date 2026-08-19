@@ -1,6 +1,6 @@
 {
   "name": "simcoecountywebviewernextjs",
-  "version": "2.0.0-rc20260813.1",
+  "version": "2.0.0",
   "private": true,
   "scripts": {
     "dev": "node scripts/copy-readme.js && cross-env NODE_EXTRA_CA_CERTS=certs/netskope-ca.pem next dev --webpack",
