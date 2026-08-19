@@ -360,6 +360,55 @@ npm run dev
 | `npm run test:ui`    | Run tests with the Vitest UI.                               |
 | `npm run e2e`        | Run Playwright end-to-end tests.                            |
 
+### Docker
+
+The app ships as a multi-stage [Dockerfile](Dockerfile) (deps → builder → runner) plus Docker Compose files. The production image uses the Next.js `standalone` output and runs as a non-root user on port 3000.
+
+#### Prerequisites
+
+- Docker Desktop (or Docker Engine + Compose v2).
+- A `.env` file in the repo root (see `env.sample`) — runtime secrets and connection strings are read from it; it is **not** baked into the image.
+
+#### Production build & run
+
+```bash
+docker compose build
+docker compose up -d
+```
+
+Then open <http://localhost:3000>. Stop with `docker compose down`.
+
+`NEXT_PUBLIC_*` variables are inlined into the client bundle **at build time**. To change them, pass build args (sourced automatically from `.env`) and rebuild:
+
+```bash
+docker compose build --build-arg NEXT_PUBLIC_BASE_PATH=/viewer
+```
+
+#### Building behind a TLS-inspecting corporate proxy
+
+If `npm ci` or `prisma generate` fail with `self-signed certificate in certificate chain`, place your proxy's root CA in the `certs/` folder and pass two build args:
+
+```bash
+docker compose build --build-arg CORP_CA=true --build-arg CORP_CA_FILE=<your-ca-file>.pem
+```
+
+(Or set `CORP_CA=true` and `CORP_CA_FILE=<your-ca-file>.pem` in the environment/`.env`.) Leave them unset outside the corporate network.
+
+#### Local development with hot reload
+
+Use the dev override to run the Next.js dev server in a container with your source bind-mounted (file watching uses polling, required on Windows):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+```
+
+Edits on the host hot-reload inside the container. Container `node_modules` are kept in a named volume so Linux binaries aren't shadowed by the Windows host install.
+
+#### Database connectivity
+
+- The app connects to external PostgreSQL/SQL Server via the connection strings in `.env` — no database container is included.
+- To reach a database running **on the Docker host**, use `host.docker.internal` (already mapped via `extra_hosts`).
+
 ### Notes
 
 - Tests run in JSDOM.

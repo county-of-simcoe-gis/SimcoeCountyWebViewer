@@ -1,0 +1,32 @@
+name: simcoe-web-viewer
+
+services:
+  app:
+    build:
+      context: .
+      target: runner
+      args:
+        # Set CORP_CA=true when building behind a TLS-inspecting corporate proxy,
+        # and CORP_CA_FILE to the CA cert filename in ./certs
+        CORP_CA: ${CORP_CA:-false}
+        CORP_CA_FILE: ${CORP_CA_FILE:-}
+        # NEXT_PUBLIC_* vars are inlined at build time — pass them from .env
+        NEXT_PUBLIC_BASE_PATH: ${NEXT_PUBLIC_BASE_PATH:-}
+        NEXT_PUBLIC_MAP_URL_SECURE: ${NEXT_PUBLIC_MAP_URL_SECURE:-}
+        NEXT_PUBLIC_MAP_URL_UNSECURE: ${NEXT_PUBLIC_MAP_URL_UNSECURE:-}
+        NEXT_PUBLIC_ESRI_PORTAL_URL: ${NEXT_PUBLIC_ESRI_PORTAL_URL:-}
+        NEXT_PUBLIC_ESRI_APP_ID: ${NEXT_PUBLIC_ESRI_APP_ID:-}
+        NEXT_PUBLIC_COLLECT_APP_STATS: ${NEXT_PUBLIC_COLLECT_APP_STATS:-false}
+    image: simcoecountywebviewernextjs:latest
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      # Local auth: override with your deployed URL in production
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+    extra_hosts:
+      # Reach databases/services running on the Docker host (Linux compat)
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
