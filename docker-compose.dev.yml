@@ -1,0 +1,23 @@
+# Development override — hot reload from Windows host filesystem.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+services:
+  app:
+    build:
+      target: dev
+    image: simcoecountywebviewernextjs:dev
+    environment:
+      NODE_ENV: development
+      # Polling is required for reliable file watching through Docker Desktop on Windows
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      # Bind-mount source so edits on the host hot-reload inside the container
+      - .:/app
+      # Keep the container's node_modules (Linux binaries) — never shadow with host's
+      - node_modules_dev:/app/node_modules
+      - next_cache_dev:/app/.next
+    restart: "no"
+
+volumes:
+  node_modules_dev:
+  next_cache_dev:

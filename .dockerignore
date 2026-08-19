@@ -1,0 +1,51 @@
+# Dependencies
+node_modules
+npm-debug.log*
+
+# Build output
+.next
+out
+
+# Test artifacts
+coverage
+test-results
+playwright-report
+e2e
+vitest-output.txt
+test-results.json
+test-results-debug.json
+
+# Version control
+.git
+.gitignore
+
+# Environment files (secrets never enter the image)
+.env
+.env.*
+
+# Build logs
+build-log.txt
+
+# Documentation / misc
+LICENSE.md
+
+# IDE
+.vscode
+.idea
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Docker / CI files
+Dockerfile
+.dockerignore
+docker-compose*.yml
+azure-pipelines.yml
+public-pipeline.yml
+Build.ps1
+*.bat
+docker_build.bat
+deploy_latest.bat
+sc_copyToServer.bat
+sc_copyToServerDev.bat
