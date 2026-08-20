@@ -940,9 +940,17 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
 
   const rawTileUrl = urls[0];
 
-  // Check for OpenStreetMap
+  // Check for OpenStreetMap — validate the parsed URL host rather than
+  // matching a substring (avoids matching e.g. "evil.com/?openstreetmap.org")
   const sourceKey = (layerSource as { key_?: string }).key_ || "";
-  if (sourceKey.includes("openstreetmap.org")) {
+  let isOpenStreetMap = false;
+  try {
+    const hostname = new URL(sourceKey.split("\n")[0]).hostname.toLowerCase();
+    isOpenStreetMap = hostname === "openstreetmap.org" || hostname.endsWith(".openstreetmap.org");
+  } catch {
+    // Not a parseable URL — treat as non-OSM
+  }
+  if (isOpenStreetMap) {
     return {
       type: "OSM",
       baseURL: sourceKey.split("\n")[0],

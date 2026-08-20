@@ -24,6 +24,8 @@ export type ColumnType = "number" | "string" | "boolean" | "date";
 export interface ColumnSchema {
   name: string;
   type: ColumnType;
+  /** Display alias (ArcGIS layers only); grid headers prefer this over `name`. */
+  alias?: string;
 }
 
 /** One column's backing storage. */

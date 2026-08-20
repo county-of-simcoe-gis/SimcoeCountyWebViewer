@@ -59,10 +59,7 @@ let _IdentityManager: typeof import("@arcgis/core/identity/IdentityManager").def
 
 async function loadArcGISModules() {
   if (!_OAuthInfo || !_IdentityManager) {
-    const [oauthMod, idMod] = await Promise.all([
-      import("@arcgis/core/identity/OAuthInfo"),
-      import("@arcgis/core/identity/IdentityManager"),
-    ]);
+    const [oauthMod, idMod] = await Promise.all([import("@arcgis/core/identity/OAuthInfo"), import("@arcgis/core/identity/IdentityManager")]);
     _OAuthInfo = oauthMod.default;
     _IdentityManager = idMod.default;
   }
@@ -75,20 +72,14 @@ async function loadArcGISModules() {
  * Initialize OAuthInfo and register with IdentityManager.
  * Only runs once (idempotent). Now async because it lazy-loads @arcgis/core.
  */
-export async function initialize(
-  appId?: string,
-  portalUrl?: string,
-): Promise<void> {
+export async function initialize(appId?: string, portalUrl?: string): Promise<void> {
   if (initialized) return;
 
   const finalAppId = appId || APP_ID;
   const finalPortalUrl = portalUrl || PORTAL_URL;
 
   if (!finalAppId || !finalPortalUrl) {
-    console.warn(
-      "ArcGIS Auth: Cannot initialize — NEXT_PUBLIC_ESRI_PORTAL_URL and " +
-        "NEXT_PUBLIC_ESRI_APP_ID environment variables are required.",
-    );
+    console.warn("ArcGIS Auth: Cannot initialize — NEXT_PUBLIC_ESRI_PORTAL_URL and " + "NEXT_PUBLIC_ESRI_APP_ID environment variables are required.");
     return;
   }
 
@@ -122,14 +113,11 @@ export async function checkCurrentStatus(): Promise<__esri.Credential> {
 async function fetchCredentials(): Promise<__esri.Credential> {
   if (!oauthInfo) throw new Error("ArcGIS Auth not initialized");
   const { IdentityManager } = await loadArcGISModules();
-  credential = await IdentityManager.getCredential(
-    `${oauthInfo.portalUrl}/sharing`,
-    {
-      error: null,
-      oAuthPopupConfirmation: false,
-      token: null,
-    } as __esri.IdentityManagerGetCredentialOptions,
-  );
+  credential = await IdentityManager.getCredential(`${oauthInfo.portalUrl}/sharing`, {
+    error: null,
+    oAuthPopupConfirmation: false,
+    token: null,
+  } as __esri.IdentityManagerGetCredentialOptions);
   return credential;
 }
 
@@ -162,10 +150,7 @@ export async function signOut(): Promise<void> {
  * Full login flow: initialize + signIn.
  * Returns the ESRI Credential object.
  */
-export async function login(
-  appId?: string,
-  portalUrl?: string,
-): Promise<__esri.Credential> {
+export async function login(appId?: string, portalUrl?: string): Promise<__esri.Credential> {
   initialize(appId, portalUrl);
   return signIn();
 }
@@ -192,7 +177,7 @@ export function processCredential(cred: __esri.Credential): ArcGISTokenData {
     portalUrl: cred.server ?? PORTAL_URL,
   };
 
-  saveTokenToStorage(tokenData);
+  void saveTokenToStorage(tokenData);
   return tokenData;
 }
 
@@ -225,7 +210,7 @@ export function processEsriJSAPIOAuth(): ArcGISTokenData | null {
       };
 
       sessionStorage.removeItem("esriJSAPIOAuth");
-      saveTokenToStorage(tokenData);
+      void saveTokenToStorage(tokenData);
       return tokenData;
     }
 
@@ -246,7 +231,7 @@ export function processEsriJSAPIOAuth(): ArcGISTokenData | null {
       };
 
       sessionStorage.removeItem("esriJSAPIOAuth");
-      saveTokenToStorage(tokenData);
+      void saveTokenToStorage(tokenData);
       return tokenData;
     }
   } catch (e) {
@@ -272,7 +257,7 @@ export async function getAccessToken(): Promise<string | null> {
   }
 
   // Check cached token
-  const cached = loadTokenFromStorage();
+  const cached = await loadTokenFromStorage();
   if (cached && Date.now() < cached.renewalDate) {
     return cached.accessToken;
   }
@@ -293,20 +278,76 @@ export async function getAccessToken(): Promise<string | null> {
 
 // ─── Session storage persistence ─────────────────────────────────────────────
 
-export function saveTokenToStorage(token: ArcGISTokenData): void {
+/**
+ * Non-extractable AES-GCM key used to encrypt the token at rest.
+ * Lazily created and held only in module memory — it never touches storage,
+ * so the sessionStorage blob is undecryptable outside this page's lifetime.
+ */
+let storageEncryptionKey: CryptoKey | null = null;
+
+async function getStorageEncryptionKey(): Promise<CryptoKey> {
+  if (!storageEncryptionKey) {
+    storageEncryptionKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  return storageEncryptionKey;
+}
+
+function bytesToBase64(bytes: Uint8Array): string {
+  let binary = "";
+  bytes.forEach((b) => {
+    binary += String.fromCharCode(b);
+  });
+  return btoa(binary);
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Encrypt the token with AES-GCM and persist to sessionStorage.
+ * The encryption key is non-extractable and memory-only, so the stored blob
+ * is useless to anyone reading sessionStorage directly.
+ */
+export async function saveTokenToStorage(token: ArcGISTokenData): Promise<void> {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(token));
+    const key = await getStorageEncryptionKey();
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const plaintext = new TextEncoder().encode(JSON.stringify(token));
+    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
+    const record = {
+      v: 1,
+      iv: bytesToBase64(iv),
+      data: bytesToBase64(new Uint8Array(ciphertext)),
+    };
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(record));
   } catch (e) {
     console.warn("ArcGIS Auth: Failed to save token to sessionStorage", e);
   }
 }
 
-export function loadTokenFromStorage(): ArcGISTokenData | null {
+export async function loadTokenFromStorage(): Promise<ArcGISTokenData | null> {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
 
-    const data: ArcGISTokenData = JSON.parse(raw);
+    const record = JSON.parse(raw);
+
+    // Only the encrypted { v, iv, data } record shape is accepted.
+    // Legacy plaintext or malformed records are discarded.
+    if (!record || record.v !== 1 || typeof record.iv !== "string" || typeof record.data !== "string") {
+      sessionStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+
+    const key = await getStorageEncryptionKey();
+    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(record.iv) }, key, base64ToBytes(record.data));
+    const data: ArcGISTokenData = JSON.parse(new TextDecoder().decode(decrypted));
 
     if (!data.accessToken || !data.expiresAt || Date.now() >= data.expiresAt) {
       sessionStorage.removeItem(STORAGE_KEY);
@@ -315,6 +356,7 @@ export function loadTokenFromStorage(): ArcGISTokenData | null {
 
     return data;
   } catch {
+    // Decryption failure (e.g. key rotated after page reload) — treat as missing
     sessionStorage.removeItem(STORAGE_KEY);
     return null;
   }
@@ -345,4 +387,3 @@ export function getAppId(): string {
 export function isInitialized(): boolean {
   return initialized;
 }
-

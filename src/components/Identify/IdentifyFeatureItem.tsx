@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
 import { useMapStore } from "@/stores/mapStore";
 import { filterFeatureKeys, formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
+import { resolveFieldAlias, resolveDomainName, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 import { useMyMapsStore, createMyMapsItem, type DrawType } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
@@ -17,10 +18,11 @@ interface IdentifyFeatureItemProps {
   featureItem: IdentifyFeature;
   layerName: string;
   minScale?: number;
+  /** ArcGIS field aliases + coded-value domains for the layer, when available. */
+  fieldMetadata?: ArcgisLayerFieldMetadata;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ featureItem, layerName, minScale = 0 }) => {
+const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ featureItem, layerName, minScale = 0, fieldMetadata }) => {
   const map = useMapStore((s) => s.map);
   const { highlightFeature, clearHighlight } = useFeatureHighlight();
   const [open, setOpen] = useState(false);
@@ -69,10 +71,14 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
         {keys
           .filter((k) => k !== "attachmentUrl")
           .map((key) => {
-            const formattedValue = formatFieldValue(key, props[key]);
+            // ArcGIS layers: prefer the field alias for the label and the
+            // coded-value domain name for the value, when available.
+            const domainName = resolveDomainName(fieldMetadata, key, props[key]);
+            const formattedValue = domainName ?? formatFieldValue(key, props[key]);
+            const label = resolveFieldAlias(fieldMetadata, key) ?? formatFieldName(key);
             return (
               <div key={key} className="grid grid-cols-[140px_1fr] gap-2.5 py-[5px] border-b border-base-200 last:border-b-0 max-[768px]:grid-cols-1 max-[768px]:gap-1">
-                <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{formatFieldName(key)}:</div>
+                <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{label}:</div>
                 <div className="text-base-content break-words max-[768px]:text-[11px] max-[768px]:pl-2.5 [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline">
                   {formattedValue !== null ? formattedValue : "N/A"}
                 </div>
@@ -98,7 +104,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     <div className="mb-2.5 border border-base-300 rounded-[3px] overflow-hidden">
       <div className="bg-base-200 py-2 px-2.5 flex justify-between items-center border-b border-base-300" onMouseEnter={() => highlightFeature(feature)} onMouseLeave={clearHighlight}>
         <div className="flex-1 cursor-pointer font-medium text-xs hover:text-primary" onClick={() => setOpen(!open)}>
-          {formatFieldName(displayName)}: {featureName}
+          {resolveFieldAlias(fieldMetadata, displayName) ?? formatFieldName(displayName)}: {featureName}
         </div>
         <div className="flex gap-2 items-center">
           <span className="text-primary text-[10px] cursor-pointer no-underline hover:underline whitespace-nowrap select-none" onClick={handleAddToMyMaps} title="Add to My Maps">
@@ -117,7 +123,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
           )}
         </div>
       </div>
-      <div className={open ? "p-2.5 bg-white" : "hidden"}>{renderFeatureContent()}</div>
+      <div className={open ? "p-2.5 bg-base-100" : "hidden"}>{renderFeatureContent()}</div>
     </div>
   );
 };

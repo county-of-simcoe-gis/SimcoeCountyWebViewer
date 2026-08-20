@@ -376,6 +376,8 @@ export interface WfsFieldDescriptor {
   name: string;
   type: ColumnType;
   nillable: boolean;
+  /** Display alias (ArcGIS layers only — from the layer JSON `fields[].alias`). */
+  alias?: string;
   /** true for geometry fields (gml:* types). Not added to grid schema. */
   isGeometry: boolean;
   /** true if the raw XSD type was xsd:ID / xsd:IDREF — great sort candidate. */

@@ -70,4 +70,24 @@ describe("JSONTranslation", () => {
       expect(result.General?.title).toBeUndefined();
     });
   });
+
+  describe("prototype pollution guards", () => {
+    it("ignores __proto__ keys in the source payload", () => {
+      const rawJson = JSON.parse('{"__proto__": {"polluted": "yes"}, "title": "Safe"}');
+
+      const result = JSONToSettings(rawJson);
+
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(Object.prototype.hasOwnProperty.call(result, "__proto__")).toBe(false);
+    });
+
+    it("ignores constructor keys in the source payload", () => {
+      const rawJson = JSON.parse('{"constructor": {"prototype": {"polluted": "yes"}}, "title": "Safe"}');
+
+      JSONToSettings(rawJson);
+
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
+    });
+  });
 });

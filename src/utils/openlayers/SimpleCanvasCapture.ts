@@ -14,15 +14,9 @@
 
 import type Map from "ol/Map";
 import { getPointResolution } from "ol/proj";
+import { htmlToText } from "@/utils/helpersCore";
 
-export type DecorationPosition =
-  | "top-left"
-  | "top-center"
-  | "top-right"
-  | "bottom-left"
-  | "bottom-center"
-  | "bottom-right"
-  | "none";
+export type DecorationPosition = "top-left" | "top-center" | "top-right" | "bottom-left" | "bottom-center" | "bottom-right" | "none";
 
 export interface MapDecorations {
   title?: string;
@@ -59,7 +53,7 @@ function getDecorationPosition(
   canvasHeight: number,
   decorationWidth: number,
   decorationHeight: number,
-  margin: number = 20
+  margin: number = 20,
 ): { x: number; y: number } {
   const positions: Record<DecorationPosition, { x: number; y: number }> = {
     "top-left": { x: margin, y: margin },
@@ -82,13 +76,7 @@ function getDecorationPosition(
 /**
  * Draw title on canvas
  */
-function drawTitle(
-  ctx: CanvasRenderingContext2D,
-  title: string,
-  position: DecorationPosition,
-  canvasWidth: number,
-  canvasHeight: number
-) {
+function drawTitle(ctx: CanvasRenderingContext2D, title: string, position: DecorationPosition, canvasWidth: number, canvasHeight: number) {
   if (position === "none" || !title) return;
 
   ctx.font = "bold 24px Arial";
@@ -114,14 +102,7 @@ function drawTitle(
 /**
  * Draw scale bar on canvas
  */
-function drawScaleBar(
-  ctx: CanvasRenderingContext2D,
-  map: Map,
-  position: DecorationPosition,
-  canvasWidth: number,
-  canvasHeight: number,
-  scaleFactor: number
-) {
+function drawScaleBar(ctx: CanvasRenderingContext2D, map: Map, position: DecorationPosition, canvasWidth: number, canvasHeight: number, scaleFactor: number) {
   if (position === "none") return;
 
   const view = map.getView();
@@ -132,10 +113,10 @@ function drawScaleBar(
   if (!resolution || !center) return;
 
   const pointResolution = getPointResolution(projection, resolution, center);
-  
+
   // Adjust for scale factor (since we're scaling the canvas)
   const adjustedResolution = pointResolution / scaleFactor;
-  
+
   const targetPixels = 150;
   const targetMeters = adjustedResolution * targetPixels;
 
@@ -189,13 +170,7 @@ function drawScaleBar(
 /**
  * Draw north arrow on canvas
  */
-function drawNorthArrow(
-  ctx: CanvasRenderingContext2D,
-  position: DecorationPosition,
-  canvasWidth: number,
-  canvasHeight: number,
-  rotation: number
-) {
+function drawNorthArrow(ctx: CanvasRenderingContext2D, position: DecorationPosition, canvasWidth: number, canvasHeight: number, rotation: number) {
   if (position === "none") return;
 
   const arrowSize = 60;
@@ -244,18 +219,12 @@ function drawNorthArrow(
 /**
  * Draw attributions on canvas
  */
-function drawAttributions(
-  ctx: CanvasRenderingContext2D,
-  map: Map,
-  position: DecorationPosition,
-  canvasWidth: number,
-  canvasHeight: number
-) {
+function drawAttributions(ctx: CanvasRenderingContext2D, map: Map, position: DecorationPosition, canvasWidth: number, canvasHeight: number) {
   if (position === "none") return;
 
   // Collect attributions (read-only operation)
   const attributions = new Set<string>();
-  
+
   try {
     const view = map.getView();
     const extent = view.calculateExtent(map.getSize());
@@ -279,7 +248,7 @@ function drawAttributions(
             if (attrs) {
               attrs.forEach((attr) => {
                 const text = typeof attr === "string" ? attr : (attr as { innerHTML?: string }).innerHTML || "";
-                const cleanText = text.replace(/<[^>]*>/g, "");
+                const cleanText = htmlToText(text);
                 if (cleanText.trim()) {
                   attributions.add(cleanText.trim());
                 }
@@ -334,11 +303,7 @@ function drawAttributions(
  *
  * This function is completely safe and will never cause the map to become blank.
  */
-export async function captureMapCanvas(
-  map: Map,
-  options: CaptureOptions = {},
-  onProgress?: (progress: CaptureProgress) => void
-): Promise<Blob> {
+export async function captureMapCanvas(map: Map, options: CaptureOptions = {}, onProgress?: (progress: CaptureProgress) => void): Promise<Blob> {
   const { format = "image/png", quality = 0.95 } = options;
 
   onProgress?.({
@@ -399,7 +364,7 @@ export async function captureMapCanvas(
         // Get opacity from parent element (read-only)
         const opacity = canvas.parentElement?.style.opacity || "1";
         captureCtx.globalAlpha = parseFloat(opacity);
-        
+
         // Draw to our new canvas (reads from source, does not modify source)
         captureCtx.drawImage(canvas, 0, 0);
         successCount++;
@@ -488,7 +453,7 @@ export async function captureMapCanvas(
         }
       },
       format,
-      quality
+      quality,
     );
   });
 }

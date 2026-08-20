@@ -13,6 +13,8 @@ import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken } from "@/utils/auth";
 import IdentifyLayer from "@/components/Identify/IdentifyLayer";
+import { parseArcgisLayerUrl } from "@/lib/attributeTable/arcgis";
+import { getArcgisFieldMetadata, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import Point from "ol/geom/Point";
 import { getCenter } from "ol/extent";
 import type TileWMS from "ol/source/TileWMS";
@@ -36,6 +38,8 @@ export interface IdentifyResult {
   features: IdentifyFeature[];
   minScale?: number;
   html_url?: string;
+  /** ArcGIS field aliases + coded-value domains for this layer, when available. */
+  fieldMetadata?: ArcgisLayerFieldMetadata;
 }
 
 const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
@@ -307,6 +311,18 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
                 });
               }
 
+              // ArcGIS layers carry field aliases + coded-value domains in
+              // the layer metadata — resolve them so the panel can display
+              // aliases and domain names instead of raw column names/codes.
+              // Cached per layer URL, so repeat identifies are free.
+              let fieldMetadata: ArcgisLayerFieldMetadata | null = null;
+              if (isArcGISLayer) {
+                const endpoint = parseArcgisLayerUrl(wfsUrl);
+                if (endpoint) {
+                  fieldMetadata = await getArcgisFieldMetadata(endpoint.layerUrl, { secured, token: endpoint.tokenFromUrl });
+                }
+              }
+
               const displayNameField = getDisplayNameFromFeature(featureList[0]);
               const features: IdentifyFeature[] = featureList.map((feature) => ({
                 feature,
@@ -319,6 +335,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
                 type: displayName,
                 features,
                 minScale,
+                fieldMetadata: fieldMetadata ?? undefined,
               });
               continue; // Skip WMS query if WFS succeeded
             }
@@ -441,23 +458,23 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
 
   return (
     <div className="p-2.5 text-xs h-full overflow-y-auto">
-      <button className="mb-2.5 w-full py-2 bg-[#007bff] text-white border-none rounded cursor-pointer text-xs hover:bg-[#0056b3]" onClick={clearIdentify}>
+      <button className="btn btn-primary btn-sm w-full mb-2.5 text-xs" onClick={clearIdentify}>
         Clear Results
       </button>
 
       {/* Debug Info */}
       {debugInfo && (
-        <div className="mb-2.5 p-2 bg-[#f8f9fa] border border-[#dee2e6] rounded text-[11px] text-[#495057]">
+        <div className="mb-2.5 p-2 bg-base-200 border border-base-300 rounded text-[11px] text-base-content/80">
           <div>
             <strong>Layers:</strong> {debugInfo.total} total, {debugInfo.visible} visible, {debugInfo.queryable} queryable
           </div>
-          {debugInfo.visible === 0 && <div className="text-[#ff6b6b] mt-[5px] text-[11px]">⚠️ No visible layers found. Turn on some layers to use identify.</div>}
+          {debugInfo.visible === 0 && <div className="text-warning mt-[5px] text-[11px]">⚠️ No visible layers found. Turn on some layers to use identify.</div>}
         </div>
       )}
 
-      <div className={layers.length === 0 && !isLoading ? "flex flex-col items-center justify-center p-5 text-[#666] text-xs" : "hidden"}>No features were selected. Please try again.</div>
-      <div className={isLoading ? "flex flex-col items-center justify-center p-5 text-[#666] text-xs" : "hidden"}>
-        <div className="border-[3px] border-[#f3f3f3] border-t-[#007bff] rounded-full w-[30px] h-[30px] animate-spin mb-2.5" />
+      <div className={layers.length === 0 && !isLoading ? "flex flex-col items-center justify-center p-5 text-base-content/70 text-xs" : "hidden"}>No features were selected. Please try again.</div>
+      <div className={isLoading ? "flex flex-col items-center justify-center p-5 text-base-content/70 text-xs" : "hidden"}>
+        <div className="loading loading-spinner loading-md text-primary mb-2.5" />
         <div>Loading...</div>
       </div>
       <div className={layers.length === 0 ? "hidden" : "mt-2.5"}>

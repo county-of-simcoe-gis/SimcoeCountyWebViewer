@@ -52,7 +52,7 @@ export default function ArcGISAuthProvider({ children, required = false }: ArcGI
         await initialize();
       }
       // Step 2 & 3: Hydrate from esriJSAPIOAuth callback or sessionStorage
-      hydrate();
+      await hydrate();
     };
     init();
   }, [hydrate]);

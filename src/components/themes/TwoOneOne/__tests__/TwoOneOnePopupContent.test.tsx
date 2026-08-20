@@ -86,7 +86,7 @@ describe("TwoOneOnePopupContent", () => {
     render(<TwoOneOnePopupContent name="Test Organization" description="Description" website="example.com" recordNumber="R001" isFrench={false} />);
 
     const links = screen.getAllByRole("link");
-    const websiteLink = links.find((link) => link.getAttribute("href")?.includes("example.com"));
+    const websiteLink = links.find((link) => link.getAttribute("href") === "https://example.com");
     expect(websiteLink).toHaveAttribute("href", "https://example.com");
   });
 });

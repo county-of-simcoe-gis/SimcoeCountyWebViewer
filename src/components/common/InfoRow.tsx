@@ -5,6 +5,8 @@ import { formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
 
 export interface InfoRowProps {
   label: string;
+  /** Exact label text to display instead of `formatFieldName(label)` (e.g. an ArcGIS field alias). */
+  labelOverride?: string;
   value?: string | number | boolean | ReactNode;
   className?: string;
   children?: ReactNode;
@@ -22,10 +24,10 @@ const VALUE_CLASSES = {
   table: "text-base-content/70 flex-1 p-2 border border-base-300 break-words [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline",
 } as const;
 
-export const InfoRow: React.FC<InfoRowProps> = ({ label, value, className = "", children, imageData = false, styleMode = "default" }) => {
+export const InfoRow: React.FC<InfoRowProps> = ({ label, labelOverride, value, className = "", children, imageData = false, styleMode = "default" }) => {
   // Use centralized field formatting which handles HTML, URLs, dates, etc.
   const formattedValue = formatFieldValue(label, value);
-  const formattedLabel = formatFieldName(label);
+  const formattedLabel = labelOverride ?? formatFieldName(label);
 
   return (
     <div className={`flex mb-1.5 items-start text-xs ${className}`} data-testid="info-row">

@@ -18,13 +18,15 @@
  */
 
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { flexRender, getCoreRowModel, useReactTable, type ColumnDef } from "@tanstack/react-table";
+import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type ColumnSizingState, type OnChangeFn } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { FaSortUp, FaSortDown, FaSort, FaSearchPlus, FaTimes, FaPaperclip } from "react-icons/fa";
 import { useAttributeTableStore, type AttributeTableTab } from "@/stores/attributeTableStore";
 import type { ColumnType } from "@/lib/attributeTable/columnarStore";
-import { formatFieldValue, formatFieldName, formatFieldValueAsText } from "@/utils/identifyHelpers";
+import { formatFieldValue, formatFieldName } from "@/utils/identifyHelpers";
 import { isExcludedKey } from "@/utils/identifyHelpers";
+import { resolveDomainValue } from "@/utils/arcgisFieldMetadata";
+import { matchesColumnFilter } from "@/lib/attributeTable/filtering";
 import { syncHighlight, zoomToFeature, setHoverFeature, clearHover } from "@/lib/attributeTable/mapIntegration";
 import AttributeTableAttachmentsDialog from "./AttributeTableAttachmentsDialog";
 
@@ -35,6 +37,9 @@ interface Props {
 
 const ROW_HEIGHT = 32;
 const HEADER_HEIGHT = 64; // includes filter row
+const DEFAULT_COLUMN_WIDTH = 160;
+const MIN_COLUMN_WIDTH = 60;
+const MAX_COLUMN_WIDTH = 800;
 
 /**
  * Row model is just an index. We never materialize per-row objects — the
@@ -50,6 +55,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
   const clearSelection = useAttributeTableStore((s) => s.clearSelection);
   const setSort = useAttributeTableStore((s) => s.setSort);
   const setFilter = useAttributeTableStore((s) => s.setFilter);
+  const setColumnSizes = useAttributeTableStore((s) => s.setColumnSizes);
 
   const parentRef = useRef<HTMLDivElement | null>(null);
 
@@ -115,6 +121,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
           );
         },
         size: 36,
+        enableResizing: false,
         cell: ({ row }) => {
           const fid = tab.store!.fids[row.original.index];
           const checked = tab.selection.has(fid);
@@ -137,6 +144,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
         id: "__actions__",
         header: () => null,
         size: tab.hasAttachments ? 76 : 44,
+        enableResizing: false,
         cell: ({ row }) => {
           const fid = tab.store!.fids[row.original.index];
           return (
@@ -179,18 +187,21 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
 
       out.push({
         id: col.name,
-        header: formatFieldName(col.name),
-        size: 160,
+        header: col.alias ?? formatFieldName(col.name),
+        size: tab.columnSizes[col.name] ?? DEFAULT_COLUMN_WIDTH,
+        minSize: MIN_COLUMN_WIDTH,
+        maxSize: MAX_COLUMN_WIDTH,
         cell: ({ row }) => {
           const v = tab.store!.getCell(row.original.index, col.name);
-          const formattedValue = formatFieldValue(col.name, v, col.type);
+          // ArcGIS coded-value domains: display the domain name for the code.
+          const formattedValue = resolveDomainValue(tab.domains, col.name, v) ?? formatFieldValue(col.name, v, col.type);
           if (formattedValue === null) return <span className="opacity-40">—</span>;
           return <span>{formattedValue}</span>;
         },
       });
     }
     return out;
-  }, [tab.schema, tab.store, tab.selection, tab.layerId, tab.wfsUrl, tab.typeName, tab.secured, tab.hasAttachments, toggleSelection, setSelection, clearSelection]);
+  }, [tab.schema, tab.store, tab.domains, tab.selection, tab.layerId, tab.wfsUrl, tab.typeName, tab.secured, tab.hasAttachments, tab.columnSizes, toggleSelection, setSelection, clearSelection]);
 
   // --- Stable row refs (one object per loaded row, reused across renders) --
 
@@ -226,9 +237,10 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
         let match = true;
         for (const f of activeFilters) {
           const cell = store.getCell(i, f.field);
-          // Format the cell value the same way it displays, then filter
-          const displayed = formatFieldValueAsText(f.field, cell, schemaTypeByField.get(f.field)).toLowerCase();
-          if (!displayed.includes(f.normalized)) {
+          // Match the same way the cell displays: formatted value AND, for
+          // ArcGIS coded-value domains, the resolved domain name (so typing
+          // "polyvinyl" matches a cell stored as "PVC", and vice versa).
+          if (!matchesColumnFilter(tab.domains, f.field, cell, schemaTypeByField.get(f.field), f.normalized)) {
             match = false;
             break;
           }
@@ -238,13 +250,35 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
       out.push({ index: i });
     }
     return out;
-  }, [tab.loadedCount, tab.selectionOnly, tab.selection, tab.store, activeFilters, schemaTypeByField]);
+  }, [tab.loadedCount, tab.selectionOnly, tab.selection, tab.store, tab.domains, activeFilters, schemaTypeByField]);
+
+  // Column widths live on the tab (in-memory only) so resizing survives
+  // minimize/restore but resets when the tab closes. TanStack calls this with
+  // either a new map or an updater function.
+  const onColumnSizingChange = useCallback<OnChangeFn<ColumnSizingState>>(
+    (updater) => {
+      const next = typeof updater === "function" ? updater(tab.columnSizes) : updater;
+      // TanStack clamps drag deltas at 0, not at the column minSize — clamp
+      // here so stored widths always respect the column bounds.
+      const clamped: ColumnSizingState = {};
+      for (const [id, width] of Object.entries(next)) {
+        clamped[id] = Math.min(MAX_COLUMN_WIDTH, Math.max(MIN_COLUMN_WIDTH, width));
+      }
+      setColumnSizes(tab.layerId, clamped);
+    },
+    [tab.columnSizes, tab.layerId, setColumnSizes],
+  );
 
   const table = useReactTable<RowRef>({
     data: rows,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (r) => String(r.index),
+    enableColumnResizing: true,
+    // Live drag: only ~30 rows are in the DOM, so per-move re-render is cheap.
+    columnResizeMode: "onChange",
+    state: { columnSizing: tab.columnSizes },
+    onColumnSizingChange,
   });
 
   // --- Virtualization ------------------------------------------------------
@@ -280,7 +314,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
       signal: ctrl.signal,
     });
     return () => ctrl.abort();
-  }, [tab.selection, tab.layerId, tab.wfsUrl, tab.typeName]);
+  }, [tab.selection, tab.layerId, tab.wfsUrl, tab.typeName, tab.secured]);
 
   // Clear hover highlight when the grid unmounts (tab close / minimize).
   useEffect(() => {
@@ -341,7 +375,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
               const active = tab.sort?.field === col.id;
               const arrow = !sortable ? null : !active ? <FaSort size={10} className="opacity-40" /> : tab.sort!.direction === "A" ? <FaSortUp size={10} /> : <FaSortDown size={10} />;
               return (
-                <div key={header.id} className="border-r border-base-300 flex flex-col" style={{ width: col.size ?? 160, minWidth: col.size ?? 160 }}>
+                <div key={header.id} className="relative border-r border-base-300 flex flex-col" style={{ width: header.getSize(), minWidth: header.getSize() }}>
                   {sortable ? (
                     <button
                       type="button"
@@ -370,6 +404,21 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
                   ) : (
                     <div className="px-1 pb-1 h-[24px]" />
                   )}
+                  {header.column.getCanResize() ? (
+                    <div
+                      role="separator"
+                      aria-orientation="vertical"
+                      aria-label={`Resize ${String(col.id)} column`}
+                      title="Drag to resize · double-click to reset"
+                      className={`absolute right-0 top-0 z-10 h-full w-1.5 cursor-col-resize select-none touch-none hover:bg-primary/60 ${
+                        header.column.getIsResizing() ? "bg-primary/60" : "bg-transparent"
+                      }`}
+                      onMouseDown={header.getResizeHandler()}
+                      onTouchStart={header.getResizeHandler()}
+                      onDoubleClick={() => header.column.resetSize()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  ) : null}
                 </div>
               );
             })}
@@ -419,7 +468,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
                     <div
                       key={cell.id}
                       className={`${isUtil ? "px-0 justify-center" : "px-2"} py-1 border-r border-base-200 truncate flex items-center [&_a]:text-primary [&_a]:no-underline [&_a:hover]:text-primary/80 [&_a:hover]:underline`}
-                      style={{ width: cell.column.columnDef.size ?? 160, minWidth: cell.column.columnDef.size ?? 160 }}
+                      style={{ width: cell.column.getSize(), minWidth: cell.column.getSize() }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </div>

@@ -23,6 +23,7 @@ import { useEventStore } from "@/stores/eventStore";
 import { activateTab } from "@/utils/helpersUI";
 import { createDefaultDrawStyle, featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import { formatFieldValueAsText } from "@/utils/identifyHelpers";
+import { resolveDomainValue } from "@/utils/arcgisFieldMetadata";
 import AttributeTableTabs from "./AttributeTableTabs";
 import AttributeTableGrid from "./AttributeTableGrid";
 import AttributeTableMapSelect from "./AttributeTableMapSelect";
@@ -176,7 +177,9 @@ export default function AttributeTablePanel(): React.ReactElement | null {
     setExporting(true);
     try {
       const store = active.store;
-      const columns = active.schema.map((c) => c.name);
+      // Export headers/values the same way the grid displays them: alias
+      // column headers and coded-value domain names (ArcGIS layers).
+      const columns = active.schema.map((c) => c.alias ?? c.name);
       // Build the list of row indices matching the current selection, in
       // on-screen order (store.fids order).
       const selectedRows: number[] = [];
@@ -193,12 +196,12 @@ export default function AttributeTablePanel(): React.ReactElement | null {
         const srcRow = selectedRows[i];
         const r: Array<string | number | boolean | null> = new Array(columns.length);
         for (let c = 0; c < columns.length; c++) {
-          const v = store.getCell(srcRow, columns[c]);
-          // Format each cell the same way it displays on-screen (dates,
-          // booleans, etc.) so the CSV matches the grid; keep null/undefined
-          // as an empty cell rather than the formatter's "N/A" placeholder.
           const col = active.schema![c];
-          r[c] = v === null || v === undefined ? "" : formatFieldValueAsText(col.name, v, col.type);
+          const v = store.getCell(srcRow, col.name);
+          // Format each cell the same way it displays on-screen (domain names,
+          // dates, booleans, etc.) so the CSV matches the grid; keep
+          // null/undefined as an empty cell rather than the "N/A" placeholder.
+          r[c] = v === null || v === undefined ? "" : (resolveDomainValue(active.domains, col.name, v) ?? formatFieldValueAsText(col.name, v, col.type));
         }
         rows[i] = r;
       }

@@ -23,6 +23,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { describeFeatureType, fetchWfsCount, fetchWfsPage, pickImplicitSortField, WfsPrimaryKeyError, type WfsFieldDescriptor } from "@/lib/attributeTable/wfs";
 import { describeArcgisLayer, fetchArcgisCount, fetchArcgisPage, parseArcgisLayerUrl, pickImplicitSortFieldArcgis, ArcgisPaginationNotSupportedError } from "@/lib/attributeTable/arcgis";
 import { ColumnarStore, type ColumnSchema } from "@/lib/attributeTable/columnarStore";
+import type { ArcgisCodedValue } from "@/utils/arcgisFieldMetadata";
 import { cacheGeometries, getCurrentMapExtent } from "@/lib/attributeTable/mapIntegration";
 import { useToastStore } from "@/hooks/useToast";
 
@@ -31,7 +32,7 @@ import { useToastStore } from "@/hooks/useToast";
 // ---------------------------------------------------------------------------
 
 function schemaFromFields(fields: WfsFieldDescriptor[]): ColumnSchema[] {
-  return fields.filter((f) => !f.isGeometry).map((f) => ({ name: f.name, type: f.type }));
+  return fields.filter((f) => !f.isGeometry).map((f) => ({ name: f.name, type: f.type, alias: f.alias }));
 }
 
 function buildCqlFromFilters(filters: Record<string, string>, schema: ColumnSchema[] | null): string | undefined {
@@ -133,6 +134,7 @@ async function describeAndCount(
   total: number;
   implicitSortField: string | null;
   supportsPagination: boolean;
+  domains: Record<string, ArcgisCodedValue[]> | null;
 }> {
   if (tab.sourceType === "arcgis") {
     const endpoint = parseArcgisLayerUrl(tab.wfsUrl);
@@ -149,6 +151,7 @@ async function describeAndCount(
       total,
       implicitSortField: pickImplicitSortFieldArcgis(info.objectIdField),
       supportsPagination: info.supportsPagination,
+      domains: info.domains,
     };
   }
 
@@ -161,7 +164,7 @@ async function describeAndCount(
       signal,
     }),
   ]);
-  return { fields, total, implicitSortField: pickImplicitSortField(fields), supportsPagination: true };
+  return { fields, total, implicitSortField: pickImplicitSortField(fields), supportsPagination: true, domains: null };
 }
 
 /** Unified page fetcher that dispatches by source type. */
@@ -250,7 +253,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
     const bbox = tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined;
 
     try {
-      const { fields, total, implicitSortField, supportsPagination } = await describeAndCount(tab, ctrl.signal);
+      const { fields, total, implicitSortField, supportsPagination, domains } = await describeAndCount(tab, ctrl.signal);
 
       const schema = schemaFromFields(fields);
       const effectiveSort = supportsPagination ? resolveSortField(tab.sort, implicitSortField, fields) : null;
@@ -293,6 +296,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
         store,
         totalCount: effectiveTotal,
         capReached,
+        domains,
       });
 
       if (capReached && effectiveTotal > ATTRIBUTE_TABLE_DEFAULTS.rowCap) {
