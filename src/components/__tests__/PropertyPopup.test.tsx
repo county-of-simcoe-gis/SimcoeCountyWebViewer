@@ -58,7 +58,7 @@ describe("PropertyPopup", () => {
     useToastStore.setState({ toasts: [] });
 
     // Set config in app store
-    useAppStore.setState({ config: { termsUrl: "https://example.com/terms" } as any });
+    useAppStore.setState({ config: { termsUrl: "https://example.com/terms" } as any, urlParameters: {} });
 
     // Mock window.map
     (global as any).window.map = {
@@ -236,6 +236,65 @@ describe("PropertyPopup", () => {
 
     expect(screen.getByText("More Information")).toBeInTheDocument();
     expect(screen.getByText("Close")).toBeInTheDocument();
+  });
+
+  it("renders the property link with the default label", () => {
+    useAppStore.setState({
+      urlParameters: { PROPERTYLINK: '{"link":"https://example.com/property/{arn}"}' },
+    });
+
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    const propertyLink = screen.getByRole("link", { name: "Property Link" });
+    expect(propertyLink).toHaveAttribute("href", "https://example.com/property/1234567890");
+    expect(propertyLink).toHaveAttribute("target", "_blank");
+    expect(propertyLink).toHaveAttribute("rel", expect.stringContaining("noopener"));
+  });
+
+  it("renders the property link with a custom label", () => {
+    useAppStore.setState({
+      urlParameters: { PROPERTYLINK: '{"label":"View Assessment","link":"https://example.com/assessment/{arn}"}' },
+    });
+
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    expect(screen.getByRole("link", { name: "View Assessment" })).toHaveAttribute("href", "https://example.com/assessment/1234567890");
+  });
+
+  it("uses lowercase propertylink parameter names", () => {
+    useAppStore.setState({
+      urlParameters: { propertylink: '{"label":"Lowercase Link","link":"https://example.com/lower/{arn}"}' },
+    });
+
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    expect(screen.getByRole("link", { name: "Lowercase Link" })).toHaveAttribute("href", "https://example.com/lower/1234567890");
+  });
+
+  it("does not render the property link when the parameter is missing", () => {
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    expect(screen.queryByRole("link", { name: "Property Link" })).not.toBeInTheDocument();
+  });
+
+  it("does not render the property link when the parameter is invalid", () => {
+    useAppStore.setState({
+      urlParameters: { PROPERTYLINK: "not json" },
+    });
+
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    expect(screen.queryByRole("link", { name: "Property Link" })).not.toBeInTheDocument();
+  });
+
+  it("does not render the property link when the link is missing", () => {
+    useAppStore.setState({
+      urlParameters: { PROPERTYLINK: '{"label":"Missing Link"}' },
+    });
+
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    expect(screen.queryByRole("link", { name: "Missing Link" })).not.toBeInTheDocument();
   });
 
   it("renders all tool links", () => {

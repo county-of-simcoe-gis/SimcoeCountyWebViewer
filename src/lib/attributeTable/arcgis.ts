@@ -17,6 +17,7 @@
 
 import type { ColumnType } from "./columnarStore";
 import type { WfsFieldDescriptor, WfsPageResult } from "./wfs";
+import { parseArcgisFieldsMetadata, type ArcgisCodedValue } from "@/utils/arcgisFieldMetadata";
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -157,6 +158,10 @@ interface ArcgisServiceInfo {
     type: string; // e.g. esriFieldTypeString, esriFieldTypeOID, …
     alias?: string;
     nullable?: boolean;
+    domain?: {
+      type?: string;
+      codedValues?: Array<{ name?: unknown; code?: unknown }>;
+    } | null;
   }>;
   objectIdField?: string;
   /** Older services expose the OID field via 'displayField' or 'fields'. */
@@ -217,6 +222,8 @@ export async function describeArcgisLayer(endpoint: ArcgisEndpoint, secured: boo
   objectIdField: string;
   maxRecordCount: number;
   supportsPagination: boolean;
+  /** field name (lowercase) → coded values, for fields with a codedValue domain. */
+  domains: Record<string, ArcgisCodedValue[]>;
 }> {
   const token = await resolveToken(endpoint, secured);
   const url = withToken(`${endpoint.layerUrl}?f=json`, token);
@@ -224,6 +231,7 @@ export async function describeArcgisLayer(endpoint: ArcgisEndpoint, secured: boo
 
   const fields: WfsFieldDescriptor[] = [];
   const objectIdField = info.objectIdField ?? findOidField(info.fields) ?? "OBJECTID";
+  const domains = parseArcgisFieldsMetadata(info.fields).domains;
 
   for (const f of info.fields ?? []) {
     // Skip geometry / shape length/area — users don't want these in the grid.
@@ -236,6 +244,8 @@ export async function describeArcgisLayer(endpoint: ArcgisEndpoint, secured: boo
       nillable: f.nullable !== false,
       isGeometry: false,
       isIdLike: f.type === "esriFieldTypeOID" || f.name === objectIdField,
+      // Surface the alias only when it adds information over the raw name.
+      alias: typeof f.alias === "string" && f.alias.length > 0 && f.alias.toLowerCase() !== f.name.toLowerCase() ? f.alias : undefined,
     });
   }
 
@@ -248,6 +258,7 @@ export async function describeArcgisLayer(endpoint: ArcgisEndpoint, secured: boo
     objectIdField,
     maxRecordCount: info.maxRecordCount ?? 1000,
     supportsPagination,
+    domains,
   };
 }
 

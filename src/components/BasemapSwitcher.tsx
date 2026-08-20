@@ -11,7 +11,7 @@ import Slider from "rc-slider";
 import "rc-slider/assets/index.css";
 import "@/styles/rc-slider-basemap.css";
 import { Layer } from "ol/layer";
-import { MdManageHistory } from "react-icons/md";
+import { MdManageHistory, MdKeyboardArrowDown, MdKeyboardArrowUp } from "react-icons/md";
 import { setStorageItem, getStorageItem } from "@/utils/storage";
 import { setBasemapPrintOnlyDescriptors, type BasemapPrintOnlyDescriptor } from "@/components/basemapPrintOnlyRegistry";
 import { trackBasemap } from "@/lib/appStats";
@@ -966,7 +966,7 @@ export default function BasemapSwitcher() {
     <>
       <div
         id="sc-basemap-main-container"
-        className={`absolute right-[2px] top-0 w-[74px] bg-base-100 border border-base-300 p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
+        className={`absolute right-[2px] top-0 w-[100px] bg-base-100 border border-base-300 p-[2px] opacity-90 rounded z-[2] outline-none hover:opacity-100${!map ? " hidden" : ""}`}
       >
         <div className="relative">
           <button
@@ -981,11 +981,14 @@ export default function BasemapSwitcher() {
           {/* Settings button overlaid on top of image for imagery */}
           {activeButton === "imagery" && (
             <button
-              className="absolute bottom-0 right-0 !bg-base-300 !border !border-base-content/50 rounded-sm cursor-pointer !p-px flex items-center justify-center text-base-content transition-all duration-200 !w-5 !h-5 z-[3] hover:bg-base-200 hover:text-base-content hover:scale-110"
+              className="absolute bottom-0 left-0 right-0 bg-base-300 border border-base-content/50 rounded-sm cursor-pointer px-1 !flex flex-row items-center justify-center gap-0.5 text-base-content transition-all duration-200 h-6 max-h-6 overflow-hidden z-[3] hover:bg-base-200 hover:text-base-content hover:opacity-90"
+              style={{ width: "100%", margin: 0 }}
               onClick={onSettingsClick}
               title="Select imagery year and settings"
             >
-              <MdManageHistory size={14} className="ml-[1px]" />
+              <MdManageHistory size={20} />
+              <span className="text-[9pt] font-bold">Imagery</span>
+              {imageryPanelOpen ? <MdKeyboardArrowDown size={20} /> : <MdKeyboardArrowUp size={20} />}
             </button>
           )}
         </div>
@@ -993,7 +996,7 @@ export default function BasemapSwitcher() {
 
       {/* Imagery Slider Panel */}
       <div
-        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[58px] bg-base-100 rounded z-[2] border border-base-300 p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
+        className={`basemap-slider-container absolute right-[2px] w-[88px] h-[280px] top-[70px] bg-base-100 rounded z-[2] border border-base-300 p-2 opacity-90 select-none transition-opacity duration-200 hover:opacity-100${!imageryPanelOpen ? " hidden" : ""}`}
       >
         <label className="block text-[8pt] ml-2.5 pb-[5px] pt-0">
           <input className="w-[13px] h-[13px] p-0 m-0 align-middle relative -top-px scale-110" type="checkbox" checked={streetsCheckbox} onChange={onStreetsCheckbox} />
@@ -1016,7 +1019,7 @@ export default function BasemapSwitcher() {
 
       {/* Topo Options Panel */}
       <div
-        className={`absolute right-[2px] w-[120px] top-[47px] bg-base-100 rounded z-[2] border border-base-300 p-1 opacity-90 select-none transition-opacity duration-200 flex flex-col gap-1.5 max-h-[400px] overflow-y-auto hover:opacity-100${!topoPanelOpen ? " hidden" : ""}`}
+        className={`absolute right-[2px] w-[120px] top-[70px] bg-base-100 rounded z-[2] border border-base-300 p-1 opacity-90 select-none transition-opacity duration-200 flex flex-col gap-1.5 max-h-[400px] overflow-y-auto hover:opacity-100${!topoPanelOpen ? " hidden" : ""}`}
       >
         {/* Imagery Option */}
         <div

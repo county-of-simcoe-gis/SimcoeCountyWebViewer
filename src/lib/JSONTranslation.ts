@@ -376,8 +376,10 @@ export function JSONToSettings(src: Record<string, unknown>): SettingsType & Rec
 
   const handledKeys = getAllHandledKeys(translationTable);
 
-  // First, copy all source properties that aren't handled by any mapping
-  for (const key in src) {
+  // First, copy all source properties that aren't handled by any mapping.
+  // Object.keys (own enumerable only) + UNSAFE_KEYS guard prevents prototype pollution.
+  for (const key of Object.keys(src)) {
+    if (UNSAFE_KEYS.has(key)) continue;
     if (!handledKeys.has(key) && !(key in translationTable)) {
       result[key] = src[key];
     }
@@ -395,12 +397,20 @@ export function JSONToSettings(src: Record<string, unknown>): SettingsType & Rec
 // --- Helper functions ---
 
 /**
+ * Keys that must never be assigned to plain objects — guarding against
+ * prototype pollution when processing untrusted JSON payloads.
+ */
+const UNSAFE_KEYS = new Set(["__proto__", "prototype", "constructor"]);
+
+/**
  * Sets a value in an object using dot notation path.
  * Creates intermediate objects if they don't exist.
  * Example: setValueAtPath(obj, "a.b.c", 123) creates obj.a.b.c = 123
  */
 function setValueAtPath(obj: any, path: string, value: any): void {
   const parts = path.split(".");
+  // Guard against prototype pollution via malicious paths
+  if (parts.some((part) => UNSAFE_KEYS.has(part))) return;
   let current = obj;
   parts.forEach((part, index) => {
     if (index === parts.length - 1) {
@@ -422,6 +432,8 @@ function setValueAtPath(obj: any, path: string, value: any): void {
  */
 function deepMerge(target: any, source: any): any {
   for (const key in source) {
+    // Guard against prototype pollution via malicious keys
+    if (UNSAFE_KEYS.has(key)) continue;
     if (Object.prototype.hasOwnProperty.call(source, key)) {
       if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key])) {
         target[key] = deepMerge(target[key] || {}, source[key]);
