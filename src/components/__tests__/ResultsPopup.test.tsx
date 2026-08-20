@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ResultsPopup, { createPropertyResult, createCondoResult, createIdentifyResult } from "@/components/ResultsPopup";
+import type { ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
 
@@ -177,6 +178,17 @@ describe("ResultsPopup", () => {
 
         expect(result.displayName).toBe("Test Layer");
       });
+
+      it("stores fieldMetadata passed via options", () => {
+        const fieldMetadata: ArcgisLayerFieldMetadata = {
+          aliases: { material: "Material" },
+          domains: { material: [{ code: "AAA", name: "Alpha Material" }] },
+        };
+
+        const result = createIdentifyResult("Test Layer", "feature_123", { MATERIAL: "PVC" }, undefined, undefined, { fieldMetadata });
+
+        expect(result.data.fieldMetadata).toBe(fieldMetadata);
+      });
     });
   });
 
@@ -220,6 +232,20 @@ describe("ResultsPopup", () => {
       render(<ResultsPopup results={results} onClose={mockOnClose} />);
 
       expect(screen.getByText(/Results/i)).toBeInTheDocument();
+    });
+
+    it("renders ArcGIS aliases and domain names for identify results", () => {
+      const fieldMetadata: ArcgisLayerFieldMetadata = {
+        aliases: { material: "Material", "dbo.testwidget.facilityid": "Asset ID", facilityid: "Asset ID" },
+        domains: { material: [{ code: "AAA", name: "Alpha Material" }] },
+      };
+      const results = [createIdentifyResult("Test Layer", "feature_1", { "DBO.TestWidget.FACILITYID": "WID-123", MATERIAL: "AAA" }, undefined, undefined, { fieldMetadata })];
+
+      render(<ResultsPopup results={results} onClose={mockOnClose} />);
+
+      expect(screen.getByText("Material:")).toBeInTheDocument();
+      expect(screen.getByText("Asset ID:")).toBeInTheDocument();
+      expect(screen.getByText("Alpha Material")).toBeInTheDocument();
     });
 
     it("shows loading state when isLoadingResults is true", async () => {

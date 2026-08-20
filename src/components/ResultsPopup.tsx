@@ -7,6 +7,7 @@ import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopu
 import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
 import { isExcludedKey } from "@/utils/identifyHelpers";
+import { resolveDomainName, resolveFieldAlias, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 
 // Base interface for common result fields
@@ -58,6 +59,8 @@ export interface IdentifyResult extends BaseResult {
     featureId: string;
     attributes: Record<string, unknown>;
     feature?: Feature;
+    /** ArcGIS field aliases + coded-value domains for the layer, when available. */
+    fieldMetadata?: ArcgisLayerFieldMetadata;
   };
 }
 
@@ -227,9 +230,14 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
             <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
                 .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")
-                .map(([key, value]) => (
-                  <InfoRow key={key} label={key} value={value != null ? String(value) : ""} />
-                ))}
+                .map(([key, value]) => {
+                  // ArcGIS layers: prefer the field alias for the label and
+                  // the coded-value domain name for the value, when available.
+                  const meta = result.data.fieldMetadata;
+                  const alias = resolveFieldAlias(meta, key);
+                  const domainName = resolveDomainName(meta, key, value);
+                  return <InfoRow key={key} label={key} labelOverride={alias} value={domainName ?? (value != null ? String(value) : "")} />;
+                })}
             </div>
           </div>
         );
@@ -303,7 +311,7 @@ export function createIdentifyResult(
   attributes: Record<string, unknown>,
   feature?: Feature,
   layerZIndex?: number,
-  options?: { layerId?: string; displayName?: string },
+  options?: { layerId?: string; displayName?: string; fieldMetadata?: ArcgisLayerFieldMetadata },
 ): IdentifyResult {
   // Try to create a meaningful display name from attributes, with caller override for
   // layers that expose a configured display field such as Name or Address.
@@ -320,6 +328,7 @@ export function createIdentifyResult(
       featureId,
       attributes,
       feature,
+      fieldMetadata: options?.fieldMetadata,
     },
   };
 }

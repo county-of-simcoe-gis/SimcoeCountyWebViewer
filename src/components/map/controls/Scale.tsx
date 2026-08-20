@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getMapScale } from "@/utils/mapHelpers";
 import Map from "ol/Map";
 import { useMapStore } from "@/stores/mapStore";
+import DOMPurify from "dompurify";
 
 // React component for scale display
 interface ScaleDisplayProps {
@@ -37,11 +38,13 @@ export const ScaleDisplay = React.memo(({ map }: ScaleDisplayProps) => {
                 originalText = originalText.replace(/\s+1:[0-9,]+/, "").trim();
               }
 
-              // Create HTML content with scale ratio on top and distance below
-              scaleLineInner.innerHTML = `<div style="line-height: 1.2; text-align: center;">
+              // Create HTML content with scale ratio on top and distance below.
+              // DOMPurify.sanitize clears the CodeQL DOM-XSS alert (originalText
+              // originates from DOM textContent).
+              scaleLineInner.innerHTML = DOMPurify.sanitize(`<div style="line-height: 1.2; text-align: center;">
               <div>${originalText}</div>
               <div>1:${formattedScale}</div>
-            </div>`;
+            </div>`);
             }
           }, 10);
         }

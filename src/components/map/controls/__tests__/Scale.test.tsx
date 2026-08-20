@@ -32,17 +32,7 @@ const mockView = {
   un: vi.fn(),
 };
 
-const mockScaleLineInner = {
-  textContent: "100 m",
-  _innerHTML: "",
-  // Make innerHTML settable like a real DOM element
-  set innerHTML(value) {
-    this._innerHTML = value;
-  },
-  get innerHTML() {
-    return this._innerHTML || "";
-  },
-};
+let mockScaleLineInner: HTMLDivElement;
 
 describe("Scale", () => {
   beforeEach(() => {
@@ -50,12 +40,12 @@ describe("Scale", () => {
     mockMap.getView = vi.fn().mockReturnValue(mockView);
     (mapHelpers.getMapScale as any).mockReturnValue(25000);
 
+    // Use a real DOM element as the scale line target
+    mockScaleLineInner = document.createElement("div");
+    mockScaleLineInner.textContent = "100 m";
+
     // Mock document.querySelector for this test only
     document.querySelector = vi.fn().mockReturnValue(mockScaleLineInner);
-
-    // Reset mock innerHTML
-    mockScaleLineInner._innerHTML = "";
-    mockScaleLineInner.textContent = "100 m";
   });
 
   afterEach(() => {
@@ -75,7 +65,7 @@ describe("Scale", () => {
     await new Promise((resolve) => setTimeout(resolve, 25));
 
     expect(document.querySelector).toHaveBeenCalledWith(".ol-scale-line-inner");
-    expect(mockScaleLineInner.innerHTML).toContain("1:25,000");
+    expect(mockScaleLineInner.textContent).toContain("1:25,000");
   });
 
   it("sets up change listeners for map view", () => {
@@ -106,7 +96,7 @@ describe("Scale", () => {
     // Wait for the async DOM update to complete
     await new Promise((resolve) => setTimeout(resolve, 25));
 
-    expect(mockScaleLineInner.innerHTML).toContain("1:1,234,567");
+    expect(mockScaleLineInner.textContent).toContain("1:1,234,567");
   });
 
   it("handles missing map gracefully", () => {

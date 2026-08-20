@@ -18,6 +18,13 @@ describe("InfoRow", () => {
     expect(screen.getByText("Test Value")).toBeInTheDocument();
   });
 
+  it("uses labelOverride verbatim instead of formatting the raw label", () => {
+    render(<InfoRow label="DBO.TestWidget.GAUGE" labelOverride="Gauge (mm)" value="200" />);
+
+    expect(screen.getByText("Gauge (mm):")).toBeInTheDocument();
+    expect(screen.queryByText(/DBO\.TestWidget/)).not.toBeInTheDocument();
+  });
+
   it("renders with children when provided", () => {
     render(
       <InfoRow label="Test Label" value="Test Value">

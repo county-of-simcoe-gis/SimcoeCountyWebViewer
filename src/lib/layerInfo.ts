@@ -6,6 +6,7 @@ import axios from "axios";
 import type { AxiosRequestConfig } from "axios";
 import type { LayerInfoData, LayerInfoResponse, ArcGISFeatureInfo, LayerInfoNativeCRS } from "@/types/layerInfo";
 import { getAccessToken } from "@/utils/auth";
+import { htmlToText } from "@/utils/helpersCore";
 
 async function buildRequestConfig(baseConfig: AxiosRequestConfig = {}, useBearerToken: boolean = false): Promise<AxiosRequestConfig> {
   const config: AxiosRequestConfig = { ...baseConfig };
@@ -162,8 +163,8 @@ export function parseArcGISFeature(featureInfo: ArcGISFeatureInfo): LayerInfoDat
  * (no tags at all), the full cleaned text is returned as-is.
  */
 export function parseESRIDescription(description: string): { description: string } {
-  // Remove HTML tags
-  const text = description.replace(/<[^>]*>/g, "");
+  // Remove HTML tags (DOMParser-based, handles multi-char sequences)
+  const text = htmlToText(description);
 
   const descriptionTagMatch = text.match(/#Description=\s*(.*?)\s*(?=#\w+=|$)/i);
   if (descriptionTagMatch) {

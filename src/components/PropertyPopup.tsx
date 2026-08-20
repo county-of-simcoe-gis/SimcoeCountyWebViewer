@@ -8,6 +8,7 @@ import { useAppStore } from "@/stores/appStore";
 import { InfoWindowRow } from "@/components/ui/InfoWindowRow";
 import { usePropertyPopupExtensionStore } from "@/stores/propertyPopupExtensionStore";
 import { isPropertyInMunicipality } from "@/utils/municipalityFilter";
+import { tryParseJSON } from "@/utils/helpersCore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useReportsStore } from "@/stores/reportsStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
@@ -42,6 +43,26 @@ export interface PropertyInfo {
   [key: string]: unknown;
 }
 
+interface PropertyLinkConfig {
+  label: string;
+  href: string;
+}
+
+function getPropertyLink(rawValue: string | undefined, arn: string): PropertyLinkConfig | null {
+  if (!rawValue) return null;
+
+  const parsed = tryParseJSON(rawValue);
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+
+  const candidate = parsed as { label?: unknown; link?: unknown };
+  if (typeof candidate.link !== "string" || candidate.link.length === 0) return null;
+
+  return {
+    label: typeof candidate.label === "string" && candidate.label.length > 0 ? candidate.label : "Property Link",
+    href: candidate.link.replace("{arn}", arn),
+  };
+}
+
 interface PropertyPopupProps {
   propInfo: PropertyInfo;
   feature: Feature;
@@ -51,6 +72,7 @@ interface PropertyPopupProps {
 
 export default function PropertyPopup({ propInfo, feature, onClose, onClearParcelLayer }: PropertyPopupProps) {
   const config = useAppStore((state) => state.config);
+  const propertyLinkParameter = useAppStore((state) => state.urlParameters.PROPERTYLINK ?? state.urlParameters.propertylink);
   const [copied, setCopied] = useState(false);
   const toast = useToast();
   const extensionItems = usePropertyPopupExtensionStore((s) => s.getVisibleItems)();
@@ -59,6 +81,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   const { ARN: arn, Address: address, AssessedValue: assessedValue, HasZoning: hasZoning, WasteCollection: wasteCollection, Other: other, pointCoordinates, shareURL } = propInfo;
   const garbageDay = wasteCollection?.GarbageDay;
   const broadbandSpeed = other?.BroadbandSpeed;
+  const propertyLink = getPropertyLink(propertyLinkParameter, arn);
 
   const handleCopyARN = () => {
     navigator.clipboard.writeText(arn);
@@ -308,19 +331,31 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
       </div>
 
       {/* Action Buttons — sticky so the scroll container can't shift them away from the cursor */}
-      <div className="flex mt-1.5 w-full sticky bottom-0 bg-base-100 pt-1 pb-0.5 z-10">
-        <button
-          className="btn btn-sm flex-[6] mr-1.5 min-h-8 rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
-          onClick={handleMoreInfo}
-        >
-          More Information
-        </button>
-        <button
-          className="btn btn-sm flex-[4] min-h-8 rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
-          onClick={handleCloseClick}
-        >
-          Close
-        </button>
+      <div className="sticky bottom-0 bg-base-100 mt-1.5 pt-1 pb-0.5 z-10">
+        <div className="flex w-full">
+          <button
+            className="btn btn-sm flex-[6] mr-1.5 min-h-8 rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+            onClick={handleMoreInfo}
+          >
+            More Information
+          </button>
+          <button
+            className="btn btn-sm flex-[4] min-h-8 rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+            onClick={handleCloseClick}
+          >
+            Close
+          </button>
+        </div>
+        {propertyLink && (
+          <a
+            href={propertyLink.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-sm mt-1 min-h-8 w-full rounded-sm border-base-300 bg-gradient-to-b from-base-100 to-base-300 text-base-content text-xs font-normal shadow-none hover:border-[#80b9ff] hover:shadow-[0_0_5px_#80b9ff]"
+          >
+            {propertyLink.label}
+          </a>
+        )}
       </div>
     </div>
   );

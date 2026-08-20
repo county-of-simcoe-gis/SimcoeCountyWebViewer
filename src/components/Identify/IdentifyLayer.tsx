@@ -71,7 +71,7 @@ const IdentifyLayerComponent: React.FC<IdentifyLayerProps> = ({ layer, expanded 
           </div>
         )}
         {layer.features.map((featureItem, idx) => (
-          <IdentifyFeatureItem key={`feature-${idx}`} featureItem={featureItem} layerName={layer.name} minScale={layer.minScale} />
+          <IdentifyFeatureItem key={`feature-${idx}`} featureItem={featureItem} layerName={layer.name} minScale={layer.minScale} fieldMetadata={layer.fieldMetadata} />
         ))}
       </div>
     </div>
