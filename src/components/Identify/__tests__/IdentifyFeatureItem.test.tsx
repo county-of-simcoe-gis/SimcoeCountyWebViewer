@@ -74,6 +74,29 @@ describe("IdentifyFeatureItem", () => {
     expect(screen.getByText("N/A")).toBeInTheDocument();
   });
 
+  describe("geometry-only features (attribute-less WMS GetFeatureInfo)", () => {
+    it("renders 'N/A' header without crashing when displayName resolves to geometry", () => {
+      // Mirrors GeoServer WMS responses with "properties": {} — the OL Feature's
+      // only property is its geometry. displayName may be "geometry" (old bug) or "".
+      const feature = new Feature(new Point([0, 0]));
+      render(<IdentifyFeatureItem featureItem={{ feature, displayName: "geometry" }} layerName="Crown Land" />);
+      expect(screen.getByText(/N\/A/)).toBeInTheDocument();
+    });
+
+    it("falls back to the layer name label when displayName is empty", () => {
+      const feature = new Feature(new Point([0, 0]));
+      render(<IdentifyFeatureItem featureItem={{ feature, displayName: "" }} layerName="Crown Land" />);
+      expect(screen.getByText(/Crown Land: N\/A/)).toBeInTheDocument();
+    });
+
+    it("shows 'No attributes found' body for geometry-only features", () => {
+      const feature = new Feature(new Point([0, 0]));
+      render(<IdentifyFeatureItem featureItem={{ feature, displayName: "" }} layerName="Crown Land" />);
+      fireEvent.click(screen.getByText(/Crown Land: N\/A/));
+      expect(screen.getByText("No attributes found")).toBeInTheDocument();
+    });
+  });
+
   describe("ArcGIS field metadata (aliases + domains)", () => {
     const fieldMetadata = {
       aliases: {
