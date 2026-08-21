@@ -21,6 +21,7 @@ import { create } from "zustand";
 import type { TOCLayer } from "@/stores/tocStore";
 import { ColumnarStore, type ColumnSchema } from "@/lib/attributeTable/columnarStore";
 import type { WfsFieldDescriptor } from "@/lib/attributeTable/wfs";
+import type { ArcgisCodedValue } from "@/utils/arcgisFieldMetadata";
 
 // ---------------------------------------------------------------------------
 // Constants / configuration
@@ -64,6 +65,8 @@ export interface AttributeTableTab {
   schema: ColumnSchema[] | null;
   /** Full field metadata from DescribeFeatureType (incl. geometry fields). */
   fields: WfsFieldDescriptor[] | null;
+  /** ArcGIS coded-value domains (field name lowercase → coded values); null for WFS layers. */
+  domains: Record<string, ArcgisCodedValue[]> | null;
   /** Field used for paging when user has no explicit sort. */
   implicitSortField: string | null;
   store: ColumnarStore | null;
@@ -74,6 +77,8 @@ export interface AttributeTableTab {
   sort: SortSpec | null;
   filters: FilterMap;
   bboxFilterActive: boolean;
+  /** Column widths in px, keyed by column id. In-memory only (not persisted); reset when the tab closes. */
+  columnSizes: Record<string, number>;
   /** When true the grid shows only currently-selected rows. */
   selectionOnly: boolean;
   /** When true the user can click/box-select features on the map to select rows. */
@@ -103,6 +108,8 @@ interface AttributeTableState {
   setFilter: (layerId: string, field: string, value: string) => void;
   clearFilters: (layerId: string) => void;
   setBboxFilterActive: (layerId: string, active: boolean) => void;
+  /** Replace the full column-width map for a tab (column id -> px width). */
+  setColumnSizes: (layerId: string, sizes: Record<string, number>) => void;
 
   /** Replace tab data (after a fresh fetch due to sort/filter change). */
   replaceData: (
@@ -114,6 +121,8 @@ interface AttributeTableState {
       store: ColumnarStore;
       totalCount: number | null;
       capReached: boolean;
+      /** ArcGIS coded-value domains; omitted/null for WFS layers. */
+      domains?: Record<string, ArcgisCodedValue[]> | null;
     },
   ) => void;
   /** Append a page to an existing store. */
@@ -164,6 +173,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
     attachmentUrlTemplate,
     schema: null,
     fields: null,
+    domains: null,
     implicitSortField: null,
     store: null,
     totalCount: null,
@@ -172,6 +182,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
     error: null,
     sort: null,
     filters: {},
+    columnSizes: {},
     // Default ON: many layers contain 100k+ features; restrict to the visible
     // map window so the initial fetch stays within the row cap.
     bboxFilterActive: false,
@@ -284,6 +295,11 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
       tabs: s.tabs.map((t) => (t.layerId === layerId ? { ...t, bboxFilterActive: active } : t)),
     })),
 
+  setColumnSizes: (layerId, sizes) =>
+    set((s) => ({
+      tabs: s.tabs.map((t) => (t.layerId === layerId ? { ...t, columnSizes: sizes } : t)),
+    })),
+
   replaceData: (layerId, patch) => {
     // Dispose the previous store before replacing so we don't leak.
     const prev = get().tabs.find((t) => t.layerId === layerId);
@@ -296,6 +312,7 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
               ...t,
               schema: patch.schema,
               fields: patch.fields,
+              domains: patch.domains ?? null,
               implicitSortField: patch.implicitSortField,
               store: patch.store,
               totalCount: patch.totalCount,

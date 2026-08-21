@@ -10,6 +10,8 @@ import { useInteractionManager } from "@/components/map/MapContainer";
 import { createIdentifyResult } from "@/components/ResultsPopup";
 import type { IdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
+import { parseArcgisLayerUrl } from "@/lib/attributeTable/arcgis";
+import { getArcgisFieldMetadata, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import ThemePopupContent from "@/components/themes/shared/ThemePopupContent";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
@@ -103,6 +105,8 @@ export interface LiveLayerResult {
   layerZIndex?: number;
   layerId?: string;
   displayName?: string;
+  /** ArcGIS field aliases + coded-value domains for the layer, when available. */
+  fieldMetadata?: ArcgisLayerFieldMetadata;
   /** True when this result comes from a theme layer (uses ThemePopupContent) */
   isThemeLayer?: boolean;
   /** Optional theme-specific popup metadata */
@@ -343,6 +347,19 @@ export default function LiveLayerClick() {
           const identifyFeatures = await queryLiveLayer(candidate.layer, coordinate);
           if (identifyFeatures.length === 0) return;
 
+          // ArcGIS layers carry field aliases + coded-value domains in the
+          // layer metadata — resolve them so the popup can display aliases and
+          // domain names instead of raw column names/codes. Cached per layer
+          // URL, so repeat clicks are free.
+          let fieldMetadata: ArcgisLayerFieldMetadata | null = null;
+          if (candidate.layer.get("isArcGIS")) {
+            const candidateWfsUrl = candidate.layer.get("wfsUrl") as string | undefined;
+            const endpoint = candidateWfsUrl ? parseArcgisLayerUrl(candidateWfsUrl) : null;
+            if (endpoint) {
+              fieldMetadata = await getArcgisFieldMetadata(endpoint.layerUrl, { secured: candidate.layer.get("secured") ?? false, token: endpoint.tokenFromUrl });
+            }
+          }
+
           for (let fi = 0; fi < identifyFeatures.length; fi++) {
             const identifyFeature = identifyFeatures[fi];
             const layerName = identifyFeature.get("layerDisplayName") || candidate.name || "Feature";
@@ -368,6 +385,7 @@ export default function LiveLayerClick() {
               feature: identifyFeature,
               layerZIndex: candidate.layerZIndex,
               layerId: candidate.layerId,
+              fieldMetadata: fieldMetadata ?? undefined,
               displayName: candidate.displayFieldName ? (cleanAttributes[String(candidate.displayFieldName)] as string | undefined) : undefined,
               isThemeLayer: candidate.isThemeLayer,
               moreInfoUrlFieldName: candidate.moreInfoUrlFieldName,
@@ -414,6 +432,7 @@ export default function LiveLayerClick() {
             const identifyResult = createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex, {
               layerId: result.layerId,
               displayName: result.displayName,
+              fieldMetadata: result.fieldMetadata,
             });
 
             // Attach themed popup rendering for theme layers

@@ -10,15 +10,7 @@
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import {
-  type ArcGISTokenData,
-  saveTokenToStorage,
-  loadTokenFromStorage,
-  clearTokenFromStorage,
-  login,
-  processCredential,
-  processEsriJSAPIOAuth,
-} from "@/utils/arcgisAuth";
+import { type ArcGISTokenData, saveTokenToStorage, loadTokenFromStorage, clearTokenFromStorage, login, processCredential, processEsriJSAPIOAuth } from "@/utils/arcgisAuth";
 import ImageArcGISRest from "ol/source/ImageArcGISRest";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -56,7 +48,7 @@ interface ArcGISTokenActions {
    */
   getValidToken: () => Promise<string | null>;
   /** Hydrate state from sessionStorage / esriJSAPIOAuth (call once on app init). */
-  hydrate: () => void;
+  hydrate: () => Promise<void>;
   /** Trigger a re-login via IdentityManager and update all secured layers. */
   refreshToken: () => Promise<boolean>;
   /** Update TOKEN param on all secured ArcGIS OL sources. */
@@ -102,8 +94,8 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
         state.error = null;
       });
 
-      // Persist
-      saveTokenToStorage(data);
+      // Persist (fire-and-forget — encrypted write)
+      void saveTokenToStorage(data);
 
       // Schedule refresh before renewal date
       clearRefreshTimer();
@@ -149,7 +141,7 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
       return ok ? get().token : null;
     },
 
-    hydrate: () => {
+    hydrate: async () => {
       // First check for esriJSAPIOAuth (redirect callback from IdentityManager)
       const redirectToken = processEsriJSAPIOAuth();
       if (redirectToken && Date.now() < redirectToken.renewalDate) {
@@ -157,8 +149,8 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
         return;
       }
 
-      // Then check sessionStorage for a cached token
-      const stored = loadTokenFromStorage();
+      // Then check sessionStorage for a cached (encrypted) token
+      const stored = await loadTokenFromStorage();
       if (stored) {
         get().setToken(stored);
       }
@@ -244,4 +236,3 @@ function replaceTokenInUrl(url: string, newToken: string): string {
   const separator = url.includes("?") ? "&" : "?";
   return `${url}${separator}token=${newToken}`;
 }
-

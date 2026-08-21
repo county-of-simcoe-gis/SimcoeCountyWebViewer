@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Map from "ol/Map";
 import { Layer } from "ol/layer";
+import { htmlToText } from "@/utils/helpersCore";
 // React component for custom attribution display
 interface AttributionControlProps {
   map?: Map;
@@ -24,8 +25,8 @@ export const AttributionControl = React.memo(({ map }: AttributionControlProps) 
             if (layerAttributions) {
               (layerAttributions as unknown as string[]).forEach((attribution: string) => {
                 if (attribution) {
-                  // Clean up HTML tags if present
-                  const cleanAttribution = attribution.replace(/<[^>]*>/g, "").trim();
+                  // Clean up HTML tags if present (DOMParser-based, handles multi-char sequences)
+                  const cleanAttribution = htmlToText(attribution).trim();
                   if (cleanAttribution) {
                     attributionSet.add(cleanAttribution);
                   }
