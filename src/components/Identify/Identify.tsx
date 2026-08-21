@@ -19,6 +19,7 @@ import Point from "ol/geom/Point";
 import { getCenter } from "ol/extent";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
+import { isExcludedKey } from "@/utils/identifyHelpers";
 
 export interface IdentifyProps {
   geometry: Geometry;
@@ -82,9 +83,15 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       }
     }
 
-    // Still nothing, so take first field
+    // Still nothing, so take first displayable field (skip excluded keys and
+    // object values such as the feature's geometry, which would otherwise be
+    // returned for attribute-less WMS features and crash React rendering).
     if (displayName === "") {
-      displayName = Object.keys(feature.getProperties())[0];
+      for (const [fieldName, value] of Object.entries(feature.getProperties())) {
+        if (isExcludedKey(fieldName)) continue;
+        if (value !== null && typeof value === "object") continue;
+        return fieldName;
+      }
     }
 
     return displayName;
