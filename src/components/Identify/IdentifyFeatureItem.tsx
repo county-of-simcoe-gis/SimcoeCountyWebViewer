@@ -48,8 +48,9 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     const geom = feature.getGeometry();
     const geomType = geom?.getType() || "Point";
     const drawType: DrawType = geomType === "LineString" || geomType === "Polygon" || geomType === "Point" ? geomType : "Polygon";
-    const label = feature.get(displayName) || layerName || "Identified Feature";
-    const myMapsItem = createMyMapsItem(feature, drawType, String(label));
+    const rawLabel = displayName ? feature.get(displayName) : undefined;
+    const label = rawLabel != null && typeof rawLabel !== "object" ? String(rawLabel) : layerName || "Identified Feature";
+    const myMapsItem = createMyMapsItem(feature, drawType, label);
     myMapsItem.featureGeoJSON = featureToGeoJSON(feature);
     useMyMapsStore.getState().addItem(myMapsItem);
     useEventStore.getState().emit("mymap-item-created", { item: myMapsItem });
@@ -97,14 +98,16 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     );
   };
 
-  const featureName = feature.get(displayName) || "N/A";
+  const rawName = displayName ? feature.get(displayName) : undefined;
+  const featureName = rawName != null && typeof rawName !== "object" ? rawName : "N/A";
+  const displayNameLabel = displayName ? (resolveFieldAlias(fieldMetadata, displayName) ?? formatFieldName(displayName)) : layerName;
   const hasGeom = feature.getGeometry() !== undefined && feature.getGeometry() !== null;
 
   return (
     <div className="mb-2.5 border border-base-300 rounded-[3px] overflow-hidden">
       <div className="bg-base-200 py-2 px-2.5 flex justify-between items-center border-b border-base-300" onMouseEnter={() => highlightFeature(feature)} onMouseLeave={clearHighlight}>
         <div className="flex-1 cursor-pointer font-medium text-xs hover:text-primary" onClick={() => setOpen(!open)}>
-          {resolveFieldAlias(fieldMetadata, displayName) ?? formatFieldName(displayName)}: {featureName}
+          {displayNameLabel}: {featureName}
         </div>
         <div className="flex gap-2 items-center">
           <span className="text-primary text-[10px] cursor-pointer no-underline hover:underline whitespace-nowrap select-none" onClick={handleAddToMyMaps} title="Add to My Maps">
