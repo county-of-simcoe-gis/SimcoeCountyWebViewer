@@ -6,7 +6,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { sqlTabular, pgWeblive } from "@/lib/database/connections";
 import { createCanvas } from "canvas";
 
-
 interface PropertyReportResult {
   ARN: string;
   Municipality?: string;
@@ -105,6 +104,10 @@ interface BroadbandResult {
   order_field: number;
 }
 
+interface PartnerLookupResult {
+  muni: string;
+}
+
 /**
  * Generate assessed value image as base64 PNG
  */
@@ -168,7 +171,95 @@ async function getBroadbandSpeed(arn: string): Promise<string> {
 }
 
 /**
+ * Format a single SQL row into the property report response shape
+ */
+function formatRecord(result: SQLResult, broadbandSpeed: string): PropertyReportResult {
+  // Messages for special municipalities
+  const barrieMsg = "Please contact City of Barrie.";
+  const orilliaMsg = "Please contact City of Orillia.";
+
+  const arnPrefix = result.ARN.substring(0, 4);
+  const isBarrie = arnPrefix === "4342";
+  const isOrillia = arnPrefix === "4352";
+
+  return {
+    ARN: result.ARN,
+    Municipality: result.Muni || undefined,
+    PropertyType: isBarrie ? "N/A" : result.PropertyDescripter,
+    Address: result.StNum || result.FullName || result.Muni ? `${result.StNum || ""} ${result.FullName || ""}, ${result.Muni || ""}`.trim() : "(Not Available)",
+    AssessedValue: getAssessedValueImage(isBarrie ? "N/A" : result.AssessedValue || 0),
+    ReportURL: result.REPORT_PUBLIC,
+    HasZoning: result.HasZoning,
+    EmergencyService: {
+      PoliceStation: result.POLICE_NAME,
+      PoliceStationArn: result.POLICE_ARN,
+      FireStation: result.FIREHALL_STATION_NAME ? `${result.FIREHALL_STATION_NAME} (${result.FIREHALL_KM} KM)` : undefined,
+      FireStationArn: result.FIREHALL_ARN,
+    },
+    WasteCollection: isBarrie
+      ? {
+          GarbageDay: barrieMsg,
+          LandfillLocation_General: barrieMsg,
+          LandfillLocation_GeneralPin: barrieMsg,
+          LandfillLocation_Hazardous: barrieMsg,
+          LandfillLocation_HazardousPin: barrieMsg,
+          BagTagleLocation1: barrieMsg,
+          BagTagleLocation2: barrieMsg,
+          BagTagleLocation3: barrieMsg,
+          WasteURL: barrieMsg,
+        }
+      : isOrillia
+        ? {
+            GarbageDay: orilliaMsg,
+            LandfillLocation_General: orilliaMsg,
+            LandfillLocation_GeneralPin: orilliaMsg,
+            LandfillLocation_Hazardous: orilliaMsg,
+            LandfillLocation_HazardousPin: orilliaMsg,
+            BagTagleLocation1: orilliaMsg,
+            BagTagleLocation2: orilliaMsg,
+            BagTagleLocation3: orilliaMsg,
+            WasteURL: orilliaMsg,
+          }
+        : {
+            GarbageDay: result.REGULAR_COLLECTION_DAY,
+            LandfillLocation_General: result.LANDFILL_CLOSEST_NAME ? `${result.LANDFILL_CLOSEST_NAME} (${result.LANDFILL_CLOSEST_KM} KM)` : undefined,
+            LandfillLocation_GeneralPin: result.LANDFILL_CLOSEST_PIN,
+            LandfillLocation_Hazardous: result.LANDFILL_HAZARD_NAME ? `${result.LANDFILL_HAZARD_NAME} (${result.LANDFILL_HAZARD_KM} KM)` : undefined,
+            LandfillLocation_HazardousPin: result.LANDFILL_HAZARD_PIN,
+            BagTagleLocation1: result.BAG_TAG1_NAME ? `${result.BAG_TAG1_NAME} (${result.BAG_TAG1_KM} KM)` : undefined,
+            BagTagleLocation2: result.BAG_TAG2_NAME ? `${result.BAG_TAG2_NAME} (${result.BAG_TAG2_KM} KM)` : undefined,
+            BagTagleLocation3: result.BAG_TAG3_NAME ? `${result.BAG_TAG3_NAME} (${result.BAG_TAG3_KM} KM)` : undefined,
+            WasteURL: "http://www.simcoe.ca/SolidWasteManagement/Pages/schedules.aspx",
+          },
+    Schools: {
+      CatholicElementry: result.SCHOOL_CATHOLIC_ELEMENTARY,
+      CatholicSecondary: result.SCHOOL_CATHOLIC_SECONDARY,
+      CatholicBoardWebsiteURL: "http://smcdsb.on.ca",
+      PublicElementry: result.SCHOOL_PUBLIC_ELEMENTARY,
+      PublicSecondary: result.SCHOOL_PUBLIC_SECONDARY,
+      PublicLookup: "https://www4.scdsb.on.ca/app/HomeSchoolLocator/public/SchoolLookup",
+      PublicBoardWebsiteURL: "http://scdsb.on.ca",
+    },
+    Other: {
+      Library: result.LIBRARY_NAME ? `${result.LIBRARY_NAME} (${result.LIBRARY_KM} KM)` : undefined,
+      LibraryUrl: result.LIBRARY_URL,
+      LibraryArn: result.LIBRARY_ARN,
+      ClosestFireHydrant: isBarrie ? barrieMsg : isOrillia ? orilliaMsg : result.FIRE_HYDRANT_KM ? `(${result.FIRE_HYDRANT_KM} KM)` : "Greater than 2",
+      MunicipalAdminCentre: result.ADMIN_NAME ? `${result.ADMIN_NAME} (${result.ADMIN_KM} KM)` : undefined,
+      MunicipalAdminCentreUrl: result.ADMIN_URL,
+      MunicipalAdminCentreArn: result.ADMIN_ARN,
+      ClosestHospital: result.HOSPITAL_NAME,
+      ClosestHospitalAddress: result.HOSPITAL_URL,
+      ClosestHospitalUrl: result.HOSPITAL_URL,
+      BroadbandSpeed: broadbandSpeed,
+    },
+  };
+}
+
+/**
  * GET handler for property report
+ * Returns an array of all records associated with the ARN (an ARN can have
+ * multiple addresses/records). Returns an empty array when none are found.
  */
 export async function GET(request: NextRequest, { params }: { params: Promise<{ arn: string }> }) {
   const { arn } = await params;
@@ -182,101 +273,40 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       SELECT *
       FROM TABULAR.dbo.view_PropertyReportInfo_map
       WHERE ARN = @arn
+      ORDER BY UseForPropertyReport DESC
     `;
     const values = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
 
     // Run both DB queries in parallel
-    const [result, broadbandSpeed] = await Promise.all([
-      sqlTabular.selectFirstWithValues<SQLResult>(sql, values),
-      getBroadbandSpeed(arn),
-    ]);
+    const [rows, broadbandSpeed] = await Promise.all([sqlTabular.selectAllWithValues<SQLResult>(sql, values), getBroadbandSpeed(arn)]);
 
-    if (!result) {
-      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    if (!rows.length) {
+      return NextResponse.json([]);
     }
 
-    // Messages for special municipalities
-    const barrieMsg = "Please contact City of Barrie.";
-    const orilliaMsg = "Please contact City of Orillia.";
+    const results = rows.map((row) => formatRecord(row, broadbandSpeed));
 
-    // Format result
-    const arnPrefix = result.ARN.substring(0, 4);
-    const isBarrie = arnPrefix === "4342";
-    const isOrillia = arnPrefix === "4352";
-    const resultFormatted: PropertyReportResult = {
-      ARN: result.ARN,
-      Municipality: result.Muni || undefined,
-      PropertyType: isBarrie ? "N/A" : result.PropertyDescripter,
-      Address: result.StNum || result.FullName || result.Muni ? `${result.StNum || ""} ${result.FullName || ""}, ${result.Muni || ""}`.trim() : "(Not Available)",
-      AssessedValue: getAssessedValueImage(isBarrie ? "N/A" : result.AssessedValue || 0),
-      ReportURL: result.REPORT_PUBLIC,
-      HasZoning: result.HasZoning,
-      EmergencyService: {
-        PoliceStation: result.POLICE_NAME,
-        PoliceStationArn: result.POLICE_ARN,
-        FireStation: result.FIREHALL_STATION_NAME ? `${result.FIREHALL_STATION_NAME} (${result.FIREHALL_KM} KM)` : undefined,
-        FireStationArn: result.FIREHALL_ARN,
-      },
-      WasteCollection: isBarrie
-        ? {
-            GarbageDay: barrieMsg,
-            LandfillLocation_General: barrieMsg,
-            LandfillLocation_GeneralPin: barrieMsg,
-            LandfillLocation_Hazardous: barrieMsg,
-            LandfillLocation_HazardousPin: barrieMsg,
-            BagTagleLocation1: barrieMsg,
-            BagTagleLocation2: barrieMsg,
-            BagTagleLocation3: barrieMsg,
-            WasteURL: barrieMsg,
-          }
-        : isOrillia
-          ? {
-              GarbageDay: orilliaMsg,
-              LandfillLocation_General: orilliaMsg,
-              LandfillLocation_GeneralPin: orilliaMsg,
-              LandfillLocation_Hazardous: orilliaMsg,
-              LandfillLocation_HazardousPin: orilliaMsg,
-              BagTagleLocation1: orilliaMsg,
-              BagTagleLocation2: orilliaMsg,
-              BagTagleLocation3: orilliaMsg,
-              WasteURL: orilliaMsg,
-            }
-          : {
-              GarbageDay: result.REGULAR_COLLECTION_DAY,
-              LandfillLocation_General: result.LANDFILL_CLOSEST_NAME ? `${result.LANDFILL_CLOSEST_NAME} (${result.LANDFILL_CLOSEST_KM} KM)` : undefined,
-              LandfillLocation_GeneralPin: result.LANDFILL_CLOSEST_PIN,
-              LandfillLocation_Hazardous: result.LANDFILL_HAZARD_NAME ? `${result.LANDFILL_HAZARD_NAME} (${result.LANDFILL_HAZARD_KM} KM)` : undefined,
-              LandfillLocation_HazardousPin: result.LANDFILL_HAZARD_PIN,
-              BagTagleLocation1: result.BAG_TAG1_NAME ? `${result.BAG_TAG1_NAME} (${result.BAG_TAG1_KM} KM)` : undefined,
-              BagTagleLocation2: result.BAG_TAG2_NAME ? `${result.BAG_TAG2_NAME} (${result.BAG_TAG2_KM} KM)` : undefined,
-              BagTagleLocation3: result.BAG_TAG3_NAME ? `${result.BAG_TAG3_NAME} (${result.BAG_TAG3_KM} KM)` : undefined,
-              WasteURL: "http://www.simcoe.ca/SolidWasteManagement/Pages/schedules.aspx",
-            },
-      Schools: {
-        CatholicElementry: result.SCHOOL_CATHOLIC_ELEMENTARY,
-        CatholicSecondary: result.SCHOOL_CATHOLIC_SECONDARY,
-        CatholicBoardWebsiteURL: "http://smcdsb.on.ca",
-        PublicElementry: result.SCHOOL_PUBLIC_ELEMENTARY,
-        PublicSecondary: result.SCHOOL_PUBLIC_SECONDARY,
-        PublicLookup: "https://www4.scdsb.on.ca/app/HomeSchoolLocator/public/SchoolLookup",
-        PublicBoardWebsiteURL: "http://scdsb.on.ca",
-      },
-      Other: {
-        Library: result.LIBRARY_NAME ? `${result.LIBRARY_NAME} (${result.LIBRARY_KM} KM)` : undefined,
-        LibraryUrl: result.LIBRARY_URL,
-        LibraryArn: result.LIBRARY_ARN,
-        ClosestFireHydrant: isBarrie ? barrieMsg : isOrillia ? orilliaMsg : result.FIRE_HYDRANT_KM ? `(${result.FIRE_HYDRANT_KM} KM)` : "Greater than 2",
-        MunicipalAdminCentre: result.ADMIN_NAME ? `${result.ADMIN_NAME} (${result.ADMIN_KM} KM)` : undefined,
-        MunicipalAdminCentreUrl: result.ADMIN_URL,
-        MunicipalAdminCentreArn: result.ADMIN_ARN,
-        ClosestHospital: result.HOSPITAL_NAME,
-        ClosestHospitalAddress: result.HOSPITAL_URL,
-        ClosestHospitalUrl: result.HOSPITAL_URL,
-        BroadbandSpeed: broadbandSpeed,
-      },
-    };
+    // Fallback: if Municipality is missing on any record, look it up once by the ARN prefix
+    if (results.some((r) => !r.Municipality)) {
+      try {
+        const lookupSql = `
+          SELECT TOP (1) [FriendlyName] as muni
+          FROM [TABULAR].[dbo].[tbl_PartnerLookup]
+          WHERE municode = LEFT(@arn, 4)
+        `;
+        const lookupValues = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
+        const lookup = await sqlTabular.selectFirstWithValues<PartnerLookupResult>(lookupSql, lookupValues);
+        if (lookup?.muni) {
+          results.forEach((r) => {
+            if (!r.Municipality) r.Municipality = lookup.muni;
+          });
+        }
+      } catch (lookupError) {
+        console.error("Error looking up municipality from tbl_PartnerLookup:", lookupError);
+      }
+    }
 
-    return NextResponse.json(resultFormatted);
+    return NextResponse.json(results);
   } catch (error) {
     console.error("Error fetching property report:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

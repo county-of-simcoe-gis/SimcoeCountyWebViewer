@@ -267,14 +267,16 @@ describe("PropertyReportClick", () => {
       }),
     );
 
-    // Mock property report response
+    // Mock property report response (API returns an array of records per ARN)
     server.use(
       http.get("**/public/reports/property/*", () => {
-        return HttpResponse.json({
-          ARN: "1234567890",
-          Address: "123 Test St",
-          AssessedValue: "data:image/png;base64,test",
-        });
+        return HttpResponse.json([
+          {
+            ARN: "1234567890",
+            Address: "123 Test St",
+            AssessedValue: "data:image/png;base64,test",
+          },
+        ]);
       }),
     );
 
@@ -358,6 +360,123 @@ describe("PropertyReportClick", () => {
     // Error handling is tested through the async flow
 
     consoleErrorSpy.mockRestore();
+  });
+
+  it("creates one popup result per record when the API returns multiple records for an ARN", async () => {
+    // Provide config with parcel layer + property report URL
+    (useAppStore as any).mockImplementation((selector?: any) => {
+      const state = {
+        urlParameters: {},
+        config: {
+          parcelLayer: { url: "https://example.com/geoserver/wfs" },
+          propertyReportUrl: "/api/public/reports/property/",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    });
+
+    // Mock WFS parcel response
+    server.use(
+      http.get("**/geoserver/wfs*", () => {
+        return HttpResponse.json({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: { arn: "1234567890" },
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [0, 0],
+                    [100, 0],
+                    [100, 100],
+                    [0, 100],
+                    [0, 0],
+                  ],
+                ],
+              },
+            },
+          ],
+        });
+      }),
+    );
+
+    // Mock property report API returning TWO records for the same ARN
+    server.use(
+      http.get("**/public/reports/property/*", () => {
+        return HttpResponse.json([
+          { ARN: "1234567890", Address: "6305 14TH LINE, NEW TECUMSETH" },
+          { ARN: "1234567890", Address: "6315 14TH LINE, NEW TECUMSETH" },
+        ]);
+      }),
+    );
+
+    render(<PropertyReportClick />);
+
+    // Grab the registered click handler and invoke it directly
+    const handlerConfig = mockRegisterHandler.mock.calls[0][0];
+    const results = await handlerConfig.handler([0, 0]);
+
+    expect(results).toHaveLength(2);
+    expect(results[0].data.Address).toBe("6305 14TH LINE, NEW TECUMSETH");
+    expect(results[1].data.Address).toBe("6315 14TH LINE, NEW TECUMSETH");
+    // Result ids must be unique even though both records share the same ARN
+    expect(results[0].id).not.toBe(results[1].id);
+  });
+
+  it("returns a basic fallback result when the API returns an empty array", async () => {
+    (useAppStore as any).mockImplementation((selector?: any) => {
+      const state = {
+        urlParameters: {},
+        config: {
+          parcelLayer: { url: "https://example.com/geoserver/wfs" },
+          propertyReportUrl: "/api/public/reports/property/",
+        },
+      };
+      return typeof selector === "function" ? selector(state) : state;
+    });
+
+    server.use(
+      http.get("**/geoserver/wfs*", () => {
+        return HttpResponse.json({
+          type: "FeatureCollection",
+          features: [
+            {
+              type: "Feature",
+              properties: { arn: "1234567890" },
+              geometry: {
+                type: "Polygon",
+                coordinates: [
+                  [
+                    [0, 0],
+                    [100, 0],
+                    [100, 100],
+                    [0, 100],
+                    [0, 0],
+                  ],
+                ],
+              },
+            },
+          ],
+        });
+      }),
+    );
+
+    server.use(
+      http.get("**/public/reports/property/*", () => {
+        return HttpResponse.json([]);
+      }),
+    );
+
+    render(<PropertyReportClick />);
+
+    const handlerConfig = mockRegisterHandler.mock.calls[0][0];
+    const results = await handlerConfig.handler([0, 0]);
+
+    // Falls back to a single basic-info result so the popup still opens
+    expect(results).toHaveLength(1);
+    expect(results[0].data.ARN).toBe("1234567890");
   });
 
   it("clears parcel layer when popup is closed", () => {
