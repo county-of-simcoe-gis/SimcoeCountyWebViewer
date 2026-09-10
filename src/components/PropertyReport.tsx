@@ -57,7 +57,8 @@ interface PropertyReportProps {
 
 export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps) {
   const config = useAppStore((state) => state.config);
-  const [data, setData] = useState<PropertyReportData | null>(null);
+  const [records, setRecords] = useState<PropertyReportData[]>([]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -75,8 +76,14 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
         if (!res.ok) {
           throw new Error(res.status === 404 ? "Property not found." : `Server error (${res.status})`);
         }
-        const json = (await res.json()) as PropertyReportData;
-        if (!cancelled) setData(json);
+        const json = (await res.json()) as PropertyReportData[] | PropertyReportData;
+        // API returns an array of records (an ARN can have multiple addresses);
+        // tolerate a bare object from older/external endpoints.
+        const list = Array.isArray(json) ? json : json ? [json] : [];
+        if (!cancelled) {
+          setRecords(list);
+          setSelectedIndex(0);
+        }
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Unknown error");
       } finally {
@@ -93,7 +100,8 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
 
   /** Print Preview — posts to the embed API and opens the report viewer. */
   const handlePrintPreview = async () => {
-    if (!data) return;
+    const record = records[selectedIndex];
+    if (!record) return;
 
     try {
       const reportName = "Public_Embedded";
@@ -102,7 +110,7 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
       const res = await fetch(toApiUrl(`/api/public/reports/embed/${reportName}`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ params: [{ name: "ARN", value: data.ARN, type: "text" }] }),
+        body: JSON.stringify({ params: [{ name: "ARN", value: record.ARN, type: "text" }] }),
       });
       // Strip quotes from the key if present (API may return quoted string)
       const rawKey = await res.text();
@@ -124,14 +132,33 @@ export default function PropertyReport({ arn, onZoomClick }: PropertyReportProps
     );
   }
 
-  if (error || !data) {
+  if (error || records.length === 0) {
     return <div className="p-4 text-red-600 text-sm">{error ?? "No data available."}</div>;
   }
 
+  const data = records[Math.min(selectedIndex, records.length - 1)];
   const isBarrie = data.ARN.substring(0, 4) === "4342";
 
   return (
     <div>
+      {/* Record selector — shown when the ARN has multiple records */}
+      {records.length > 1 && (
+        <div className="flex flex-wrap gap-1.5 p-1.5 pb-0">
+          {records.map((record, index) => (
+            <button
+              key={`${record.ARN}-${index}`}
+              className={`flex-1 min-w-[120px] text-xs py-1.5 px-2 rounded cursor-pointer border ${
+                index === selectedIndex ? "text-white border-[#3d7b9e]" : "text-[#337ab7] border-[#ccc] bg-white hover:bg-gray-100"
+              }`}
+              style={index === selectedIndex ? { background: "linear-gradient(to bottom, #3980cc 0%, #2865a2 100%)" } : undefined}
+              onClick={() => setSelectedIndex(index)}
+            >
+              {record.Address || `Record ${index + 1}`}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Action buttons */}
       <div className="flex gap-1.5 p-1.5">
         {onZoomClick && (

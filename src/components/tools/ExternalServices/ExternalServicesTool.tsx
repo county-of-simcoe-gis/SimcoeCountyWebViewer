@@ -107,8 +107,10 @@ export default function ExternalServicesTool({ name = "External Services", helpL
           const infoURL = `${getPublicPath(propertyReportUrl)}${arn}`;
           const infoResponse = await axiosClient.get(infoURL);
 
-          if (infoResponse.data.Address) {
-            setAddress(infoResponse.data.Address);
+          // Endpoint returns an array of records; use the first record's address
+          const records = Array.isArray(infoResponse.data) ? infoResponse.data : infoResponse.data ? [infoResponse.data] : [];
+          if (records[0]?.Address) {
+            setAddress(records[0].Address);
           }
         }
       } catch (error) {
