@@ -2,7 +2,7 @@
  * ArcGIS Token Store (Zustand + Immer)
  *
  * Manages the ArcGIS user token lifecycle using @arcgis/core's IdentityManager:
- *  - Stores the current token in state and sessionStorage
+ *  - Stores the current token in state and localStorage
  *  - Schedules token refresh before the renewal date (mirrors old app's forceAppRefresh)
  *  - Provides getValidToken() for on-demand fresh-token access
  *  - After refresh, updates all secured ArcGIS OL layer sources in-place
@@ -47,7 +47,7 @@ interface ArcGISTokenActions {
    * triggers a refresh if nearing expiry, or returns null if unavailable.
    */
   getValidToken: () => Promise<string | null>;
-  /** Hydrate state from sessionStorage / esriJSAPIOAuth (call once on app init). */
+  /** Hydrate state from localStorage / esriJSAPIOAuth (call once on app init). */
   hydrate: () => Promise<void>;
   /** Trigger a re-login via IdentityManager and update all secured layers. */
   refreshToken: () => Promise<boolean>;
@@ -60,6 +60,7 @@ type ArcGISTokenStore = ArcGISTokenState & ArcGISTokenActions;
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
 let refreshTimerId: ReturnType<typeof setTimeout> | null = null;
+let refreshPromise: Promise<boolean> | null = null;
 
 function clearRefreshTimer() {
   if (refreshTimerId !== null) {
@@ -157,36 +158,48 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
     },
 
     refreshToken: async (): Promise<boolean> => {
-      // Prevent concurrent refreshes
-      if (get().isLoading) return false;
+      // If a refresh is already in flight, await the same promise so every
+      // concurrent caller resolves to the same token (or failure). Without this,
+      // the second caller would get `false`, proceed with no token, and fail
+      // on its first authenticated ArcGIS request (e.g. Road Closures layers).
+      if (refreshPromise) {
+        return refreshPromise;
+      }
 
-      set((state) => {
-        state.isLoading = true;
-      });
+      refreshPromise = (async (): Promise<boolean> => {
+        set((state) => {
+          state.isLoading = true;
+        });
+
+        try {
+          // Use IdentityManager's login flow which handles SAML automatically
+          const cred = await login();
+          const tokenData = processCredential(cred);
+
+          get().setToken(tokenData);
+          // Update all secured ArcGIS layer sources with the new token
+          get().updateLayerTokens(tokenData.accessToken);
+          return true;
+        } catch (err) {
+          console.error("ArcGIS token refresh error:", err);
+          set((state) => {
+            state.isLoading = false;
+            state.error = err instanceof Error ? err.message : "Token refresh failed";
+          });
+          return false;
+        }
+      })();
 
       try {
-        // Use IdentityManager's login flow which handles SAML automatically
-        const cred = await login();
-        const tokenData = processCredential(cred);
-
-        get().setToken(tokenData);
-        // Update all secured ArcGIS layer sources with the new token
-        get().updateLayerTokens(tokenData.accessToken);
-        return true;
-      } catch (err) {
-        console.error("ArcGIS token refresh error:", err);
-        set((state) => {
-          state.isLoading = false;
-          state.error = err instanceof Error ? err.message : "Token refresh failed";
-        });
-        return false;
+        return await refreshPromise;
+      } finally {
+        refreshPromise = null;
       }
     },
 
     updateLayerTokens: (newToken: string) => {
       try {
         // Import dynamically to avoid circular dependencies at module-load time
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
         const { useLayerManagerStore } = require("@/stores/layerManagerStore");
         const allLayers = useLayerManagerStore.getState().getAllLayers();
 

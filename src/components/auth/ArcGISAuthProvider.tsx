@@ -6,7 +6,7 @@
  *
  *  1. On mount: initialize OAuthInfo / IdentityManager
  *  2. Check for esriJSAPIOAuth redirect callback in sessionStorage
- *  3. Hydrate from cached token in sessionStorage
+ *  3. Hydrate from cached token in localStorage
  *  4. If `required` and no valid token, trigger IdentityManager login
  *     (which handles SAML redirects automatically)
  *

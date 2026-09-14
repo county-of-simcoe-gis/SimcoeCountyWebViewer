@@ -130,19 +130,21 @@ export default function PropertyReportClick() {
     return url;
   }, []);
 
-  // Fetch property information
+  // Fetch property information (endpoint returns an array of records per ARN)
   const fetchPropertyInfo = useCallback(
-    async (arn: string, feature: Feature | null, pointerPoint: number[], latLongCoords: number[]): Promise<PropertyInfo> => {
+    async (arn: string, feature: Feature | null, pointerPoint: number[], latLongCoords: number[]): Promise<PropertyInfo[]> => {
       const propertyReportUrl = config?.propertyReportUrl;
+      const basicInfo: PropertyInfo = {
+        ARN: arn,
+        pointCoordinates: latLongCoords,
+        pointerCoordinates: pointerPoint,
+        shareURL: getShareURL(arn),
+        area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
+      };
+
       if (!propertyReportUrl) {
         // Return basic info if no property report URL configured
-        return {
-          ARN: arn,
-          pointCoordinates: latLongCoords,
-          pointerCoordinates: pointerPoint,
-          shareURL: getShareURL(arn),
-          area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-        };
+        return [basicInfo];
       }
 
       const infoURL = `${propertyReportUrl}${arn}`;
@@ -151,25 +153,21 @@ export default function PropertyReportClick() {
       const requestPath = infoURL.startsWith("/api/") ? infoURL.replace("/api", "") : infoURL;
 
       try {
-        const response = await axiosClient.get<PropertyInfo>(requestPath);
-        const result = response.data;
+        const response = await axiosClient.get<PropertyInfo[]>(requestPath);
+        // Tolerate a bare object response from older/external endpoints
+        const records = Array.isArray(response.data) ? response.data : response.data ? [response.data] : [];
+        if (records.length === 0) return [basicInfo];
 
-        return {
-          ...result,
+        return records.map((record) => ({
+          ...record,
           pointerCoordinates: pointerPoint,
           pointCoordinates: latLongCoords,
           shareURL: getShareURL(arn),
           area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-        };
+        }));
       } catch (error) {
         console.error("Error fetching property info:", error);
-        return {
-          ARN: arn,
-          pointCoordinates: latLongCoords,
-          pointerCoordinates: pointerPoint,
-          shareURL: getShareURL(arn),
-          area: feature?.getGeometry() ? getArea(feature.getGeometry()!) : 0,
-        };
+        return [basicInfo];
       }
     },
     [config, getShareURL],
@@ -238,8 +236,8 @@ export default function PropertyReportClick() {
                 // Attach lazy-loading function for property info
                 condoResult.loadDetails = async () => {
                   if (!condoResult.data.propInfo) {
-                    const propInfo = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
-                    condoResult.data.propInfo = propInfo;
+                    const records = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
+                    condoResult.data.propInfo = records[0];
                     condoResult.data.feature = feature;
                   }
                 };
@@ -252,11 +250,13 @@ export default function PropertyReportClick() {
             console.error("Error fetching condo children:", error);
           }
         } else {
-          // Regular property
-          const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
-          const propertyResult: ClickResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
-          propertyResult.clearParcelLayer = clearParcelLayer;
-          results.push(propertyResult);
+          // Regular property - one result per record returned for the ARN
+          const records = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
+          records.forEach((propInfo, index) => {
+            const propertyResult: ClickResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo, records.length > 1 ? index : undefined);
+            propertyResult.clearParcelLayer = clearParcelLayer;
+            results.push(propertyResult);
+          });
         }
 
         // Show unified popup
@@ -339,8 +339,8 @@ export default function PropertyReportClick() {
                 // Attach lazy-loading function for property info
                 condoResult.loadDetails = async () => {
                   if (!condoResult.data.propInfo) {
-                    const propInfo = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
-                    condoResult.data.propInfo = propInfo;
+                    const records = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
+                    condoResult.data.propInfo = records[0];
                     condoResult.data.feature = feature;
                   }
                 };
@@ -355,14 +355,16 @@ export default function PropertyReportClick() {
             console.error("Error fetching condo children:", error);
           }
         } else {
-          // Regular property - fetch property information
-          const propInfo = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
-          const propertyResult: ClickResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo);
+          // Regular property - one result per record returned for the ARN
+          const records = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
+          records.forEach((propInfo, index) => {
+            const propertyResult: ClickResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo, records.length > 1 ? index : undefined);
 
-          // Attach parcel layer clearing function
-          propertyResult.clearParcelLayer = clearParcelLayer;
+            // Attach parcel layer clearing function
+            propertyResult.clearParcelLayer = clearParcelLayer;
 
-          results.push(propertyResult);
+            results.push(propertyResult);
+          });
         }
 
         return results;

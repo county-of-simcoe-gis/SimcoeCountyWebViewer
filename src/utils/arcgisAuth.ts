@@ -13,6 +13,8 @@
  * pulling Calcite Components (ResizeObserver, etc.) into SSR/prerender.
  */
 
+import { setStorageItem, getStorageItem, removeStorageItem } from "@/utils/storage";
+
 // ─── Configuration (from env) ────────────────────────────────────────────────
 
 const PORTAL_URL = process.env.NEXT_PUBLIC_ESRI_PORTAL_URL ?? "";
@@ -24,7 +26,7 @@ const DEFAULT_EXPIRATION_MINUTES = 20160;
 /** Max active session time in ms before forcing a refresh (12 hours). */
 const MAX_ACTIVE_TIME_MS = 43200000;
 
-/** Storage key in sessionStorage. */
+/** Storage key in localStorage. */
 export const STORAGE_KEY = "ArcGIS_Token";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -276,95 +278,55 @@ export async function getAccessToken(): Promise<string | null> {
   return null;
 }
 
-// ─── Session storage persistence ─────────────────────────────────────────────
+// ─── Local storage persistence ───────────────────────────────────────────────
 
 /**
- * Non-extractable AES-GCM key used to encrypt the token at rest.
- * Lazily created and held only in module memory — it never touches storage,
- * so the sessionStorage blob is undecryptable outside this page's lifetime.
- */
-let storageEncryptionKey: CryptoKey | null = null;
-
-async function getStorageEncryptionKey(): Promise<CryptoKey> {
-  if (!storageEncryptionKey) {
-    storageEncryptionKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-  }
-  return storageEncryptionKey;
-}
-
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  bytes.forEach((b) => {
-    binary += String.fromCharCode(b);
-  });
-  return btoa(binary);
-}
-
-function base64ToBytes(base64: string): Uint8Array {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-  return bytes;
-}
-
-/**
- * Encrypt the token with AES-GCM and persist to sessionStorage.
- * The encryption key is non-extractable and memory-only, so the stored blob
- * is useless to anyone reading sessionStorage directly.
+ * Persist the token to localStorage as plaintext JSON.
+ *
+ * The token is already exposed to same-origin JavaScript and is sent as a
+ * `?token=` query parameter on ArcGIS REST requests, so plaintext storage
+ * is acceptable. localStorage is used instead of sessionStorage so the token
+ * survives new tabs and browser close/open.
  */
 export async function saveTokenToStorage(token: ArcGISTokenData): Promise<void> {
   try {
-    const key = await getStorageEncryptionKey();
-    const iv = crypto.getRandomValues(new Uint8Array(12));
-    const plaintext = new TextEncoder().encode(JSON.stringify(token));
-    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, plaintext);
-    const record = {
-      v: 1,
-      iv: bytesToBase64(iv),
-      data: bytesToBase64(new Uint8Array(ciphertext)),
-    };
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(record));
+    if (!token?.accessToken || !token?.expiresAt) {
+      console.warn("ArcGIS Auth: Refusing to save malformed token");
+      return;
+    }
+    setStorageItem(STORAGE_KEY, JSON.stringify(token), { skipSync: true });
   } catch (e) {
-    console.warn("ArcGIS Auth: Failed to save token to sessionStorage", e);
+    console.warn("ArcGIS Auth: Failed to save token to localStorage", e);
   }
 }
 
 export async function loadTokenFromStorage(): Promise<ArcGISTokenData | null> {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-
-    const record = JSON.parse(raw);
-
-    // Only the encrypted { v, iv, data } record shape is accepted.
-    // Legacy plaintext or malformed records are discarded.
-    if (!record || record.v !== 1 || typeof record.iv !== "string" || typeof record.data !== "string") {
+    // One-time cleanup: remove the legacy encrypted token from sessionStorage
+    // that older builds may have left behind.
+    if (typeof sessionStorage !== "undefined") {
       sessionStorage.removeItem(STORAGE_KEY);
-      return null;
     }
 
-    const key = await getStorageEncryptionKey();
-    const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: base64ToBytes(record.iv) }, key, base64ToBytes(record.data));
-    const data: ArcGISTokenData = JSON.parse(new TextDecoder().decode(decrypted));
+    const raw = getStorageItem(STORAGE_KEY);
+    if (!raw) return null;
+
+    const data: ArcGISTokenData = JSON.parse(raw);
 
     if (!data.accessToken || !data.expiresAt || Date.now() >= data.expiresAt) {
-      sessionStorage.removeItem(STORAGE_KEY);
+      removeStorageItem(STORAGE_KEY, { skipSync: true });
       return null;
     }
 
     return data;
   } catch {
-    // Decryption failure (e.g. key rotated after page reload) — treat as missing
-    sessionStorage.removeItem(STORAGE_KEY);
     return null;
   }
 }
 
 export function clearTokenFromStorage(): void {
   try {
-    sessionStorage.removeItem(STORAGE_KEY);
+    removeStorageItem(STORAGE_KEY, { skipSync: true });
   } catch {
     // Ignore
   }

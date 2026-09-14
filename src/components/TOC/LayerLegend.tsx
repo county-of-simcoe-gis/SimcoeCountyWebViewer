@@ -221,8 +221,8 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
     // Show a generic loading placeholder while determining mode
     return (
       <div className="relative inline-block">
-        <div className="flex items-center justify-center bg-gray-200 animate-pulse rounded-sm w-6 h-6">
-          <FaImage size={12} className="text-gray-500" />
+        <div className="flex items-center justify-center bg-base-300 animate-pulse rounded-sm w-6 h-6">
+          <FaImage size={12} className="text-base-content/50" />
         </div>
       </div>
     );
@@ -244,10 +244,10 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
     // For inline mode (small images), return just the image
     if (displayMode === "inline") {
       return (
-        <div className="relative inline-block">
+        <div className="relative inline-block align-middle mx-1 bg-base-100 dark:bg-base-200 p-1 rounded-sm">
           {isImageLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-200 animate-pulse rounded-sm">
-              <FaImage size={12} className="text-gray-500" />
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-base-300 animate-pulse rounded-sm">
+              <FaImage size={12} className="text-base-content/50" />
             </div>
           )}
           <img
@@ -256,7 +256,7 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
             alt="Layer Legend"
             width={25}
             height={25}
-            className="inline-block align-middle mx-1"
+            className="inline-block align-middle"
             loading="lazy"
             onError={(e) => {
               setIsImageLoading(false);
@@ -270,10 +270,10 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
     // For expandable legends - just show content when expanded, toggle handled elsewhere
     if (displayMode === "expandable") {
       return (
-        <div className="relative inline-block">
+        <div className="relative inline-block bg-base-100 dark:bg-base-200 p-1 rounded-sm">
           {isImageLoading && (
-            <div className="flex items-center justify-center bg-gray-200 animate-pulse rounded-sm w-6 h-6">
-              <FaImage size={24} className="text-gray-500" />
+            <div className="flex items-center justify-center bg-base-300 animate-pulse rounded-sm w-6 h-6">
+              <FaImage size={24} className="text-base-content/50" />
             </div>
           )}
           <img
@@ -296,10 +296,10 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
 
               // Check if this is a small image and apply conditional styling
               if (img.naturalWidth <= 30 && img.naturalHeight <= 30) {
-                const container = img.closest(".mx-1") as HTMLElement;
+                const container = img.closest(".bg-base-100") as HTMLElement;
                 if (container) {
                   // Remove margin for small images that should be inline
-                  container.className = "my-0.5";
+                  container.className = "my-0.5 bg-base-100 dark:bg-base-200 p-1 rounded-sm";
                 }
               }
             }}
@@ -320,10 +320,10 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
           if (legend.startsWith("http")) {
             return (
               <div className="mx-1 my-0.5">
-                <div className="relative">
+                <div className="relative inline-block bg-base-100 dark:bg-base-200 p-1 rounded-sm">
                   {isImageLoading && (
-                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-200 animate-pulse rounded-sm min-h-[60px]">
-                      <FaImage size={24} className="text-gray-500" />
+                    <div className="absolute inset-0 z-10 flex items-center justify-center bg-base-300 animate-pulse rounded-sm min-h-[60px]">
+                      <FaImage size={24} className="text-base-content/50" />
                     </div>
                   )}
                   <img
@@ -407,13 +407,13 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
           // Handle other legend object formats
           if (legendObj.legend && Array.isArray(legendObj.legend)) {
             return (
-              <div className="mx-1 my-0.5">
+              <div className="mx-1 my-0.5 bg-base-100 dark:bg-base-200 p-1 rounded-sm">
                 {legendObj.legend.map((item: LegendItem, index: number) => (
                   <div key={index} className="flex items-center mb-1 gap-1">
                     {item.imageData && (
-                      <div className="relative inline-block">
-                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-200 animate-pulse rounded-sm">
-                          <FaImage size={8} className="text-gray-500" />
+                      <div className="relative inline-block bg-base-100 dark:bg-base-200 p-0.5 rounded-sm">
+                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-base-300 animate-pulse rounded-sm">
+                          <FaImage size={8} className="text-base-content/50" />
                         </div>
                         <img
                           src={`data:${item.contentType};base64,${item.imageData}`}
@@ -430,7 +430,7 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
                         />
                       </div>
                     )}
-                    {item.label && <span className="text-xs text-gray-700">{item.label}</span>}
+                    {item.label && <span className="text-xs text-base-content/80">{item.label}</span>}
                   </div>
                 ))}
               </div>

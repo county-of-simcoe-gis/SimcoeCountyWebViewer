@@ -10,11 +10,15 @@ import { setUserStorage } from "@/utils/userStorage";
 
 /**
  * Write a raw string value to localStorage and trigger server sync.
+ * Pass `skipSync: true` to avoid syncing to server-side user storage
+ * (used for sensitive or auth-related items that should stay local).
  */
-export function setStorageItem(key: string, value: string): void {
+export function setStorageItem(key: string, value: string, options?: { skipSync?: boolean }): void {
   try {
     localStorage.setItem(key, value);
-    setUserStorage();
+    if (!options?.skipSync) {
+      setUserStorage();
+    }
   } catch (error) {
     console.error("Failed to set localStorage item:", error);
   }
@@ -34,11 +38,14 @@ export function getStorageItem(key: string): string | null {
 
 /**
  * Remove a key from localStorage and trigger server sync.
+ * Pass `skipSync: true` to avoid syncing to server-side user storage.
  */
-export function removeStorageItem(key: string): void {
+export function removeStorageItem(key: string, options?: { skipSync?: boolean }): void {
   try {
     localStorage.removeItem(key);
-    setUserStorage();
+    if (!options?.skipSync) {
+      setUserStorage();
+    }
   } catch (error) {
     console.error("Failed to remove localStorage item:", error);
   }
@@ -62,14 +69,14 @@ export function getStorageKeys(): string[] {
 /**
  * Save item to localStorage with optional expiration
  */
-export function saveToStorage(storageKey: string, item: unknown, options: { expires?: Date } = {}): void {
+export function saveToStorage(storageKey: string, item: unknown, options: { expires?: Date; skipSync?: boolean } = {}): void {
   const data = {
     value: item,
     expires: options.expires?.getTime() || null,
     timestamp: Date.now(),
   };
 
-  setStorageItem(storageKey, JSON.stringify(data));
+  setStorageItem(storageKey, JSON.stringify(data), { skipSync: options.skipSync });
 }
 
 /**
@@ -157,14 +164,14 @@ export function getSharedItem<T = unknown>(key: string): T | null {
 /**
  * Remove item from localStorage
  */
-export function removeFromStorage(storageKey: string): void {
-  removeStorageItem(storageKey);
+export function removeFromStorage(storageKey: string, options?: { skipSync?: boolean }): void {
+  removeStorageItem(storageKey, options);
 }
 
 /**
  * Append item to an array in localStorage with optional limit
  */
-export function appendToStorage<T>(storageKey: string, item: T, limit?: number): void {
+export function appendToStorage<T>(storageKey: string, item: T, limit?: number, options?: { skipSync?: boolean }): void {
   try {
     const existing = getItemsFromStorage<T[]>(storageKey) || [];
 
@@ -179,7 +186,7 @@ export function appendToStorage<T>(storageKey: string, item: T, limit?: number):
       filtered.splice(limit);
     }
 
-    saveToStorage(storageKey, filtered);
+    saveToStorage(storageKey, filtered, options);
   } catch (error) {
     console.error("Failed to append to localStorage:", error);
   }
@@ -188,14 +195,14 @@ export function appendToStorage<T>(storageKey: string, item: T, limit?: number):
 /**
  * Remove a specific item from an array in localStorage
  */
-export function removeItemFromStorage<T>(storageKey: string, item: T): void {
+export function removeItemFromStorage<T>(storageKey: string, item: T, options?: { skipSync?: boolean }): void {
   try {
     const existing = getItemsFromStorage<T[]>(storageKey) || [];
 
     // Remove the specific item
     const filtered = existing.filter((existingItem) => JSON.stringify(existingItem) !== JSON.stringify(item));
 
-    saveToStorage(storageKey, filtered);
+    saveToStorage(storageKey, filtered, options);
   } catch (error) {
     console.error("Failed to remove item from localStorage:", error);
   }

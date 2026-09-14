@@ -270,9 +270,10 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
 }
 
 // Helper function to create a property result
-export function createPropertyResult(arn: string, address: string, feature: Feature, propInfo: PropertyInfo): PropertyResult {
+// idSuffix keeps result ids unique when one ARN returns multiple records (e.g. multiple addresses)
+export function createPropertyResult(arn: string, address: string, feature: Feature, propInfo: PropertyInfo, idSuffix?: number): PropertyResult {
   return {
-    id: `property_${arn}`,
+    id: `property_${arn}${idSuffix !== undefined ? `_${idSuffix}` : ""}`,
     type: "property",
     displayName: address || arn,
     layerZIndex: -1, // Property results sort to bottom
