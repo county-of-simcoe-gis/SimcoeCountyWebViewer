@@ -39,11 +39,20 @@ export function getActiveMunicipality(): string | null {
  * @returns `true` when there is no filter **or** the property belongs to the
  *   configured municipality; `false` otherwise.
  */
+/**
+ * Normalize a municipality string for comparison.
+ * Strips spaces and hyphens and lower-cases so formatting differences
+ * (e.g. "ADJALA-TOSORONTIO" vs "Adjala Tosorontio") do not cause mismatches.
+ */
+function normalizeMunicipality(value: string): string {
+  return value.toLowerCase().replace(/[-\s]/g, "");
+}
+
 export function isPropertyInMunicipality(propertyMunicipality: string | undefined | null): boolean {
   const filter = getActiveMunicipality();
   if (!filter) return true; // no restriction
   if (!propertyMunicipality) return false; // municipality unknown — deny
-  return filter.toLowerCase() === propertyMunicipality.toLowerCase();
+  return normalizeMunicipality(filter) === normalizeMunicipality(propertyMunicipality);
 }
 
 /**
