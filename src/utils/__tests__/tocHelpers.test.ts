@@ -1,6 +1,9 @@
-import { describe, it, expect, vi } from "vitest";
-import { buildESRILayer, type BuildESRILayerOptions } from "@/utils/tocHelpers";
-import type { TOCLayer } from "@/stores/tocStore";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { buildESRILayer, loadLayerGroupsFromSources, type BuildESRILayerOptions } from "@/utils/tocHelpers";
+import type { TOCLayer, TOCSource } from "@/stores/tocStore";
+import * as authUtils from "@/utils/auth";
+import * as arcgisAuth from "@/utils/arcgisAuth";
+import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 
 // Mock LayerHelpers so buildESRILayer can run without OpenLayers dependencies.
 vi.mock("@/utils/openlayers/LayerHelpers", () => ({
@@ -73,6 +76,52 @@ const baseLayer: BuildESRILayerOptions["layer"] = {
   opaque: false,
   grouped: false,
 };
+
+describe("loadLayerGroupsFromSources secured source gating", () => {
+  const arcgisSource: TOCSource = {
+    layerUrl: "https://example.com/arcgis/rest/services/Secure/MapServer",
+    secure: true,
+    primary: false,
+    urlType: "root",
+    type: "arcgis",
+  };
+  const config = { toc: { keywords: {}, default_group: "" } };
+
+  beforeEach(() => {
+    useArcGISTokenStore.setState({ token: null, expiresAt: 0, renewalDate: 0, username: "", isAuthenticated: false, isLoading: false, error: null });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+  });
+
+  it("does not skip a secured ArcGIS source when the ArcGIS token store has a valid token, even if the Azure AD token is unavailable", async () => {
+    vi.spyOn(authUtils, "getAccessToken").mockResolvedValue(undefined);
+    useArcGISTokenStore.setState({ token: "arcgis-token", renewalDate: Date.now() + 60 * 60 * 1000, isAuthenticated: true });
+
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ layers: [] }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await loadLayerGroupsFromSources([arcgisSource], config);
+
+    expect(fetchMock).toHaveBeenCalled();
+    expect(result.failedSources).not.toContain(arcgisSource.layerUrl);
+  });
+
+  it("skips a secured ArcGIS source when neither the Azure AD nor the ArcGIS token is available", async () => {
+    vi.spyOn(authUtils, "getAccessToken").mockResolvedValue(undefined);
+    vi.spyOn(arcgisAuth, "login").mockRejectedValue(new Error("not signed in"));
+
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const result = await loadLayerGroupsFromSources([arcgisSource], config);
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(result.failedSources).toContain(arcgisSource.layerUrl);
+  });
+});
 
 describe("buildESRILayer disclaimer", () => {
   it("returns undefined disclaimer when no disclaimer options are provided", async () => {

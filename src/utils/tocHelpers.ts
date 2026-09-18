@@ -830,15 +830,27 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   let defaultGroupName = config.toc.default_group || "";
   const failedSources: string[] = [];
 
-  // Pre-fetch the access token once so we can:
-  //  1. Skip secured sources entirely when the user isn't authenticated
-  //  2. Pass the token through to avoid redundant getSession() calls per source
-  const hasSecuredSources = sources.some((s) => s.secure);
+  // Secured sources authenticate through one of two independent token systems
+  // depending on type: GeoServer/"layer" sources use the Azure AD/NextAuth session
+  // token, while ArcGIS sources (unless appToken) use the separate ArcGIS Portal
+  // user token (arcgisTokenStore) — the two must never be used to gate each other.
+  const isArcGISUserTokenSource = (s: TOCSource) => (s.type || "geoserver").toLowerCase() === "arcgis" && !s.appToken;
+  const hasSecuredNonArcGISSources = sources.some((s) => s.secure && !isArcGISUserTokenSource(s));
+  const hasSecuredArcGISSources = sources.some((s) => s.secure && isArcGISUserTokenSource(s));
+
   let accessToken: string | undefined;
-  if (hasSecuredSources) {
+  if (hasSecuredNonArcGISSources) {
     accessToken = await getAccessToken();
     if (!accessToken) {
-      console.warn("[TOC] No access token available — skipping secured sources. " + "The user may not be signed in or the session may have expired.");
+      console.warn("[TOC] No access token available — skipping secured GeoServer sources. " + "The user may not be signed in or the session may have expired.");
+    }
+  }
+
+  let arcgisToken: string | undefined;
+  if (hasSecuredArcGISSources) {
+    arcgisToken = (await useArcGISTokenStore.getState().getValidToken()) ?? undefined;
+    if (!arcgisToken) {
+      console.warn("[TOC] No ArcGIS token available — skipping secured ArcGIS sources. " + "The user may not be signed in to ArcGIS or the token has expired.");
     }
   }
 
@@ -850,10 +862,16 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   });
   // console.log("sortedSources", sortedSources);
   for (const source of sortedSources) {
-    // Skip secured sources when the user isn't authenticated
-    if (source.secure && !accessToken) {
-      console.debug(`[TOC] Skipping secured source (no token): ${source.layerUrl}`);
-      continue;
+    // Skip secured sources when their corresponding token system has no token.
+    // Reported as a failed source (not just a debug log) so the missing layers
+    // are visible to the user instead of disappearing silently.
+    if (source.secure) {
+      const requiredToken = isArcGISUserTokenSource(source) ? arcgisToken : accessToken;
+      if (!requiredToken) {
+        console.warn(`[TOC] Skipping secured source (no token): ${source.layerUrl}`);
+        failedSources.push(source.layerUrl);
+        continue;
+      }
     }
 
     try {

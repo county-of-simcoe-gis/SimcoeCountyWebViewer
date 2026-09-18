@@ -153,7 +153,7 @@ export async function signOut(): Promise<void> {
  * Returns the ESRI Credential object.
  */
 export async function login(appId?: string, portalUrl?: string): Promise<__esri.Credential> {
-  initialize(appId, portalUrl);
+  await initialize(appId, portalUrl);
   return signIn();
 }
 

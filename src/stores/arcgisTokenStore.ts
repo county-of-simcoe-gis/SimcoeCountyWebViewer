@@ -3,20 +3,28 @@
  *
  * Manages the ArcGIS user token lifecycle using @arcgis/core's IdentityManager:
  *  - Stores the current token in state and localStorage
- *  - Schedules token refresh before the renewal date (mirrors old app's forceAppRefresh)
- *  - Provides getValidToken() for on-demand fresh-token access
- *  - After refresh, updates all secured ArcGIS OL layer sources in-place
+ *  - Provides getValidToken() for on-demand fresh-token access (interactive requests)
+ *  - Schedules a forced page reload at the token's renewal date (mirrors old app's
+ *    esriHelpers.js forceAppRefresh) instead of silently swapping tokens into live
+ *    layer sources in place — a full reload re-runs TOC/layer init with a fresh
+ *    token instead of requiring every layer type to be patched individually.
  */
 
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { type ArcGISTokenData, saveTokenToStorage, loadTokenFromStorage, clearTokenFromStorage, login, processCredential, processEsriJSAPIOAuth } from "@/utils/arcgisAuth";
-import ImageArcGISRest from "ol/source/ImageArcGISRest";
+import { showMessage } from "@/utils/helpersUI";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 /** Refresh the token 5 minutes before the renewal date. */
 const REFRESH_BUFFER_MS = 5 * 60 * 1000;
+
+/** Delay between the expiry warning toast and the page reload (matches old app). */
+const FORCE_REFRESH_WARNING_DELAY_MS = 5000;
+
+/** Shorter delay used when a freshly-acquired token is already past its own renewal date. */
+const FORCE_REFRESH_IMMEDIATE_DELAY_MS = 2500;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -49,24 +57,44 @@ interface ArcGISTokenActions {
   getValidToken: () => Promise<string | null>;
   /** Hydrate state from localStorage / esriJSAPIOAuth (call once on app init). */
   hydrate: () => Promise<void>;
-  /** Trigger a re-login via IdentityManager and update all secured layers. */
+  /** Trigger a re-login via IdentityManager. */
   refreshToken: () => Promise<boolean>;
-  /** Update TOKEN param on all secured ArcGIS OL sources. */
-  updateLayerTokens: (newToken: string) => void;
 }
 
 type ArcGISTokenStore = ArcGISTokenState & ArcGISTokenActions;
 
 // ─── Internal helpers ────────────────────────────────────────────────────────
 
-let refreshTimerId: ReturnType<typeof setTimeout> | null = null;
+let forceRefreshTimerId: ReturnType<typeof setTimeout> | null = null;
 let refreshPromise: Promise<boolean> | null = null;
 
-function clearRefreshTimer() {
-  if (refreshTimerId !== null) {
-    clearTimeout(refreshTimerId);
-    refreshTimerId = null;
+function clearForceRefreshTimer() {
+  if (forceRefreshTimerId !== null) {
+    clearTimeout(forceRefreshTimerId);
+    forceRefreshTimerId = null;
   }
+}
+
+/** Warn the user then reload the page so every layer/request picks up a fresh token. */
+function forceAppRefresh(title: string, message: string, delay: number) {
+  showMessage(title, message, "error", delay);
+  console.warn("ArcGIS Token expired. Page will automatically refresh.");
+  setTimeout(() => {
+    window.location.reload();
+  }, delay);
+}
+
+/** Schedule (or immediately trigger, if already due) the forced reload at the renewal date. */
+function scheduleForceRefresh(renewalDate: number) {
+  clearForceRefreshTimer();
+  const msUntilRenewal = renewalDate - Date.now();
+  if (msUntilRenewal <= 0) {
+    forceAppRefresh("Acquiring ArcGIS Token", "Acquiring ArcGIS Token, refreshing page...", FORCE_REFRESH_IMMEDIATE_DELAY_MS);
+    return;
+  }
+  forceRefreshTimerId = setTimeout(() => {
+    forceAppRefresh("ArcGIS Token expired!", "ArcGIS Token expired, refreshing page...", FORCE_REFRESH_WARNING_DELAY_MS);
+  }, msUntilRenewal);
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -98,19 +126,13 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
       // Persist (fire-and-forget — localStorage)
       void saveTokenToStorage(data);
 
-      // Schedule refresh before renewal date
-      clearRefreshTimer();
-      const msUntilRefresh = data.renewalDate - Date.now() - REFRESH_BUFFER_MS;
-      if (msUntilRefresh > 0) {
-        refreshTimerId = setTimeout(() => {
-          console.warn("ArcGIS: Token approaching renewal date, refreshing...");
-          get().refreshToken();
-        }, msUntilRefresh);
-      }
+      // Schedule a forced page reload at the renewal date instead of silently
+      // refreshing in place (mirrors old app's forceAppRefresh).
+      scheduleForceRefresh(data.renewalDate);
     },
 
     clearToken: () => {
-      clearRefreshTimer();
+      clearForceRefreshTimer();
       clearTokenFromStorage();
       set((state) => {
         state.token = null;
@@ -187,8 +209,6 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
           const tokenData = processCredential(cred);
 
           get().setToken(tokenData);
-          // Update all secured ArcGIS layer sources with the new token
-          get().updateLayerTokens(tokenData.accessToken);
           return true;
         } catch (err) {
           console.error("ArcGIS token refresh error:", err);
@@ -206,56 +226,5 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
         refreshPromise = null;
       }
     },
-
-    updateLayerTokens: (newToken: string) => {
-      try {
-        // Import dynamically to avoid circular dependencies at module-load time
-        const { useLayerManagerStore } = require("@/stores/layerManagerStore");
-        const allLayers = useLayerManagerStore.getState().getAllLayers();
-
-        for (const managed of allLayers) {
-          const layer = managed.layer;
-          const isSecured = layer.get?.("secured");
-          const isArcGIS = layer.get?.("isArcGIS");
-
-          if (!isSecured || !isArcGIS) continue;
-
-          // Update the OL source TOKEN param (triggers re-render)
-          const source = (layer as { getSource?: () => unknown }).getSource?.();
-          if (source instanceof ImageArcGISRest) {
-            const params = source.getParams();
-            source.updateParams({ ...params, TOKEN: newToken });
-          }
-
-          // Update wfsUrl and attachmentUrl with the new token
-          const wfsUrl = layer.get?.("wfsUrl") as string | undefined;
-          if (wfsUrl) {
-            const updatedWfsUrl = replaceTokenInUrl(wfsUrl, newToken);
-            layer.setProperties?.({ wfsUrl: updatedWfsUrl });
-          }
-
-          const attachmentUrl = layer.get?.("attachmentUrl") as string | undefined;
-          if (attachmentUrl) {
-            const updatedAttachmentUrl = replaceTokenInUrl(attachmentUrl, newToken);
-            layer.setProperties?.({ attachmentUrl: updatedAttachmentUrl });
-          }
-        }
-      } catch (err) {
-        console.warn("ArcGIS: Failed to update layer tokens after refresh:", err);
-      }
-    },
   })),
 );
-
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-/**
- * Replace or append a `token=...` query parameter in a URL string.
- */
-function replaceTokenInUrl(url: string, newToken: string): string {
-  if (/[?&]token=[^&]*/i.test(url)) {
-    return url.replace(/([?&])token=[^&]*/i, `$1token=${newToken}`);
-  }
-  const separator = url.includes("?") ? "&" : "?";
-  return `${url}${separator}token=${newToken}`;
-}
