@@ -95,7 +95,7 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
         state.error = null;
       });
 
-      // Persist (fire-and-forget — encrypted write)
+      // Persist (fire-and-forget — localStorage)
       void saveTokenToStorage(data);
 
       // Schedule refresh before renewal date
@@ -147,13 +147,23 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
       const redirectToken = processEsriJSAPIOAuth();
       if (redirectToken && Date.now() < redirectToken.renewalDate) {
         get().setToken(redirectToken);
+        // If the refresh point was already passed, refresh immediately in the
+        // background so the user doesn't use a stale token until the next request.
+        if (Date.now() >= redirectToken.renewalDate - REFRESH_BUFFER_MS) {
+          void get().refreshToken();
+        }
         return;
       }
 
-      // Then check sessionStorage for a cached (encrypted) token
+      // Then check localStorage for a cached token
       const stored = await loadTokenFromStorage();
       if (stored) {
         get().setToken(stored);
+        // If the refresh point was already passed, refresh immediately in the
+        // background so the user doesn't use a stale token until the next request.
+        if (Date.now() >= stored.renewalDate - REFRESH_BUFFER_MS) {
+          void get().refreshToken();
+        }
       }
     },
 
