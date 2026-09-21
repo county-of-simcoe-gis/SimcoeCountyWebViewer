@@ -61,11 +61,28 @@ type ArcGISTokenStore = ArcGISTokenState & ArcGISTokenActions;
 
 let refreshTimerId: ReturnType<typeof setTimeout> | null = null;
 let refreshPromise: Promise<boolean> | null = null;
+/** True once a consumer has requested a token; gates the background refresh timer. */
+let refreshSchedulingEnabled = false;
 
 function clearRefreshTimer() {
   if (refreshTimerId !== null) {
     clearTimeout(refreshTimerId);
     refreshTimerId = null;
+  }
+}
+
+function scheduleRefreshTimer(getState: () => ArcGISTokenStore) {
+  if (!refreshSchedulingEnabled) return;
+
+  clearRefreshTimer();
+  const { expiresAt, renewalDate } = getState();
+  const refreshPoint = Math.min(renewalDate, expiresAt) - REFRESH_BUFFER_MS;
+  const msUntilRefresh = refreshPoint - Date.now();
+  if (msUntilRefresh > 0) {
+    refreshTimerId = setTimeout(() => {
+      console.warn("ArcGIS: Token approaching renewal date, refreshing...");
+      getState().refreshToken();
+    }, msUntilRefresh);
   }
 }
 
@@ -98,15 +115,10 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
       // Persist (fire-and-forget — localStorage)
       void saveTokenToStorage(data);
 
-      // Schedule refresh before renewal date
-      clearRefreshTimer();
-      const msUntilRefresh = data.renewalDate - Date.now() - REFRESH_BUFFER_MS;
-      if (msUntilRefresh > 0) {
-        refreshTimerId = setTimeout(() => {
-          console.warn("ArcGIS: Token approaching renewal date, refreshing...");
-          get().refreshToken();
-        }, msUntilRefresh);
-      }
+      // Only arm the background refresh timer once a consumer has actually
+      // requested a token. Maps that never call getValidToken() won't waste
+      // cycles (or trigger ArcGIS auth flows) in the background.
+      scheduleRefreshTimer(get);
     },
 
     clearToken: () => {
@@ -124,20 +136,28 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
     },
 
     getValidToken: async (): Promise<string | null> => {
-      const { token, renewalDate, refreshToken } = get();
+      const { token, expiresAt, renewalDate, refreshToken } = get();
+      const hardLimit = Math.min(renewalDate, expiresAt);
 
-      // Token is still valid and well before renewal
-      if (token && Date.now() < renewalDate - REFRESH_BUFFER_MS) {
+      // Lazily enable background refresh scheduling the first time any
+      // consumer actually needs an ArcGIS token.
+      if (!refreshSchedulingEnabled) {
+        refreshSchedulingEnabled = true;
+        scheduleRefreshTimer(get);
+      }
+
+      // Token is still valid and well before its refresh point
+      if (token && Date.now() < hardLimit - REFRESH_BUFFER_MS) {
         return token;
       }
 
-      // Token exists but nearing renewal — try refresh
-      if (token && Date.now() < renewalDate) {
+      // Token exists but nearing its refresh point or expiry — try refresh
+      if (token && Date.now() < hardLimit) {
         const ok = await refreshToken();
         return ok ? get().token : token; // Return old token if refresh fails (still technically valid)
       }
 
-      // Token past renewal date or missing — need fresh login
+      // Token past its refresh point/expiry or missing — need fresh login
       const ok = await refreshToken();
       return ok ? get().token : null;
     },
@@ -182,8 +202,9 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
         });
 
         try {
-          // Use IdentityManager's login flow which handles SAML automatically
-          const cred = await login();
+          // Pass force=true so IdentityManager fetches a new token instead of
+          // returning the cached credential, which would still carry the old expiry.
+          const cred = await login(undefined, undefined, true);
           const tokenData = processCredential(cred);
 
           get().setToken(tokenData);
