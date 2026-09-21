@@ -36,7 +36,7 @@ export interface ArcGISTokenData {
   accessToken: string;
   /** Epoch ms when the token expires. */
   expiresAt: number;
-  /** Epoch ms after which the app should refresh (expiresAt - maxActiveTime). */
+  /** Epoch ms after which the app should refresh. */
   renewalDate: number;
   /** Epoch ms when the token was issued. */
   issueDate: number;

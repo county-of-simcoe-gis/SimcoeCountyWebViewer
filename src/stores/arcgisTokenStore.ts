@@ -15,8 +15,8 @@ import ImageArcGISRest from "ol/source/ImageArcGISRest";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Refresh the token 5 minutes before the renewal date. */
-const REFRESH_BUFFER_MS = 5 * 60 * 1000;
+/** Refresh the token 1 minute before the renewal date. */
+const REFRESH_BUFFER_MS = 1 * 60 * 1000;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -76,7 +76,8 @@ function scheduleRefreshTimer(getState: () => ArcGISTokenStore) {
 
   clearRefreshTimer();
   const { expiresAt, renewalDate } = getState();
-  const refreshPoint = Math.min(renewalDate, expiresAt) - REFRESH_BUFFER_MS;
+  const hardLimit = expiresAt > 0 ? Math.min(renewalDate, expiresAt) : renewalDate;
+  const refreshPoint = hardLimit - REFRESH_BUFFER_MS;
   const msUntilRefresh = refreshPoint - Date.now();
   if (msUntilRefresh > 0) {
     refreshTimerId = setTimeout(() => {
@@ -137,7 +138,9 @@ export const useArcGISTokenStore = create<ArcGISTokenStore>()(
 
     getValidToken: async (): Promise<string | null> => {
       const { token, expiresAt, renewalDate, refreshToken } = get();
-      const hardLimit = Math.min(renewalDate, expiresAt);
+      // expiresAt may be 0 when state was set directly without a real token data
+      // object (e.g. tests), so fall back to renewalDate only in that case.
+      const hardLimit = expiresAt > 0 ? Math.min(renewalDate, expiresAt) : renewalDate;
 
       // Lazily enable background refresh scheduling the first time any
       // consumer actually needs an ArcGIS token.
