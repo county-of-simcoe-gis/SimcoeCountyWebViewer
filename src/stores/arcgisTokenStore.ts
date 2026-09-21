@@ -15,8 +15,8 @@ import ImageArcGISRest from "ol/source/ImageArcGISRest";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-/** Refresh the token 1 minute before the renewal date. */
-const REFRESH_BUFFER_MS = 1 * 60 * 1000;
+/** Refresh the token 5 minute before the renewal date. */
+const REFRESH_BUFFER_MS = 5 * 60 * 1000;
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 

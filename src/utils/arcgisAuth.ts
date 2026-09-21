@@ -20,11 +20,11 @@ import { setStorageItem, getStorageItem, removeStorageItem } from "@/utils/stora
 const PORTAL_URL = process.env.NEXT_PUBLIC_ESRI_PORTAL_URL ?? "";
 const APP_ID = process.env.NEXT_PUBLIC_ESRI_APP_ID ?? "";
 
-/** Max token lifespan in minutes (14 days — capped by server's max). */
-const DEFAULT_EXPIRATION_MINUTES = 20160;
+/** Max token lifespan in minutes (2 days). */
+const DEFAULT_EXPIRATION_MINUTES = 2 * 24 * 60;
 
 /** Max active session time in ms before forcing a refresh (12 hours). */
-const MAX_ACTIVE_TIME_MS = 43200000;
+const MAX_ACTIVE_TIME_MS = 12 * 60 * 60 * 1000;
 
 /** Storage key in localStorage. */
 export const STORAGE_KEY = "ArcGIS_Token";
