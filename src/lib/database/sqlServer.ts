@@ -52,6 +52,9 @@ export class SQLServer {
     if (dbLower === "geoedit") {
       return process.env.SQL_GEOEDIT_USER || "";
     }
+    if (dbLower === "scapptrack") {
+      return process.env.SQL_APPTRACK_USER || "";
+    }
     return "";
   }
 
@@ -68,6 +71,9 @@ export class SQLServer {
     }
     if (dbLower === "geoedit") {
       return process.env.SQL_GEOEDIT_PASS || "";
+    }
+    if (dbLower === "scapptrack") {
+      return process.env.SQL_APPTRACK_PASS || "";
     }
     return "";
   }
