@@ -19,7 +19,24 @@ beforeEach(() => {
   // to reset it is by letting the previous refresh complete. Since we mock
   // login() synchronously below, this is sufficient.
   vi.restoreAllMocks();
+
+  // Ensure the OAuth redirect-callback path never interferes with hydrate tests.
+  vi.spyOn(arcgisAuth, "processEsriJSAPIOAuth").mockReturnValue(null);
 });
+
+function makeStoredToken(overrides: Partial<arcgisAuth.ArcGISTokenData> = {}): arcgisAuth.ArcGISTokenData {
+  const now = Date.now();
+  return {
+    accessToken: "stored-token",
+    expiresAt: now + 24 * 60 * 60 * 1000,
+    renewalDate: now + 12 * 60 * 60 * 1000,
+    issueDate: now,
+    username: "test-user",
+    ssl: true,
+    portalUrl: "https://example.com",
+    ...overrides,
+  };
+}
 
 describe("arcgisTokenStore", () => {
   describe("getValidToken", () => {
@@ -122,6 +139,72 @@ describe("arcgisTokenStore", () => {
       const second = await result.current.getValidToken();
       expect(second).toBe("retry-token");
       expect(arcgisAuth.login).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe("hydrate", () => {
+    it("should refresh immediately when the stored token is past its refresh point", async () => {
+      const now = Date.now();
+      let resolveLogin: ((cred: __esri.Credential) => void) | undefined;
+      const loginSpy = vi.spyOn(arcgisAuth, "login").mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveLogin = resolve;
+          }),
+      );
+
+      const storedToken = makeStoredToken({ renewalDate: now - 60 * 60 * 1000 });
+      vi.spyOn(arcgisAuth, "loadTokenFromStorage").mockResolvedValue(storedToken);
+
+      const { result } = renderHook(() => useArcGISTokenStore());
+      await result.current.hydrate();
+
+      // The stored token should be in state, and a background refresh should
+      // have been triggered because the refresh point has passed.
+      expect(useArcGISTokenStore.getState().token).toBe("stored-token");
+      expect(loginSpy).toHaveBeenCalledTimes(1);
+
+      resolveLogin!({
+        token: "refreshed-token",
+        expires: now + 24 * 60 * 60 * 1000,
+        creationTime: now,
+        userId: "test-user",
+        ssl: true,
+        server: "https://example.com",
+      } as unknown as __esri.Credential);
+
+      await vi.waitFor(() => expect(useArcGISTokenStore.getState().token).toBe("refreshed-token"));
+    });
+
+    it("should not refresh when the stored token is before its refresh point", async () => {
+      const now = Date.now();
+      const loginSpy = vi.spyOn(arcgisAuth, "login").mockResolvedValue({
+        token: "refreshed-token",
+        expires: now + 24 * 60 * 60 * 1000,
+        creationTime: now,
+        userId: "test-user",
+        ssl: true,
+        server: "https://example.com",
+      } as unknown as __esri.Credential);
+
+      const storedToken = makeStoredToken({ renewalDate: now + 12 * 60 * 60 * 1000 });
+      vi.spyOn(arcgisAuth, "loadTokenFromStorage").mockResolvedValue(storedToken);
+
+      const { result } = renderHook(() => useArcGISTokenStore());
+      await result.current.hydrate();
+
+      expect(useArcGISTokenStore.getState().token).toBe("stored-token");
+      expect(loginSpy).not.toHaveBeenCalled();
+    });
+
+    it("should not set a token when localStorage is empty", async () => {
+      vi.spyOn(arcgisAuth, "loadTokenFromStorage").mockResolvedValue(null);
+
+      const { result } = renderHook(() => useArcGISTokenStore());
+      await result.current.hydrate();
+
+      expect(useArcGISTokenStore.getState().isAuthenticated).toBe(false);
+      expect(useArcGISTokenStore.getState().token).toBeNull();
     });
   });
 });
