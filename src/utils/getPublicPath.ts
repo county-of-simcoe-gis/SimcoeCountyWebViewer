@@ -30,4 +30,33 @@ export function getPublicPath(path: string): string {
   return `${getBasePath()}${normalizedPath}`;
 }
 
+/**
+ * Returns an absolute URL for a public asset, preserving already-absolute URLs.
+ *
+ * MapFish Print fetches icon URLs server-side, so relative paths must be made
+ * absolute and include the configured basePath. Data URLs and absolute URLs
+ * are returned unchanged.
+ *
+ * @example
+ *   getAbsolutePublicUrl("/images/logo.png")
+ *     // => "https://opengis.simcoe.ca/viewer/images/logo.png"
+ */
+export function getAbsolutePublicUrl(url: string): string {
+  if (!url) return url;
+
+  // Already absolute (http:, https:, //) or inline data — leave as-is.
+  if (/^(https?:|\/\/|data:)/i.test(url)) {
+    return url;
+  }
+
+  const basePath = getBasePath();
+  const normalizedPath = url.startsWith("/") ? url : `/${url}`;
+
+  // Avoid double-prefixing when the URL was already built with the basePath.
+  const publicUrl = basePath && normalizedPath.startsWith(`${basePath}/`) ? normalizedPath : getPublicPath(normalizedPath);
+
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  return `${origin}${publicUrl}`;
+}
+
 export default getPublicPath;
