@@ -90,6 +90,8 @@ async function getWazeAlertLayer(type: string): Promise<FeatureCollection> {
     return { type: "FeatureCollection", features: [] };
   }
 
+  const upperType = type.toUpperCase();
+
   try {
     const response = await fetch(wazeURL);
 
@@ -103,13 +105,25 @@ async function getWazeAlertLayer(type: string): Promise<FeatureCollection> {
     const wazeByType: WazeAlert[] = [];
 
     for (const element of alerts) {
+      const elementType = element.type.toUpperCase();
+      const elementSubtype = (element.subtype || "").toUpperCase();
+
       // Filter by type
-      if (type.toUpperCase() === "HAZARD") {
-        // HAZARD includes both WEATHERHAZARD and HAZARD types
-        if (element.type.toUpperCase() !== "WEATHERHAZARD" && element.type.toUpperCase() !== "HAZARD") {
+      if (upperType === "HAZARD") {
+        // HAZARD includes both WEATHERHAZARD and HAZARD types, but excludes construction hazards
+        if (elementType !== "WEATHERHAZARD" && elementType !== "HAZARD") {
           continue;
         }
-      } else if (element.type.toUpperCase() !== type.toUpperCase()) {
+        // Construction-related hazards are shown in the Construction layer instead
+        if (elementSubtype.startsWith("HAZARD_ON_ROAD_CONSTRUCTION")) {
+          continue;
+        }
+      } else if (upperType === "CONSTRUCTION") {
+        // Construction layer includes top-level CONSTRUCTION alerts and construction hazards
+        if (elementType !== "CONSTRUCTION" && !elementSubtype.startsWith("HAZARD_ON_ROAD_CONSTRUCTION")) {
+          continue;
+        }
+      } else if (elementType !== upperType) {
         continue;
       }
 
@@ -122,7 +136,7 @@ async function getWazeAlertLayer(type: string): Promise<FeatureCollection> {
 
       // Delete unnecessary properties
       delete (element as { location?: unknown }).location;
-      delete (element as { pubMillis?: unknown }).pubMillis;
+      // Keep pubMillis so the popup can render relative times (e.g. "47 min ago")
 
       wazeByType.push(element);
     }
@@ -175,7 +189,7 @@ async function getWazeJamsLayer(): Promise<FeatureCollection> {
 
       // Delete unnecessary properties
       delete (element as { location?: unknown }).location;
-      delete (element as { pubMillis?: unknown }).pubMillis;
+      // Keep pubMillis so the popup can render relative times (e.g. "47 min ago")
       delete (element as { line?: unknown }).line;
     }
 
