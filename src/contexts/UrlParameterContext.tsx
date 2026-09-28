@@ -313,6 +313,108 @@ export function UrlParameterProvider({ children }: UrlParameterProviderProps) {
 }
 
 // ============================================================================
+// Sidebar shortcut helpers
+// ============================================================================
+
+interface SidebarShortcut {
+  url_param: string;
+  type: string;
+  component: string;
+  matchValue?: string;
+  hidden?: boolean;
+  timeout?: number;
+}
+
+/**
+ * Find a matching sidebarShortcutParams entry for a URL parameter name/value.
+ * Matching is case-insensitive for both url_param and optional matchValue.
+ */
+function findSidebarShortcut(shortcuts: SidebarShortcut[] | undefined, paramName: string, value: string): SidebarShortcut | undefined {
+  if (!shortcuts || shortcuts.length === 0) return undefined;
+  const paramNameUpper = paramName.toUpperCase();
+  const valueUpper = value.toUpperCase();
+
+  return shortcuts.find((s) => {
+    if (s.url_param.toUpperCase() !== paramNameUpper) return false;
+    if (s.matchValue && s.matchValue.toUpperCase() !== valueUpper) return false;
+    return true;
+  });
+}
+
+/**
+ * Wait for sidebar items of the requested type to be loaded, then find one
+ * whose name or id matches `componentName` case-insensitively.
+ */
+async function findSidebarItemWhenReady(
+  sidebarStore: typeof import("@/stores/sidebarStore").useSidebarStore,
+  itemType: "themes" | "tools",
+  componentName: string,
+  timeout = 5000,
+): Promise<import("@/stores/sidebarStore").SidebarItem | undefined> {
+  const checkInterval = 100;
+  let waited = 0;
+  const nameUpper = componentName.toUpperCase();
+
+  while (waited < timeout) {
+    const state = sidebarStore.getState();
+    const items = itemType === "themes" ? state.themes : state.tools;
+    const match = items.find((i) => i.name.toUpperCase() === nameUpper || i.id.toUpperCase() === nameUpper);
+    if (match) return match;
+
+    if (items.length > 0) {
+      // Items have loaded but no match found; stop waiting early
+      break;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, checkInterval));
+    waited += checkInterval;
+  }
+
+  return undefined;
+}
+
+/**
+ * Activate a sidebar item by name/id and switch to the correct tab.
+ */
+function activateSidebarShortcutItem(
+  sidebarState: Pick<ReturnType<typeof import("@/stores/sidebarStore").useSidebarStore.getState>, "openSidebar" | "setActiveTab" | "activateSidebarItem">,
+  item: import("@/stores/sidebarStore").SidebarItem,
+  itemType: "themes" | "tools",
+): void {
+  sidebarState.openSidebar();
+  const tabIndex = itemType === "themes" ? 3 : 1;
+  sidebarState.setActiveTab(tabIndex);
+  sidebarState.activateSidebarItem(item.id, itemType);
+}
+
+/**
+ * Handle a sidebar shortcut entry by resolving its component and activating it.
+ */
+async function handleSidebarShortcut(shortcut: SidebarShortcut, value: string): Promise<void> {
+  const { useSidebarStore } = await import("@/stores/sidebarStore");
+
+  if (shortcut.type === "search") {
+    const { useSearchStore } = await import("@/stores/searchStore");
+    useSearchStore.getState().setPendingSearch({ value, type: shortcut.component });
+    return;
+  }
+
+  if (shortcut.type === "themes" || shortcut.type === "tools") {
+    const item = await findSidebarItemWhenReady(useSidebarStore, shortcut.type, shortcut.component, shortcut.timeout);
+    if (item) {
+      activateSidebarShortcutItem(useSidebarStore.getState(), item, shortcut.type);
+    } else {
+      console.warn(`[Handler] Shortcut component "${shortcut.component}" not found in ${shortcut.type}`);
+    }
+    return;
+  }
+
+  if (shortcut.type === "MYMAPS") {
+    // TODO: Load MyMaps configuration
+  }
+}
+
+// ============================================================================
 // Lazy Handler Factory
 // ============================================================================
 
@@ -341,10 +443,15 @@ function createLazyHandler(paramName: string): HandlerFn {
       }
 
       case "THEME": {
-        // Enable a specific theme
-        // 1. Open the sidebar
-        // 2. Set active tab to themes (index 3)
-        // 3. Activate the theme by name
+        // 1. Try configured sidebarShortcutParams first (e.g. THEME=Economic Development -> Commercial Real Estate)
+        const { useAppStore } = await import("@/stores/appStore");
+        const themeShortcut = findSidebarShortcut(useAppStore.getState().config?.sidebarShortcutParams, "THEME", value);
+        if (themeShortcut && themeShortcut.type === "themes") {
+          await handleSidebarShortcut(themeShortcut, value);
+          break;
+        }
+
+        // 2. Fall back to legacy direct name/id lookup
         // Wait for themes to be loaded (max 5 seconds)
         const maxWait = 5000;
         const checkInterval = 100;
@@ -361,12 +468,7 @@ function createLazyHandler(paramName: string): HandlerFn {
         const theme = sidebarState.themes.find((t) => t.name.toUpperCase() === value.toUpperCase() || t.id.toUpperCase() === value.toUpperCase());
 
         if (theme) {
-          // Open sidebar and switch to themes tab
-          sidebarState.openSidebar();
-          sidebarState.setActiveTab(3); // 3 = themes tab
-
-          // Activate the theme
-          sidebarState.activateSidebarItem(theme.id, "themes");
+          activateSidebarShortcutItem(sidebarState, theme, "themes");
         } else {
           console.warn(
             `[Handler] Theme "${value}" not found. Available themes:`,
@@ -377,7 +479,15 @@ function createLazyHandler(paramName: string): HandlerFn {
       }
 
       case "TOOL": {
-        // Enable a specific tool
+        // 1. Try configured sidebarShortcutParams first
+        const { useAppStore: useAppStoreTool } = await import("@/stores/appStore");
+        const toolShortcut = findSidebarShortcut(useAppStoreTool.getState().config?.sidebarShortcutParams, "TOOL", value);
+        if (toolShortcut && toolShortcut.type === "tools") {
+          await handleSidebarShortcut(toolShortcut, value);
+          break;
+        }
+
+        // 2. Fall back to legacy direct name/id lookup
         // Wait for tools to be loaded (max 5 seconds)
         const maxWaitTool = 5000;
         const checkIntervalTool = 100;
@@ -394,12 +504,7 @@ function createLazyHandler(paramName: string): HandlerFn {
         const tool = sidebarState.tools.find((t) => t.name.toUpperCase() === value.toUpperCase() || t.id.toUpperCase() === value.toUpperCase());
 
         if (tool) {
-          // Open sidebar and switch to tools tab
-          sidebarState.openSidebar();
-          sidebarState.setActiveTab(1); // 1 = tools tab
-
-          // Activate the tool
-          sidebarState.activateSidebarItem(tool.id, "tools");
+          activateSidebarShortcutItem(sidebarState, tool, "tools");
         } else {
           console.warn(
             `[Handler] Tool "${value}" not found. Available tools:`,
@@ -440,59 +545,9 @@ function createLazyHandler(paramName: string): HandlerFn {
       default: {
         // Check sidebarShortcutParams from merged config for custom URL param handling
         const { useAppStore } = await import("@/stores/appStore");
-        const appConfig = useAppStore.getState().config;
-        const shortcuts =
-          (appConfig?.sidebarShortcutParams as Array<{
-            url_param: string;
-            type: string;
-            component: string;
-            matchValue?: string;
-            hidden?: boolean;
-            timeout?: number;
-          }>) || [];
-
-        // Find a matching shortcut entry
-        const shortcut = shortcuts.find((s) => {
-          if (s.url_param.toUpperCase() !== paramName.toUpperCase()) return false;
-          // If matchValue is specified, the URL param value must match it
-          if (s.matchValue && s.matchValue.toUpperCase() !== value.toUpperCase()) return false;
-          return true;
-        });
-
+        const shortcut = findSidebarShortcut(useAppStore.getState().config?.sidebarShortcutParams, paramName, value);
         if (shortcut) {
-          if (shortcut.type === "search") {
-            // Set a pending search for the Search component to pick up
-            const { useSearchStore } = await import("@/stores/searchStore");
-            useSearchStore.getState().setPendingSearch({ value, type: shortcut.component });
-          } else if (shortcut.type === "themes" || shortcut.type === "tools") {
-            // Wait for sidebar items to be loaded
-            const maxWaitShortcut = shortcut.timeout || 5000;
-            const checkIntervalShortcut = 100;
-            let waitedShortcut = 0;
-            let sidebarStateShortcut = useSidebarStore.getState();
-            const items = shortcut.type === "themes" ? sidebarStateShortcut.themes : sidebarStateShortcut.tools;
-
-            while (items.length === 0 && waitedShortcut < maxWaitShortcut) {
-              await new Promise((resolve) => setTimeout(resolve, checkIntervalShortcut));
-              waitedShortcut += checkIntervalShortcut;
-              sidebarStateShortcut = useSidebarStore.getState();
-            }
-
-            // Find the item by component name (case-insensitive)
-            const finalItems = shortcut.type === "themes" ? sidebarStateShortcut.themes : sidebarStateShortcut.tools;
-            const item = finalItems.find((i) => i.name.toUpperCase() === shortcut.component.toUpperCase() || i.id.toUpperCase() === shortcut.component.toUpperCase());
-
-            if (item) {
-              sidebarStateShortcut.openSidebar();
-              const tabIndex = shortcut.type === "themes" ? 3 : 1;
-              sidebarStateShortcut.setActiveTab(tabIndex);
-              sidebarStateShortcut.activateSidebarItem(item.id, shortcut.type);
-            } else {
-              console.warn(`[Handler] Shortcut component "${shortcut.component}" not found in ${shortcut.type}`);
-            }
-          } else if (shortcut.type === "MYMAPS") {
-            // TODO: Load MyMaps configuration
-          }
+          await handleSidebarShortcut(shortcut, value);
         }
         break;
       }
