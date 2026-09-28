@@ -1,142 +1,158 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import Five11WazePopupContent from "../Five11WazePopupContent";
 
 describe("Five11WazePopupContent", () => {
+  const now = 1776010900000; // matches sample feed timestamp
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(now);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe("alert layers (point)", () => {
-    const alertProperties = {
-      type: "ACCIDENT",
-      subtype: "ACCIDENT_MINOR",
-      reportDescription: "Minor accident on highway",
-      date: "2026-02-10T10:30:00Z",
-      street: "Highway 400",
-    };
+    it("renders a friendly title from subtype", () => {
+      render(<Five11WazePopupContent properties={{ type: "HAZARD", subtype: "HAZARD_ON_ROAD_CONSTRUCTION", street: "CR-27" }} layerName="511-waze-construction" />);
 
-    it("renders all relevant Waze alert fields", () => {
-      render(<Five11WazePopupContent properties={alertProperties} layerName="511-waze-accident" />);
-
-      expect(screen.getByText("ACCIDENT")).toBeInTheDocument();
-      expect(screen.getByText("ACCIDENT_MINOR")).toBeInTheDocument();
-      expect(screen.getByText("Minor accident on highway")).toBeInTheDocument();
-      expect(screen.getByText("Highway 400")).toBeInTheDocument();
+      expect(screen.getByText("Road construction")).toBeInTheDocument();
+      expect(screen.getByText("CR-27")).toBeInTheDocument();
+      expect(screen.queryByText("HAZARD")).not.toBeInTheDocument();
+      expect(screen.queryByText("HAZARD_ON_ROAD_CONSTRUCTION")).not.toBeInTheDocument();
     });
 
-    it("renders formatted field labels", () => {
-      render(<Five11WazePopupContent properties={alertProperties} layerName="511-waze-accident" />);
+    it("renders relative time and driver confirmations", () => {
+      render(
+        <Five11WazePopupContent
+          properties={{
+            type: "HAZARD",
+            subtype: "HAZARD_ON_ROAD_CONSTRUCTION",
+            street: "CR-27",
+            pubMillis: now - 47 * 60 * 1000,
+            nThumbsUp: 3,
+          }}
+          layerName="511-waze-construction"
+        />,
+      );
 
-      expect(screen.getByText("Type")).toBeInTheDocument();
-      expect(screen.getByText("Subtype")).toBeInTheDocument();
-      expect(screen.getByText("Description")).toBeInTheDocument(); // reportDescription maps to Description
-      expect(screen.getByText("Street")).toBeInTheDocument();
+      expect(screen.getByText("47 min ago")).toBeInTheDocument();
+      expect(screen.getByText("3 drivers")).toBeInTheDocument();
     });
 
-    it("skips null and undefined values", () => {
-      const sparseProperties = {
-        type: "HAZARD",
-        subtype: undefined,
-        reportDescription: null,
-        street: "Main St",
-      };
+    it("uses type as title fallback when subtype is missing", () => {
+      render(<Five11WazePopupContent properties={{ type: "ROAD_CLOSED", street: "5th Sideroad" }} layerName="511-waze-road-closed" />);
 
-      render(<Five11WazePopupContent properties={sparseProperties as any} layerName="511-waze-hazard" />);
-
-      expect(screen.getByText("HAZARD")).toBeInTheDocument();
-      expect(screen.getByText("Main St")).toBeInTheDocument();
-      // Only 2 field entries should render (type and street)
-      const fieldLabels = screen.getAllByText(/^(Type|Street)$/);
-      expect(fieldLabels.length).toBe(2);
+      expect(screen.getByText("Road closed")).toBeInTheDocument();
+      expect(screen.getByText("5th Sideroad")).toBeInTheDocument();
     });
 
-    it("skips empty string values", () => {
-      const props = {
-        type: "ROAD_CLOSED",
-        subtype: "",
-        street: "Elm St",
-      };
+    it("renders the report description when it differs from the title", () => {
+      render(
+        <Five11WazePopupContent
+          properties={{
+            type: "ROAD_CLOSED",
+            street: "5th Sideroad",
+            reportDescription: "This bridge is permanently closed.",
+          }}
+          layerName="511-waze-road-closed"
+        />,
+      );
 
-      render(<Five11WazePopupContent properties={props} layerName="511-waze-road-closed" />);
-
-      expect(screen.getByText("ROAD_CLOSED")).toBeInTheDocument();
-      expect(screen.getByText("Elm St")).toBeInTheDocument();
+      expect(screen.getByText("This bridge is permanently closed.")).toBeInTheDocument();
     });
 
-    it("skips geometry and internal fields", () => {
-      const props = {
-        type: "CONSTRUCTION",
-        geometry: { type: "Point", coordinates: [0, 0] },
-        _internalField: "secret",
-        street: "Oak Ave",
-      };
+    it("omits the description when it matches the generated title", () => {
+      render(
+        <Five11WazePopupContent
+          properties={{
+            type: "HAZARD",
+            subtype: "HAZARD_ON_ROAD_CONSTRUCTION",
+            reportDescription: "Road construction",
+            street: "CR-27",
+          }}
+          layerName="511-waze-construction"
+        />,
+      );
 
-      render(<Five11WazePopupContent properties={props as any} layerName="511-waze-construction" />);
-
-      expect(screen.getByText("CONSTRUCTION")).toBeInTheDocument();
-      expect(screen.queryByText("secret")).not.toBeInTheDocument();
+      // Title is shown, but the redundant description is not rendered separately
+      expect(screen.getByText("Road construction")).toBeInTheDocument();
+      expect(screen.queryByText(/Road construction.{1}/)).not.toBeInTheDocument();
     });
 
-    it("shows no details message when no matching fields", () => {
-      const emptyProps = { unknownField: "value" };
-
-      render(<Five11WazePopupContent properties={emptyProps as any} layerName="511-waze-accident" />);
+    it("shows no details message when there is nothing to display", () => {
+      render(<Five11WazePopupContent properties={{}} layerName="511-waze-accident" />);
 
       expect(screen.getByText("No details available")).toBeInTheDocument();
     });
   });
 
   describe("line layers (jam/irregularity)", () => {
-    const jamProperties = {
-      speedKMH: 45,
-      delay: 120,
-      date: "2026-02-10T10:30:00Z",
-      street: "Highway 11",
-      city: "Barrie",
-    };
+    it("renders speed, delay, street, city, and relative time for jam layers", () => {
+      render(
+        <Five11WazePopupContent
+          properties={{
+            speedKMH: 45,
+            delay: 2,
+            street: "Highway 11",
+            city: "Barrie",
+            pubMillis: now - 30 * 60 * 1000,
+          }}
+          layerName="511-waze-jam-lines"
+        />,
+      );
 
-    it("renders line layer fields for jam layers", () => {
-      render(<Five11WazePopupContent properties={jamProperties} layerName="511-waze-jam-lines" />);
-
-      expect(screen.getByText("45")).toBeInTheDocument();
-      expect(screen.getByText("120")).toBeInTheDocument();
+      expect(screen.getByText("45 km/h")).toBeInTheDocument();
+      expect(screen.getByText("2 min")).toBeInTheDocument();
       expect(screen.getByText("Highway 11")).toBeInTheDocument();
       expect(screen.getByText("Barrie")).toBeInTheDocument();
+      expect(screen.getByText("30 min ago")).toBeInTheDocument();
     });
 
-    it("renders Speed (km/h) label for speedKMH field", () => {
-      render(<Five11WazePopupContent properties={jamProperties} layerName="511-waze-jam-lines" />);
+    it("renders irregularity layer fields using updateDateMillis", () => {
+      render(
+        <Five11WazePopupContent
+          properties={{
+            speedKMH: 30,
+            delay: 1,
+            street: "County Road 90",
+            updateDateMillis: now - 90 * 60 * 1000,
+          }}
+          layerName="511-waze-irregularity-lines"
+        />,
+      );
 
-      expect(screen.getByText("Speed (km/h)")).toBeInTheDocument();
-    });
-
-    it("renders line layer fields for irregularity layers", () => {
-      const irregProps = {
-        speedKMH: 30,
-        delay: 60,
-        street: "County Road 90",
-      };
-
-      render(<Five11WazePopupContent properties={irregProps} layerName="511-waze-irregularity-lines" />);
-
-      expect(screen.getByText("30")).toBeInTheDocument();
-      expect(screen.getByText("60")).toBeInTheDocument();
+      expect(screen.getByText("30 km/h")).toBeInTheDocument();
+      expect(screen.getByText("1 min")).toBeInTheDocument();
       expect(screen.getByText("County Road 90")).toBeInTheDocument();
+      expect(screen.getByText("1 hr ago")).toBeInTheDocument();
     });
 
-    it("does not show alert-only fields like type/subtype for line layers", () => {
-      const mixedProps = {
-        type: "JAM",
-        subtype: "JAM_HEAVY",
-        speedKMH: 20,
-        street: "Hwy 26",
-      };
+    it("does not show alert-only fields for line layers", () => {
+      render(
+        <Five11WazePopupContent
+          properties={{
+            type: "JAM",
+            subtype: "JAM_HEAVY",
+            speedKMH: 20,
+            street: "Hwy 26",
+          }}
+          layerName="511-waze-jam-lines"
+        />,
+      );
 
-      render(<Five11WazePopupContent properties={mixedProps as any} layerName="511-waze-jam-lines" />);
-
-      // type and subtype are not in the line layer field list
       expect(screen.queryByText("JAM")).not.toBeInTheDocument();
       expect(screen.queryByText("JAM_HEAVY")).not.toBeInTheDocument();
-      // But speedKMH and street should be present
-      expect(screen.getByText("20")).toBeInTheDocument();
+      expect(screen.getByText("20 km/h")).toBeInTheDocument();
       expect(screen.getByText("Hwy 26")).toBeInTheDocument();
+    });
+
+    it("shows no details message when line layer has no details", () => {
+      render(<Five11WazePopupContent properties={{}} layerName="511-waze-jam-lines" />);
+
+      expect(screen.getByText("No details available")).toBeInTheDocument();
     });
   });
 });

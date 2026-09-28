@@ -23,6 +23,7 @@ interface BasemapLayer {
   isOverlay?: boolean;
   display?: boolean;
   print?: boolean;
+  secured?: boolean;
   fullExtent?: number[];
   minZoom?: number;
   maxZoom?: number;
@@ -507,6 +508,7 @@ export default function BasemapSwitcher() {
                     pngPath: layerConfig.pngPath,
                     opacity,
                     printOrder: reversedIndex,
+                    secured: layerConfig.secured,
                   });
                   resolve();
                   return;

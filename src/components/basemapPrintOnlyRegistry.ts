@@ -14,6 +14,8 @@ export interface BasemapPrintOnlyDescriptor {
   pngPath?: string;
   opacity: number;
   printOrder: number;
+  /** Whether the substitute layer requires an ArcGIS token. */
+  secured?: boolean;
 }
 
 let basemapPrintOnlyDescriptors: BasemapPrintOnlyDescriptor[] = [];

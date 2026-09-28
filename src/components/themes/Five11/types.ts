@@ -24,8 +24,13 @@ export interface WazeAlertProperties {
   subtype?: string;
   reportDescription?: string;
   date?: string;
+  pubMillis?: number;
   street?: string;
+  city?: string;
   uuid?: string;
+  nThumbsUp?: number;
+  confidence?: number;
+  reliability?: number;
   [key: string]: unknown;
 }
 
@@ -34,6 +39,8 @@ export interface WazeLineProperties {
   speedKMH?: number;
   delay?: number;
   date?: string;
+  pubMillis?: number;
+  updateDateMillis?: number;
   street?: string;
   city?: string;
   level?: number;
