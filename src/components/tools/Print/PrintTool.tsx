@@ -22,6 +22,7 @@ import { buildPrintRequest, PrintState } from "./printRequest";
 import { getBaseUrl, mergePrintSizes } from "./printUtils";
 import { useToast } from "@/hooks/useToast";
 import { getAccessToken } from "@/utils/auth";
+import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { Layer } from "ol/layer";
 
 interface PrintToolProps {
@@ -62,6 +63,7 @@ function createLayerFromPrintOnlyDescriptor(descriptor: {
   rootPath?: string;
   opacity: number;
   printOrder: number;
+  secured?: boolean;
 }): Promise<Layer | null> {
   return new Promise((resolve) => {
     try {
@@ -74,6 +76,7 @@ function createLayerFromPrintOnlyDescriptor(descriptor: {
           minZoom: descriptor.minZoom,
           maxZoom: descriptor.maxZoom,
           rootPath: descriptor.rootPath,
+          secured: descriptor.secured,
         },
         (layer) => {
           layer.setOpacity(descriptor.opacity);
@@ -285,11 +288,26 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
 
       // Check for secured layers
       let useBearerToken = false;
+      let hasSecuredArcGISLayer = false;
       printLayers.forEach((layer) => {
         if (layer.get("secured")) {
           useBearerToken = true;
+          if (layer.get("isArcGIS")) {
+            hasSecuredArcGISLayer = true;
+          }
         }
       });
+
+      // Pre-fetch a fresh ArcGIS token for secured ArcGIS image layers. This
+      // primes the token store so configureImageLayer can inject a valid token
+      // into the MapFish request and avoids intermittent failures caused by
+      // stale TOKEN params on unrendered layers.
+      if (hasSecuredArcGISLayer) {
+        const arcGISToken = await useArcGISTokenStore.getState().getValidToken();
+        if (!arcGISToken) {
+          console.warn("[Print] Secured ArcGIS layers present but no ArcGIS token available");
+        }
+      }
 
       // Build print state
       const printState: PrintState = {
@@ -315,8 +333,11 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
       const outputFormat = printData.outputFormat;
       const url = `${printUrl}/print/${printAppId}/report.${outputFormat}`;
 
-      // Encode print request
+      // Encode print request as a MapFish form-encoded spec field. MapFish
+      // expects either raw JSON or a form body where the `spec` key contains
+      // the URL-encoded JSON print request.
       const encodedPrintRequest = encodeURIComponent(JSON.stringify(printData));
+      const formBody = `spec=${encodedPrintRequest}`;
 
       // Send request
       const requestOptions: RequestInit = {
@@ -324,7 +345,7 @@ export default function PrintTool({ name = "Print", helpLink, hideHeader = false
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
-        body: encodedPrintRequest,
+        body: formBody,
       };
 
       if (useBearerToken) {

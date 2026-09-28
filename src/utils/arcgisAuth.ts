@@ -20,11 +20,11 @@ import { setStorageItem, getStorageItem, removeStorageItem } from "@/utils/stora
 const PORTAL_URL = process.env.NEXT_PUBLIC_ESRI_PORTAL_URL ?? "";
 const APP_ID = process.env.NEXT_PUBLIC_ESRI_APP_ID ?? "";
 
-/** Max token lifespan in minutes (14 days — capped by server's max). */
-const DEFAULT_EXPIRATION_MINUTES = 20160;
+/** Max token lifespan in minutes (2 days). */
+const DEFAULT_EXPIRATION_MINUTES = 2 * 24 * 60;
 
 /** Max active session time in ms before forcing a refresh (12 hours). */
-const MAX_ACTIVE_TIME_MS = 43200000;
+const MAX_ACTIVE_TIME_MS = 12 * 60 * 60 * 1000;
 
 /** Storage key in localStorage. */
 export const STORAGE_KEY = "ArcGIS_Token";
@@ -36,7 +36,7 @@ export interface ArcGISTokenData {
   accessToken: string;
   /** Epoch ms when the token expires. */
   expiresAt: number;
-  /** Epoch ms after which the app should refresh (expiresAt - maxActiveTime). */
+  /** Epoch ms after which the app should refresh. */
   renewalDate: number;
   /** Epoch ms when the token was issued. */
   issueDate: number;
@@ -151,9 +151,23 @@ export async function signOut(): Promise<void> {
 /**
  * Full login flow: initialize + signIn.
  * Returns the ESRI Credential object.
+ *
+ * @param force - When true, destroy any cached credential first so the
+ *                next sign-in fetches a fresh token instead of reusing the
+ *                old one. Used for proactive refresh before the current
+ *                token expires.
  */
-export async function login(appId?: string, portalUrl?: string): Promise<__esri.Credential> {
+export async function login(appId?: string, portalUrl?: string, force = false): Promise<__esri.Credential> {
   initialize(appId, portalUrl);
+
+  if (force) {
+    credential = undefined;
+    if (oauthInfo) {
+      const { IdentityManager } = await loadArcGISModules();
+      IdentityManager.destroyCredentials();
+    }
+  }
+
   return signIn();
 }
 
@@ -167,7 +181,7 @@ export function processCredential(cred: __esri.Credential): ArcGISTokenData {
   const now = Date.now();
   const expiresAt = cred.expires ?? now + DEFAULT_EXPIRATION_MINUTES * 60 * 1000;
   const issueDate = cred.creationTime ?? now;
-  const renewalDate = expiresAt - MAX_ACTIVE_TIME_MS;
+  const renewalDate = Math.min(issueDate + MAX_ACTIVE_TIME_MS, expiresAt - 60 * 1000);
 
   const tokenData: ArcGISTokenData = {
     accessToken: cred.token,
@@ -200,11 +214,12 @@ export function processEsriJSAPIOAuth(): ArcGISTokenData | null {
       const serverData = esriLogin["/"][esriServer];
       const now = Date.now();
       const expiresAt = serverData.expires ?? now;
+      const renewalDate = Math.min(now + MAX_ACTIVE_TIME_MS, expiresAt - 60 * 1000);
 
       const tokenData: ArcGISTokenData = {
         accessToken: serverData.token,
         expiresAt,
-        renewalDate: expiresAt - MAX_ACTIVE_TIME_MS,
+        renewalDate,
         issueDate: now,
         username: serverData.userId ?? "",
         ssl: serverData.ssl ?? false,
@@ -221,11 +236,12 @@ export function processEsriJSAPIOAuth(): ArcGISTokenData | null {
       const now = Date.now();
       const expiresInMs = parseInt(esriLogin.expires_in ?? "0", 10) * 1000;
       const expiresAt = now + expiresInMs;
+      const renewalDate = Math.min(now + MAX_ACTIVE_TIME_MS, expiresAt - 60 * 1000);
 
       const tokenData: ArcGISTokenData = {
         accessToken: esriLogin.access_token,
         expiresAt,
-        renewalDate: expiresAt - MAX_ACTIVE_TIME_MS,
+        renewalDate,
         issueDate: now,
         username: esriLogin.username ?? "",
         ssl: esriLogin.ssl === "true" || esriLogin.ssl === true,

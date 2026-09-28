@@ -47,13 +47,23 @@ export const five11Config: Five11Config = {
       geometryType: "Point",
     },
     {
+      apiUrl: "/api/public/map/theme/511/waze/alerts/JAM",
+      layerName: "511-waze-jam",
+      displayName: "Traffic Jam",
+      imageName: "waze_traffic_jam.png",
+      clickable: true,
+      visible: false,
+      zIndex: 2213,
+      geometryType: "Point",
+    },
+    {
       apiUrl: "/api/public/map/theme/511/waze/jams",
       layerName: "511-waze-jam-lines",
       displayName: "Traffic Jam (Lines)",
       imageName: "waze_traffic_jam_line.png",
       clickable: true,
       visible: true,
-      zIndex: 2213,
+      zIndex: 2214,
       geometryType: "LineString",
     },
     {
@@ -63,7 +73,7 @@ export const five11Config: Five11Config = {
       imageName: "waze_irregularity_line.png",
       clickable: true,
       visible: false,
-      zIndex: 2214,
+      zIndex: 2215,
       geometryType: "LineString",
     },
   ],
@@ -100,9 +110,6 @@ export const five11Config: Five11Config = {
     },
   ],
 };
-
-// Fields to display in Waze popups
-export const wazePopupFields = ["type", "subtype", "reportDescription", "date", "street"];
 
 // Fields to display in MTO popups
 export const mtoPopupFields = ["DirectionOfTravel", "Description", "LanesAffected", "EventType", "IsFullClosure", "Comment"];

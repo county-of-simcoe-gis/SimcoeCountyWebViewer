@@ -58,6 +58,16 @@ describe("municipalityFilter", () => {
       expect(isPropertyInMunicipality("BARRIE")).toBe(true);
     });
 
+    it("returns true when property matches filter ignoring spaces and hyphens", () => {
+      vi.mocked(useAppStore.getState).mockReturnValue({
+        config: { municipality: "ADJALA-TOSORONTIO" },
+        urlParameters: {},
+      } as never);
+      expect(isPropertyInMunicipality("Adjala Tosorontio")).toBe(true);
+      expect(isPropertyInMunicipality("ADJALA TOSORONTIO")).toBe(true);
+      expect(isPropertyInMunicipality("adjala-tosorontio")).toBe(true);
+    });
+
     it("returns false when property does not match filter", () => {
       vi.mocked(useAppStore.getState).mockReturnValue({
         config: { municipality: "Barrie" },

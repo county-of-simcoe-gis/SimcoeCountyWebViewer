@@ -18,6 +18,7 @@ import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES } from "@/utils/openlayers/types";
 import { getMapScale } from "@/utils/mapHelpers";
+import { getAbsolutePublicUrl } from "@/utils/getPublicPath";
 
 // =============================================================================
 // Types
@@ -464,7 +465,7 @@ function iconImageToSymbolizer(olImage: Icon | null): MapFishSymbolizer | null {
   return {
     type: "point",
     rotation: (olImage.getRotation?.() || 0) * (180 / Math.PI),
-    externalGraphic: iconSrc,
+    externalGraphic: getAbsolutePublicUrl(iconSrc),
     graphicName: "icon",
     graphicOpacity: olImage.getOpacity?.() ?? 1,
   };
@@ -1010,112 +1011,131 @@ async function configureTileLayer(layer: TileLayer): Promise<MapFishWMTSLayer | 
 }
 
 /**
- * Configure image layer for MapFish
+ * Get a fresh ArcGIS token for secured ArcGIS image layers.
+ * Returns null for non-secured layers or when the token store is unavailable.
  */
-function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintRequestAttributes, map: Map): MapFishImageLayer {
+async function getArcGISTokenForLayer(layer: Layer): Promise<string | null> {
+  const isSecured = layer.get("secured") === true;
+  if (!isSecured) return null;
+
+  try {
+    // Dynamic import avoids pulling the store (and its dependencies) into
+    // contexts where it is not needed, and mirrors the pattern used in
+    // LayerHelpers.ts for ArcGIS token injection.
+    const { useArcGISTokenStore } = await import("@/stores/arcgisTokenStore");
+    return await useArcGISTokenStore.getState().getValidToken();
+  } catch (err) {
+    console.warn("[Print] Failed to get ArcGIS token for layer:", layer.get("name") || "unknown", err);
+    return null;
+  }
+}
+
+/**
+ * Build an ArcGIS MapServer export URL for MapFish.
+ * Preserves source params (e.g. LAYERS, LAYERDEFS) and injects a fresh token
+ * when the layer is secured.
+ */
+function buildArcGISExportUrl(baseUrl: string, sourceParams: Record<string, string>, extent: number[], outputSize: [number, number], outputDPI: number, token: string | null): URL {
+  const exportUrl = new URL(`${baseUrl}/export`);
+
+  // Required export params
+  exportUrl.searchParams.set("F", "image");
+  exportUrl.searchParams.set("FORMAT", "PNG32");
+  exportUrl.searchParams.set("TRANSPARENT", "true");
+
+  // Preserve source params (LAYERS, LAYERDEFS, etc.) but strip any stale token
+  for (const [key, value] of Object.entries(sourceParams)) {
+    if (key.toUpperCase() === "TOKEN") continue;
+    exportUrl.searchParams.set(key, value);
+  }
+
+  // Inject fresh token for secured layers
+  if (token) {
+    exportUrl.searchParams.set("TOKEN", token);
+  }
+
+  exportUrl.searchParams.set("SIZE", outputSize.join(","));
+  exportUrl.searchParams.set("DPI", String(outputDPI));
+  exportUrl.searchParams.set("BBOX", extent.join(","));
+  exportUrl.searchParams.set("BBOXSR", "3857");
+  exportUrl.searchParams.set("IMAGESR", "3857");
+
+  return exportUrl;
+}
+
+/**
+ * Configure image layer for MapFish
+ * @internal Exported for unit testing only.
+ */
+export async function configureImageLayer(layer: ImageLayer<ImageSource>, options: PrintRequestAttributes, map: Map): Promise<MapFishImageLayer> {
   const source = layer.getSource() as {
     image_?: { src_: string };
     getUrl?: () => string | undefined;
     getParams?: () => Record<string, string>;
   };
 
-  // Prefer the cached rendered image URL, but fall back to building one from
-  // the source's public API (getUrl/getParams) when the layer hasn't rendered yet.
-  const imageSrc = source?.image_?.src_;
-
-  if (!imageSrc) {
-    const baseUrl = source?.getUrl?.();
-    if (baseUrl) {
-      const params = source?.getParams?.() || {};
-      const fallbackUrl = new URL(`${baseUrl}/export`);
-      for (const [k, v] of Object.entries(params)) {
-        fallbackUrl.searchParams.set(k, v);
-      }
-      // Set sensible defaults so the URL parsing below works
-      fallbackUrl.searchParams.set("F", "image");
-      fallbackUrl.searchParams.set("FORMAT", "PNG32");
-      fallbackUrl.searchParams.set("TRANSPARENT", "true");
-      const mapSize = map.getSize() || [800, 600];
-      const printSize = !options.map.height || !options.map.width ? mapSize : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
-      const extent = options.map.bbox ? options.map.bbox : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
-
-      // Match old-app output sizing logic: scale from current view size/bbox to requested print extent + DPI.
-      const viewExtent = map.getView().calculateExtent(mapSize);
-      const viewDPI = 96;
-      let outputDPI = options.map.dpi || 96;
-      let outputSize = [
-        parseInt(String((mapSize[0] / ((viewExtent[0] - viewExtent[2]) / (extent[0] - extent[2]))) * (outputDPI / viewDPI))),
-        parseInt(String((mapSize[1] / ((viewExtent[1] - viewExtent[3]) / (extent[1] - extent[3]))) * (outputDPI / viewDPI))),
-      ];
-
-      // Defensive fallback when the extent math yields invalid dimensions.
-      if (!Number.isFinite(outputSize[0]) || !Number.isFinite(outputSize[1]) || outputSize[0] <= 0 || outputSize[1] <= 0) {
-        outputSize = [printSize[0], printSize[1]];
-      }
-
-      if (outputSize[0] > 4096 || outputSize[1] > 4096) {
-        const outputScaler = 4096 / Math.max(outputSize[0], outputSize[1]);
-        outputDPI = parseInt(String(outputDPI * outputScaler));
-        outputSize = [parseInt(String(outputSize[0] * outputScaler)), parseInt(String(outputSize[1] * outputScaler))];
-      }
-
-      fallbackUrl.searchParams.set("F", "image");
-      fallbackUrl.searchParams.set("FORMAT", "PNG32");
-      fallbackUrl.searchParams.set("TRANSPARENT", "true");
-      fallbackUrl.searchParams.set("SIZE", outputSize.join(","));
-      fallbackUrl.searchParams.set("DPI", String(outputDPI));
-      fallbackUrl.searchParams.set("BBOX", extent.join(","));
-      fallbackUrl.searchParams.set("BBOXSR", "3857");
-      fallbackUrl.searchParams.set("IMAGESR", "3857");
-
-      return {
-        type: "image",
-        baseURL: fallbackUrl,
-        opacity: layer.getOpacity(),
-        imageFormat: "image/png",
-        extent: extent,
-        name: "image",
-      };
-    }
-
+  const baseUrl = source?.getUrl?.();
+  if (!baseUrl) {
     throw new Error("Image source not found");
   }
 
-  const url = new URL(imageSrc);
-  const urlParams = new URLSearchParams(url.searchParams);
-  const urlDPI = parseInt(urlParams.get("DPI") || "96");
-  const urlSIZE = (urlParams.get("SIZE") || "800,600").split(",");
-  const urlBBOX = (urlParams.get("BBOX") || "0,0,0,0").split(",");
+  const sourceParams = source?.getParams?.() || {};
+  const imageSrc = source?.image_?.src_;
 
   const mapSize = map.getSize() || [800, 600];
   const printSize = !options.map.height || !options.map.width ? mapSize : [parseInt(String(options.map.height)), parseInt(String(options.map.width))];
-
   const extent = options.map.bbox ? options.map.bbox : computeExtent(printSize[0], printSize[1], 72, options.map.scale || 1, options.map.center || [0, 0]);
 
   let outputDPI = options.map.dpi || 96;
-  let outputSize = [
-    parseInt(String((parseInt(urlSIZE[0]) / ((parseFloat(urlBBOX[0]) - parseFloat(urlBBOX[2])) / (extent[0] - extent[2]))) * (outputDPI / urlDPI))),
-    parseInt(String((parseInt(urlSIZE[1]) / ((parseFloat(urlBBOX[1]) - parseFloat(urlBBOX[3])) / (extent[1] - extent[3]))) * (outputDPI / urlDPI))),
-  ];
+  let outputSize: [number, number];
 
+  if (imageSrc) {
+    // Use the rendered image's DPI/SIZE/BBOX for the most accurate scaling
+    // to the requested print extent.
+    const urlParams = new URLSearchParams(new URL(imageSrc).searchParams);
+    const urlDPI = parseInt(urlParams.get("DPI") || "96");
+    const urlSIZE = (urlParams.get("SIZE") || "800,600").split(",");
+    const urlBBOX = (urlParams.get("BBOX") || "0,0,0,0").split(",");
+
+    outputSize = [
+      parseInt(String((parseInt(urlSIZE[0]) / ((parseFloat(urlBBOX[0]) - parseFloat(urlBBOX[2])) / (extent[0] - extent[2]))) * (outputDPI / urlDPI))),
+      parseInt(String((parseInt(urlSIZE[1]) / ((parseFloat(urlBBOX[1]) - parseFloat(urlBBOX[3])) / (extent[1] - extent[3]))) * (outputDPI / urlDPI))),
+    ];
+  } else {
+    // Layer hasn't rendered yet. Scale from the current view size/bbox to the
+    // requested print extent + DPI. This path is common for print-only
+    // substitute layers or layers that were just toggled on.
+    const viewExtent = map.getView().calculateExtent(mapSize);
+    const viewDPI = 96;
+    outputSize = [
+      parseInt(String((mapSize[0] / ((viewExtent[0] - viewExtent[2]) / (extent[0] - extent[2]))) * (outputDPI / viewDPI))),
+      parseInt(String((mapSize[1] / ((viewExtent[1] - viewExtent[3]) / (extent[1] - extent[3]))) * (outputDPI / viewDPI))),
+    ];
+  }
+
+  // Defensive fallback when the extent math yields invalid dimensions.
+  if (!Number.isFinite(outputSize[0]) || !Number.isFinite(outputSize[1]) || outputSize[0] <= 0 || outputSize[1] <= 0) {
+    outputSize = [printSize[0], printSize[1]];
+  }
+
+  // Cap output size to avoid ArcGIS export limits.
   if (outputSize[0] > 4096 || outputSize[1] > 4096) {
     const outputScaler = 4096 / Math.max(outputSize[0], outputSize[1]);
     outputDPI = parseInt(String(outputDPI * outputScaler));
     outputSize = [parseInt(String(outputSize[0] * outputScaler)), parseInt(String(outputSize[1] * outputScaler))];
   }
 
-  url.searchParams.set("SIZE", outputSize.join(","));
-  url.searchParams.set("DPI", String(outputDPI));
-  url.searchParams.set("BBOX", extent.join(","));
-  url.searchParams.set("BBOXSR", "3857");
-  url.searchParams.set("IMAGESR", "3857");
+  // Always inject the freshest available ArcGIS token. This is the key fix for
+  // intermittent failures caused by stale TOKEN params in source.getParams().
+  const token = await getArcGISTokenForLayer(layer);
+  const exportUrl = buildArcGISExportUrl(baseUrl, sourceParams, extent, outputSize, outputDPI, token);
 
   return {
     type: "image",
-    baseURL: url,
+    baseURL: exportUrl,
     opacity: layer.getOpacity(),
     imageFormat: "image/png",
-    extent: extent,
+    extent,
     name: "image",
   };
 }

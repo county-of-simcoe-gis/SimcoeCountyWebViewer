@@ -3,7 +3,6 @@
  * Fetches traffic data from 511on.ca API and converts to GeoJSON
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
 const GeoJSON = require("geojson");
 import polyline from "@mapbox/polyline";
 import type { FeatureCollection } from "geojson";
@@ -94,6 +93,20 @@ const roadConditionAreas = [
 // No need for a custom cameras array - the 511ON API provides better coverage and
 // is maintained by MTO, making it more reliable than scraping individual municipal feeds.
 
+/**
+ * Append the 511 developer key to an MTO API URL.
+ * As of 2024-09-24, 511on.ca requires a registered developer key on most endpoints.
+ */
+function buildMtoUrl(baseUrl: string): string {
+  const key = process.env["511_DEVELOPMENT_KEY"]?.trim();
+  if (!key) {
+    console.warn("[mto] 511_DEVELOPMENT_KEY is not set. 511on.ca API requests may be rejected.");
+  }
+
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  return key ? `${baseUrl}${separator}key=${encodeURIComponent(key)}` : baseUrl;
+}
+
 // Types for MTO API responses
 interface MTOCameraView {
   Id: number;
@@ -162,7 +175,7 @@ function formatDate(timestamp: number): string {
  * Fetch MTO point layer data (cameras, events, construction, etc.)
  */
 async function getMTOPointLayer(url: string): Promise<GeoJSON.FeatureCollection> {
-  const response = await fetch(url);
+  const response = await fetch(buildMtoUrl(url));
   const isCameraLayer = url.toUpperCase().includes("CAMERA");
 
   if (isCameraLayer) {
@@ -220,7 +233,7 @@ async function getMTOPointLayer(url: string): Promise<GeoJSON.FeatureCollection>
  * Fetch MTO polyline layer data (road conditions, HOV lanes)
  */
 async function getMTOPolylineLayer(url: string): Promise<FeatureCollection | []> {
-  const response = await fetch(url);
+  const response = await fetch(buildMtoUrl(url));
   const allMTO: MTORoadConditionRecord[] = await response.json();
   const allMTOWithGeoJSON: MTORoadConditionRecord[] = [];
 
@@ -262,7 +275,7 @@ async function getMTOPolylineLayer(url: string): Promise<FeatureCollection | []>
  * Fetch MTO alerts (no geometry)
  */
 async function getMTOAlerts(url: string): Promise<unknown[]> {
-  const response = await fetch(url);
+  const response = await fetch(buildMtoUrl(url));
   return response.json();
 }
 
