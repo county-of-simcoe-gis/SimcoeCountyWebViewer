@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setReportParameters } from "@/lib/secure/reports/powerbiEmbed";
+import { setReportParameters } from "@/lib/reports/powerbiEmbed";
 
 /**
  * POST /api/public/reports/embed/:report
@@ -9,10 +9,7 @@ import { setReportParameters } from "@/lib/secure/reports/powerbiEmbed";
  * Body: { params: [{ name: string, value: string, type: string }] }
  * Returns: batchId string (UUID)
  */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ report: string }> }
-): Promise<NextResponse> {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ report: string }> }): Promise<NextResponse> {
   try {
     const { report } = await params;
 
