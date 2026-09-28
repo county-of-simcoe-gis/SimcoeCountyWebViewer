@@ -26,14 +26,6 @@ const LotAndConcessionTool = lazy(() => import("@/components/tools/LotAndConcess
 const ExternalServicesTool = lazy(() => import("@/components/tools/ExternalServices/ExternalServicesTool"));
 const AddLayerTool = lazy(() => import("@/components/tools/AddLayer/AddLayerTool"));
 const AvailableMapsTool = lazy(() => import("@/components/tools/AvailableMaps/AvailableMapsTool"));
-
-// Secure Road Closures tool
-const RoadClosuresTool = lazy(() =>
-  import("@/components/tools/secure/roadclosures/RoadClosuresTool").catch(() => ({
-    default: () => <div className="p-5">Road Closures is not available in this build.</div>,
-  })),
-);
-
 // Lazy load theme components
 const ForestryTheme = lazy(() => import("@/components/themes/Forestry/Forestry"));
 const ChildCareFacilitiesTheme = lazy(() => import("@/components/themes/ChildCareFacilities/ChildCareFacilities"));
