@@ -18,6 +18,7 @@ import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES } from "@/utils/openlayers/types";
 import { getMapScale } from "@/utils/mapHelpers";
+import { getAbsolutePublicUrl } from "@/utils/getPublicPath";
 
 // =============================================================================
 // Types
@@ -464,7 +465,7 @@ function iconImageToSymbolizer(olImage: Icon | null): MapFishSymbolizer | null {
   return {
     type: "point",
     rotation: (olImage.getRotation?.() || 0) * (180 / Math.PI),
-    externalGraphic: iconSrc,
+    externalGraphic: getAbsolutePublicUrl(iconSrc),
     graphicName: "icon",
     graphicOpacity: olImage.getOpacity?.() ?? 1,
   };
@@ -1034,14 +1035,7 @@ async function getArcGISTokenForLayer(layer: Layer): Promise<string | null> {
  * Preserves source params (e.g. LAYERS, LAYERDEFS) and injects a fresh token
  * when the layer is secured.
  */
-function buildArcGISExportUrl(
-  baseUrl: string,
-  sourceParams: Record<string, string>,
-  extent: number[],
-  outputSize: [number, number],
-  outputDPI: number,
-  token: string | null,
-): URL {
+function buildArcGISExportUrl(baseUrl: string, sourceParams: Record<string, string>, extent: number[], outputSize: [number, number], outputDPI: number, token: string | null): URL {
   const exportUrl = new URL(`${baseUrl}/export`);
 
   // Required export params

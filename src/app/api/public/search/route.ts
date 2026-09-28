@@ -8,7 +8,7 @@ import { search } from "@/lib/services/search";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const keywords = searchParams.get("q") || "";
+    const keywords = (searchParams.get("q") || "").trim();
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const type = searchParams.get("type") || undefined;
     const muni = searchParams.get("muni") || undefined;
@@ -17,9 +17,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error("Search error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

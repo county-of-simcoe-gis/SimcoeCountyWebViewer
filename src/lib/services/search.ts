@@ -95,9 +95,10 @@ async function getJSON<T = unknown>(url: string, init?: RequestInit): Promise<T>
  */
 export async function search(keywords: string, type: string | undefined, muni: string | undefined, limit: number = 10): Promise<SearchRow[]> {
   try {
-    if (keywords.length < 2) return [];
+    const trimmedKeywords = keywords.trim();
+    if (trimmedKeywords.length < 2) return [];
 
-    const parts = keywords.split(" ");
+    const parts = trimmedKeywords.split(/\s+/);
     const isFirstWordNumeric = !isNaN(Number(parts[0]));
 
     const allValues: SearchRow[] = [];
@@ -105,11 +106,11 @@ export async function search(keywords: string, type: string | undefined, muni: s
 
     // First word is numeric → assume address
     if (isFirstWordNumeric) {
-      addresses = await searchAddress(keywords, muni, type, limit);
+      addresses = await searchAddress(trimmedKeywords, muni, type, limit);
 
       // Fallback to ESRI geocoder
       if (useESRIGeocoder && addresses.length === 0 && (type === "Address" || type === undefined || type === "All")) {
-        const geocodeResult = await getJSON<{ candidates?: GeocodeCandidateRaw[] }>(geocodeUrl(limit, keywords));
+        const geocodeResult = await getJSON<{ candidates?: GeocodeCandidateRaw[] }>(geocodeUrl(limit, trimmedKeywords));
         if (geocodeResult?.candidates) {
           for (const candidate of geocodeResult.candidates) {
             if (candidate.score > 10) {
@@ -131,14 +132,14 @@ export async function search(keywords: string, type: string | undefined, muni: s
 
     // Fill remaining with non-address results
     if (allValues.length < limit) {
-      const nonAddresses = await searchNonAddress(keywords, type, muni, limit);
+      const nonAddresses = await searchNonAddress(trimmedKeywords, type, muni, limit);
       allValues.push(...nonAddresses);
     }
 
     // Fill with OSM if still empty and appropriate
     if ((useOSMSearch && allValues.length === 0) || type === "Open Street Map" || (allValues.length === 0 && type === "All")) {
       const numRecords = limit - allValues.length;
-      const osmPlaces = await searchOsm(keywords, type, numRecords);
+      const osmPlaces = await searchOsm(trimmedKeywords, type, numRecords);
       allValues.push(...osmPlaces);
     }
 
