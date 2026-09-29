@@ -183,7 +183,9 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
 
     for (const col of tab.schema) {
       // Skip system/internal fields like objectid, geometry, shape_area, etc.
-      if (isExcludedKey(col.name)) continue;
+      // Fields with a meaningful alias (e.g. Shape.STLength() -> "Length (m)")
+      // are treated as user-facing and are kept.
+      if (isExcludedKey(col.name, col.alias)) continue;
 
       out.push({
         id: col.name,

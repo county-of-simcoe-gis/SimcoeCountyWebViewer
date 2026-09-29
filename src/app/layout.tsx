@@ -2,6 +2,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import "@/app/globals.css";
 import "@/styles/openlayers.css";
+import "@/utils/projections"; // register custom EPSG projections before map/tool code
 import AuthProvider from "@/app/auth/Provider";
 import ArcGISAuthProvider from "@/components/auth/ArcGISAuthProvider";
 import { ThemeProvider } from "@/components/ThemeProvider";

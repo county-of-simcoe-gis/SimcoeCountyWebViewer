@@ -248,6 +248,22 @@ describe("ResultsPopup", () => {
       expect(screen.getByText("Alpha Material")).toBeInTheDocument();
     });
 
+    it("shows aliases verbatim and falls back to title case only when there is no alias", () => {
+      const fieldMetadata: ArcgisLayerFieldMetadata = {
+        aliases: { "shape.stlength()": "Length (m)", customfield: "Custom Field" },
+        domains: {},
+      };
+      const results = [createIdentifyResult("Test Layer", "feature_1", { "Shape.STLength()": 123.45, CUSTOMFIELD: "value", raw_field_name: "other" }, undefined, undefined, { fieldMetadata })];
+
+      render(<ResultsPopup results={results} onClose={mockOnClose} />);
+
+      // Alias casing must be preserved exactly as provided by the service.
+      expect(screen.getByText("Length (m):")).toBeInTheDocument();
+      expect(screen.getByText("Custom Field:")).toBeInTheDocument();
+      // Without an alias the raw field name should be title-cased.
+      expect(screen.getByText("Raw Field Name:")).toBeInTheDocument();
+    });
+
     it("shows loading state when isLoadingResults is true", async () => {
       const user = userEvent.setup();
       render(<ResultsPopup results={[]} onClose={mockOnClose} isLoadingResults={true} />);

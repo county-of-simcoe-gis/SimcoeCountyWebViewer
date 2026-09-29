@@ -7,15 +7,16 @@
  */
 
 import proj4 from "proj4";
+import { registerProjections } from "@/utils/projections";
 import type { SpatialReferenceId, Coordinates, Extent } from "@/types/urlParameters";
 
 // ============================================================================
 // Projection Definitions
 // ============================================================================
 
-// Define projections (proj4 has 4326 and 3857 built-in)
-// UTM Zone 17N NAD83
-proj4.defs("EPSG:26917", "+proj=utm +zone=17 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs +type=crs");
+// Register all application projections (EPSG:26917, 26717, 3978, 3979, 32190).
+// The previous single EPSG:26917 definition is now kept in the central registry.
+registerProjections();
 
 /**
  * Map of spatial reference identifiers to EPSG codes
@@ -31,6 +32,7 @@ const SR_TO_EPSG: Record<string, string> = {
   "102100": "EPSG:3857", // Esri's wkid for Web Mercator (equivalent to EPSG:3857)
   utm: "EPSG:26917",
   "26917": "EPSG:26917",
+  "32190": "EPSG:32190",
 };
 
 /**
@@ -73,6 +75,8 @@ export function getSRLabel(sr?: string): string {
       return "Web Mercator";
     case "EPSG:26917":
       return "UTM Zone 17N (NAD83)";
+    case "EPSG:32190":
+      return "MTM Zone 9 (NAD83)";
     default:
       return epsg;
   }
@@ -109,6 +113,9 @@ export function isWithinBounds(x: number, y: number, sr?: string): boolean {
     case "EPSG:26917":
       // UTM Zone 17N: reasonable bounds for Ontario area
       return x >= 100000 && x <= 900000 && y >= 0 && y <= 10000000;
+    case "EPSG:32190":
+      // NAD83 / MTM zone 9: reasonable bounds for Simcoe County area
+      return x >= 200000 && x <= 400000 && y >= 4800000 && y <= 5100000;
     default:
       return true; // Unknown system, assume valid
   }
