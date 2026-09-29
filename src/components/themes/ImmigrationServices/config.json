@@ -1,0 +1,98 @@
+{
+  "themeColor": "#C9E7F9",
+  "expandInitialList": false,
+  "disableParcelClick": true,
+  "introDescription": "Explore resources to help newcomers settle in Simcoe County. Toggle the layers below to discover services including settlement support, employment, housing, healthcare, and government services.",
+  "toggleLayers": [
+    {
+      "displayName": "New to Canada Information",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:New_To_Canada_Information",
+      "visible": true,
+      "zIndex": 209,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Settlement Services help newcomers get settled into Simcoe County. Many offer English language training. They can provide you with community information and guidance on starting work in Canada."
+    },
+    {
+      "displayName": "Housing Support Agency",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Housing_Support_Agency",
+      "visible": false,
+      "zIndex": 208,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Housing Support Agencies help people who are looking for affordable rental housing or at risk of losing their current housing. Housing Support Agencies can help you learn what is available in the County to help you obtain and retain housing."
+    },
+    {
+      "displayName": "Employment Services Centre",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Ontario_Employment_Services_Centre",
+      "visible": false,
+      "zIndex": 207,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Employment Ontario Employment Services are available across the County of Simcoe to help newcomers look for a job, plan their careers, explore starting their own business and obtain referrals to community programs and services."
+    },
+    {
+      "displayName": "Ontario Early Years Centre",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Ontario_Early_Years_Centre",
+      "visible": false,
+      "zIndex": 206,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Ontario Early Years Centres are meeting places for children up to the age of six and their parents and caregivers to take part in programs and activities together."
+    },
+    {
+      "displayName": "Service Canada Centre",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Service_Canada_Centre",
+      "visible": false,
+      "zIndex": 205,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Service Canada provides a range of services and programs for people living in Canada. This includes necessary documentation to live and work in Canada. Some of these programs and services are specific to newcomers to Canada."
+    },
+    {
+      "displayName": "Service Ontario Centre",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Service_Ontario_Centre",
+      "visible": false,
+      "zIndex": 204,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Service Ontario sites provides documentation, certifications, licenses, permits and information on the following services: drivers; vehicles; health; outdoor; home, land and personal property; identification and certificates; education and training."
+    },
+    {
+      "displayName": "Library",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Library",
+      "visible": false,
+      "zIndex": 203,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Libraries are a place to meet people in the community. They have books, magazines, audiovisual, software and digital materials that you can borrow. Access to computers and internet is available. Libraries also have helpful information about services and resources nearby and can help you find volunteer opportunities."
+    },
+    {
+      "displayName": "Hospital",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "Hospital",
+      "visible": false,
+      "zIndex": 202,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Hospitals provide emergency medical care. A doctor may also refer you to a hospital for specific medical supports and care."
+    },
+    {
+      "displayName": "Community Health Centre",
+      "serverUrl": "https://opengis.simcoe.ca/geoserver/",
+      "layerName": "simcoe:Community_Health_Centre",
+      "visible": false,
+      "zIndex": 201,
+      "clickable": true,
+      "displayFieldName": "Name",
+      "description": "Community Health Centres offer non-emergency health care and health promotion. A Community Health Centre is a good choice for people without a health care provider, newcomers to Canada or people without health insurance in Ontario."
+    }
+  ]
+}

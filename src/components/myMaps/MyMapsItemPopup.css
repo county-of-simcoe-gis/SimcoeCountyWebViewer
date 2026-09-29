@@ -1,0 +1,25 @@
+@reference "../../app/globals.css";
+
+.popup-container {
+  @apply fixed z-[99999] bg-base-100 border border-base-300 rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[180px] max-w-[250px] font-[Arial,sans-serif] text-[13px] text-base-content origin-top-left;
+}
+
+.popup-menu-item {
+  @apply flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-primary/10 hover:text-primary [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis;
+}
+
+.popup-menu-item-danger {
+  @apply flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-error/10 hover:text-error [&>img]:mr-2 [&>img]:shrink-0 [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis;
+}
+
+.popup-menu-item-parent {
+  @apply relative flex items-center justify-between px-3 py-1.5 cursor-pointer transition-colors select-none max-h-[25px] hover:bg-primary/10 hover:text-primary [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis;
+}
+
+.popup-submenu-item {
+  @apply flex items-center px-3 py-1.5 cursor-pointer transition-colors select-none hover:bg-primary/10 hover:text-primary [&>span]:text-[13px] [&>span]:whitespace-nowrap [&>span]:overflow-hidden [&>span]:text-ellipsis;
+}
+
+.popup-submenu-container {
+  @apply absolute left-full top-0 bg-base-100 border border-base-300 rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[120px] z-[100000];
+}

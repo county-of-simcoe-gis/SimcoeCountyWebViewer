@@ -1,0 +1,51 @@
+/* AddLayer Tool - react-tabs overrides (3rd-party library) */
+
+.addlayer-tabs .addlayer-tab-list {
+  display: flex !important;
+  list-style: none !important;
+  gap: 0 !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: 6px !important;
+  padding: 0 !important;
+  margin: 0 0 0.75rem 0 !important;
+  overflow: hidden !important;
+  background-color: #f3f4f6 !important;
+}
+
+.addlayer-tabs .addlayer-tab {
+  flex: 1 !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  border: none !important;
+  border-right: 1px solid #d1d5db !important;
+  background-color: transparent !important;
+  color: #374151 !important;
+  text-align: center !important;
+  transition: all 0.15s ease-in-out !important;
+  list-style: none !important;
+}
+
+.addlayer-tabs .addlayer-tab:last-child {
+  border-right: none !important;
+}
+
+.addlayer-tabs .addlayer-tab:hover {
+  background-color: #e5e7eb !important;
+  color: #1f2937 !important;
+}
+
+.addlayer-tabs .addlayer-tab.react-tabs__tab--selected {
+  background-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+.addlayer-tabs .addlayer-tab.react-tabs__tab--selected:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.addlayer-tabs .addlayer-tab:focus {
+  outline: none !important;
+}

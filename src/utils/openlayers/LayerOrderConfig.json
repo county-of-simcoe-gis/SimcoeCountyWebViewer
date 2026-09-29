@@ -1,0 +1,70 @@
+{
+  "categories": {
+    "BaseMap": {
+      "priority": 0,
+      "zIndexRange": {
+        "min": 0,
+        "max": 99
+      },
+      "description": "Base map layers (imagery, streets, topographic)"
+    },
+    "TOC": {
+      "priority": 100,
+      "zIndexRange": {
+        "min": 100,
+        "max": 1999
+      },
+      "description": "Table of Contents layers from GeoServer"
+    },
+    "MyMaps": {
+      "priority": 2000,
+      "zIndexRange": {
+        "min": 2000,
+        "max": 2199
+      },
+      "description": "User-created drawing and custom layers"
+    },
+    "Themes": {
+      "priority": 2200,
+      "zIndexRange": {
+        "min": 2200,
+        "max": 2399
+      },
+      "description": "Theme-specific layers (511, AVL, Forestry, etc.)"
+    },
+    "Tools": {
+      "priority": 2400,
+      "zIndexRange": {
+        "min": 2400,
+        "max": 2599
+      },
+      "description": "Tool-related layers (measure, coordinates, etc.)"
+    },
+    "Graphics": {
+      "priority": 2600,
+      "zIndexRange": {
+        "min": 2600,
+        "max": 2699
+      },
+      "description": "Temporary graphics, highlights, and overlays"
+    },
+    "Overlay": {
+      "priority": 2700,
+      "zIndexRange": {
+        "min": 2700,
+        "max": 2799
+      },
+      "description": "Overlay layers"
+    },
+    "Popup": {
+      "priority": 2800,
+      "zIndexRange": {
+        "min": 2800,
+        "max": 2899
+      },
+      "description": "Popup and tooltip layers"
+    }
+  },
+  "defaultLayersPerCategory": 50,
+  "zIndexIncrement": 1
+}

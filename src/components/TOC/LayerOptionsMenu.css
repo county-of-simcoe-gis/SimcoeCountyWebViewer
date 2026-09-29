@@ -1,0 +1,79 @@
+/* Opacity slider thumb styling — pseudo-elements require CSS */
+.layer-options-opacity-slider {
+  height: 4px;
+  background: #e9ecef;
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.layer-options-opacity-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.layer-options-opacity-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.layer-options-opacity-slider::-webkit-slider-track {
+  background: #e9ecef;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.layer-options-opacity-slider::-moz-range-track {
+  background: #e9ecef;
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+}
+
+.layer-options-opacity-slider:focus {
+  outline: none;
+}
+
+.layer-options-opacity-slider:focus::-webkit-slider-thumb {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+.layer-options-opacity-slider:focus::-moz-range-thumb {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(0, 123, 255, 0.25);
+}
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .layer-options-opacity-slider {
+  background: #2a323c;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-webkit-slider-thumb {
+  border-color: #1d232a;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-moz-range-thumb {
+  border-color: #1d232a;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-webkit-slider-track {
+  background: #2a323c;
+}
+
+[data-theme="dark"] .layer-options-opacity-slider::-moz-range-track {
+  background: #2a323c;
+}

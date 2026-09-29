@@ -1,0 +1,9 @@
+@reference "../../app/globals.css";
+
+.mymaps-action-btn {
+  @apply bg-base-200 border border-base-300 rounded-[3px] py-1 px-[5px] cursor-pointer text-[11px] font-[Arial,sans-serif] text-base-content flex items-center justify-center gap-[3px] transition-all min-h-[24px] min-w-[60px] hover:bg-base-300;
+}
+
+.mymaps-text-input {
+  @apply h-[25px] w-[280px] text-[8pt] py-[2px] pr-[25px] pl-1 border-2 border-base-content/60 rounded-[3px] mb-2 box-border outline-none transition-colors focus:border-primary disabled:bg-base-200 disabled:text-base-content/50;
+}

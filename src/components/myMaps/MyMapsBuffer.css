@@ -1,0 +1,17 @@
+@reference "../../app/globals.css";
+
+.buffer-grid {
+  @apply grid grid-cols-[50%_50%] grid-rows-[11px_25px_23px_auto] content-center gap-y-[5px] gap-x-[5px] w-full box-border;
+
+  & label {
+    @apply text-[11px] font-[Arial,sans-serif] text-base-content font-bold;
+  }
+
+  & input[type="number"] {
+    @apply p-[5px] border border-base-300 rounded-[3px] text-[11px] outline-none w-full box-border bg-base-100 text-base-content focus:border-primary;
+  }
+
+  & select {
+    @apply p-[5px] border border-base-300 rounded-[3px] text-[11px] outline-none w-full box-border bg-base-100 text-base-content focus:border-primary;
+  }
+}

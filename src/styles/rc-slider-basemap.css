@@ -1,0 +1,58 @@
+/* rc-slider overrides for BasemapSwitcher imagery slider */
+.basemap-slider-container .rc-slider-mark {
+  top: 0px;
+  left: 25px !important;
+  width: 60px;
+}
+
+.basemap-slider-container .rc-slider-mark-text {
+  color: #337ab7 !important;
+  text-decoration: underline;
+  cursor: pointer !important;
+  user-select: none;
+  font-size: 10px;
+  font-weight: bold;
+  writing-mode: initial;
+  text-orientation: initial;
+  transform: none;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.basemap-slider-container .rc-slider-vertical {
+  width: 4px;
+  left: 15px;
+}
+
+.basemap-slider-container .rc-slider-vertical .rc-slider-rail {
+  width: 4px;
+}
+
+.basemap-slider-container .rc-slider-vertical .rc-slider-track {
+  width: 4px;
+}
+
+.basemap-slider-container .rc-slider-rail,
+.basemap-slider-container .rc-slider-track {
+  background-color: #337ab7;
+}
+
+.basemap-slider-container .rc-slider-handle {
+  border-color: #337ab7;
+  background-color: #337ab7;
+  width: 12px;
+  height: 12px;
+  margin-left: -4px;
+}
+
+.basemap-slider-container .rc-slider-handle:hover,
+.basemap-slider-container .rc-slider-handle:focus {
+  border-color: #23527c;
+  background-color: #23527c;
+}
+
+/* ──── Dark Mode Overrides ──── */
+
+[data-theme="dark"] .basemap-slider-container .rc-slider-mark-text {
+  color: #6ea8cf !important;
+}

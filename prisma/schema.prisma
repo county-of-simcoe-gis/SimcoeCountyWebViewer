@@ -1,0 +1,125 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "windows", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model TblMymaps {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  json         String?   @db.Text
+  date_created DateTime? @db.Date
+  email        String?   @db.VarChar
+  name         String?   @db.VarChar
+  lastimported DateTime? @db.Timestamptz(6)
+  jsonhash     String?   @db.VarChar
+
+  @@unique([email, name])
+  @@map("tbl_mymaps")
+}
+
+// Maps are now accessed via stored procedures usp_get_map_settings and usp_get_all_maps
+// No direct table model needed as we use raw SQL queries
+
+model TblSecurityRoles {
+  id                 Int     @id @default(autoincrement())
+  name               String  @db.VarChar
+  azure_ad_group_id  String? @db.VarChar
+  description        String? @db.VarChar
+  azure_tenant_id    String? @db.VarChar
+  azure_app_id       String? @db.VarChar
+
+  @@index([azure_tenant_id, azure_app_id], name: "idx_usp_get_security_roles")
+  @@map("tbl_security_roles")
+}
+
+// 211 Service Directory - English Raw Data (read-only, no primary key in DB)
+model Tbl211Raw {
+  recordNumber                 String   @id @map("record_#") @db.Text
+  organizationProgramName      String?  @map("organization_program_name") @db.Text
+  locatedInCommunity           String?  @map("located_in_community") @db.Text
+  ageCategory                  String?  @map("age_category") @db.Text
+  address                      String?  @db.Text
+  areasServed                  String?  @map("areas_served") @db.Text
+  cwdSimcategoryHeadinggroups  String?  @map("cwd_simcategory_headinggroups") @db.Text
+  cwdSimcategoryHeadings       String?  @map("cwd_simcategory_headings") @db.Text
+  dateUpdated                  String?  @map("date_updated") @db.Text
+  dates                        String?  @db.Text
+  descriptionBrief             String?  @map("description_brief") @db.Text
+  descriptionService           String?  @map("description_service") @db.Text
+  eligibility                  String?  @db.Text
+  email                        String?  @db.Text
+  geocodingInfo                String?  @map("geocoding_info") @db.Text
+  hours                        String?  @db.Text
+  languages                    String?  @db.Text
+  latitude                     String?  @db.Text
+  longitude                    String?  @db.Text
+  mapRecord                    String?  @map("map_record") @db.Text
+  officePhone                  String?  @map("office_phone") @db.Text
+  parentAgencyName             String?  @map("parent_agency_name") @db.Text
+  parentAgencyRecordNumber     String?  @map("parent_agency_record_#") @db.Text
+  physicalAccess               String?  @map("physical_access") @db.Text
+  publicComments               String?  @map("public_comments") @db.Text
+  taxonomy                     String?  @db.Text
+  taxonomyCodes                String?  @map("taxonomy_codes") @db.Text
+  tollFreePhone                String?  @map("toll_free_phone") @db.Text
+  ttyPhone                     String?  @map("tty_phone") @db.Text
+  website                      String?  @db.Text
+
+  @@map("tbl_211_raw")
+}
+
+// 211 Service Directory - French Raw Data (read-only, no primary key in DB)
+model Tbl211FrenchRaw {
+  recordNumber                 String   @id @map("record_#") @db.Text
+  organizationProgramName      String?  @map("organization_program_name") @db.Text
+  locatedInCommunity           String?  @map("located_in_community") @db.Text
+  ageCategory                  String?  @map("age_category") @db.Text
+  address                      String?  @db.Text
+  areasServed                  String?  @map("areas_served") @db.Text
+  cwdSimcategoryHeadinggroups  String?  @map("cwd_simcategory_headinggroups") @db.Text
+  cwdSimcategoryHeadings       String?  @map("cwd_simcategory_headings") @db.Text
+  dateUpdated                  String?  @map("date_updated") @db.Text
+  dates                        String?  @db.Text
+  descriptionBrief             String?  @map("description_brief") @db.Text
+  descriptionService           String?  @map("description_service") @db.Text
+  eligibility                  String?  @db.Text
+  email                        String?  @db.Text
+  geocodingInfo                String?  @map("geocoding_info") @db.Text
+  hours                        String?  @db.Text
+  languages                    String?  @db.Text
+  latitude                     String?  @db.Text
+  longitude                    String?  @db.Text
+  mapRecord                    String?  @map("map_record") @db.Text
+  officePhone                  String?  @map("office_phone") @db.Text
+  parentAgencyName             String?  @map("parent_agency_name") @db.Text
+  parentAgencyRecordNumber     String?  @map("parent_agency_record_#") @db.Text
+  physicalAccess               String?  @map("physical_access") @db.Text
+  publicComments               String?  @map("public_comments") @db.Text
+  taxonomy                     String?  @db.Text
+  taxonomyCodes                String?  @map("taxonomy_codes") @db.Text
+  tollFreePhone                String?  @map("toll_free_phone") @db.Text
+  ttyPhone                     String?  @map("tty_phone") @db.Text
+  website                      String?  @db.Text
+  @@map("tbl_211_french_raw")
+}
+
+// 211 Categories Lookup Table (read-only, no primary key in DB)
+model Tbl211Categories {
+  ghId                 String   @map("gh_id") @db.Text
+  generalHeading       String?  @map("general_heading") @db.Text
+  groupId              String?  @map("group_id") @db.Text
+  groupName            String?  @map("group_name") @db.Text
+  iconNameFull         String?  @map("icon_name_full") @db.Text
+  iconNameFullGroup    String?  @map("icon_name_full_group") @db.Text
+  isFrench             Boolean  @default(false) @map("is_french")
+
+  @@id([ghId, isFrench])
+  @@map("tbl_211_categories")
+}
