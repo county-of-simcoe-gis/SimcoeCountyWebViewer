@@ -16,6 +16,8 @@ export const IDENTIFY_FILTER_KEY_PATTERNS = [
   /^globalid$/,
   /^objectid.*$/,
   /^shape.*$/,
+  /^st_length$/,
+  /^st_area$/,
   /^displayfieldname$/,
   /^displayfieldvalue$/,
   /^layerdisplayname$/,
@@ -25,9 +27,18 @@ export const IDENTIFY_FILTER_KEY_PATTERNS = [
   /^feature id$/,
 ];
 
-/** Check whether a property key should be excluded from display */
-export function isExcludedKey(key: string): boolean {
+/**
+ * Check whether a property key should be excluded from display.
+ * If a meaningful alias is provided (different from the raw key), the field
+ * is treated as user-facing and is not excluded. This lets computed/system
+ * fields such as `Shape.STLength()` show up when the service gives them a
+ * human-readable alias like "Length (m)".
+ */
+export function isExcludedKey(key: string, alias?: string | null): boolean {
   const lower = key.toLowerCase();
+  if (alias && alias.trim().length > 0 && alias.toLowerCase() !== lower) {
+    return false;
+  }
   return IDENTIFY_FILTER_KEY_PATTERNS.some((pattern) => pattern.test(lower));
 }
 

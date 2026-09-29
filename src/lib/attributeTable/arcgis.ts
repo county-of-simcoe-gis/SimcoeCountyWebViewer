@@ -239,15 +239,11 @@ export async function describeArcgisLayer(
   const domains = parseArcgisFieldsMetadata(info.fields).domains;
 
   for (const f of info.fields ?? []) {
-    // Skip geometry / shape length/area — users don't want these in the grid.
-    if (f.type === "esriFieldTypeGeometry") continue;
-    if (/^(shape|st)_(length|area)$/i.test(f.name)) continue;
-
     fields.push({
       name: f.name,
       type: esriTypeToColumnType(f.type),
       nillable: f.nullable !== false,
-      isGeometry: false,
+      isGeometry: f.type === "esriFieldTypeGeometry",
       isIdLike: f.type === "esriFieldTypeOID" || f.name === objectIdField,
       // Surface the alias only when it adds information over the raw name.
       alias: typeof f.alias === "string" && f.alias.length > 0 && f.alias.toLowerCase() !== f.name.toLowerCase() ? f.alias : undefined,

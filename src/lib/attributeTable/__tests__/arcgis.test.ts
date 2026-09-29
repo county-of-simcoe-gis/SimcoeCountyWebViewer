@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchArcgisFeatureById } from "@/lib/attributeTable/arcgis";
+import { describeArcgisLayer, fetchArcgisFeatureById } from "@/lib/attributeTable/arcgis";
 
 const SERVICE_URL = "https://example.com/arcgis/rest/services/Operations/Roads/MapServer";
 const LAYER_URL = `${SERVICE_URL}/588`;
@@ -184,5 +184,78 @@ describe("fetchArcgisFeatureById", () => {
     const firstCoord = geometry.coordinates[0][0];
     expect(Math.abs(firstCoord[0])).toBeGreaterThan(1000000);
     expect(Math.abs(firstCoord[1])).toBeGreaterThan(1000000);
+  });
+});
+
+describe("describeArcgisLayer", () => {
+  let originalFetch: typeof fetch;
+
+  beforeEach(() => {
+    originalFetch = globalThis.fetch;
+  });
+
+  afterEach(() => {
+    globalThis.fetch = originalFetch;
+    vi.clearAllMocks();
+  });
+
+  function createLayerMetadataWithSystemFieldsResponse() {
+    return {
+      currentVersion: 11.5,
+      id: 588,
+      name: "Bridges",
+      type: "Feature Layer",
+      geometryType: "esriGeometryPolygon",
+      sourceSpatialReference: { wkid: 32190, latestWkid: 32190 },
+      spatialReference: { wkid: 32190, latestWkid: 32190 },
+      objectIdField: "OBJECTID",
+      fields: [
+        { name: "OBJECTID", type: "esriFieldTypeOID" },
+        { name: "BridgeName", type: "esriFieldTypeString", length: 255 },
+        { name: "Shape", type: "esriFieldTypeGeometry" },
+        { name: "Shape_Length", type: "esriFieldTypeDouble" },
+        { name: "Shape_Area", type: "esriFieldTypeDouble" },
+        { name: "st_length", type: "esriFieldTypeDouble" },
+        { name: "st_area", type: "esriFieldTypeDouble" },
+      ],
+    };
+  }
+
+  it("marks geometry fields as isGeometry and keeps length/area fields in the schema", async () => {
+    globalThis.fetch = vi.fn(async (url: string | URL | Request) => {
+      const urlString = url.toString();
+      if (urlString.includes("/588?f=json")) {
+        return new Response(JSON.stringify(createLayerMetadataWithSystemFieldsResponse()), {
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: { code: 404, message: "Not found" } }), { status: 200 });
+    }) as unknown as typeof fetch;
+
+    const endpoint = {
+      serviceUrl: SERVICE_URL,
+      layerId: 588,
+      layerUrl: LAYER_URL,
+      tokenFromUrl: null,
+    };
+
+    const result = await describeArcgisLayer(endpoint, false);
+
+    const fieldNames = result.fields.map((f) => f.name);
+    expect(fieldNames).toContain("OBJECTID");
+    expect(fieldNames).toContain("BridgeName");
+    expect(fieldNames).toContain("Shape_Length");
+    expect(fieldNames).toContain("Shape_Area");
+    expect(fieldNames).toContain("st_length");
+    expect(fieldNames).toContain("st_area");
+
+    // Geometry field stays in raw schema but is marked for downstream filtering.
+    const shapeField = result.fields.find((f) => f.name === "Shape");
+    expect(shapeField).toBeDefined();
+    expect(shapeField!.isGeometry).toBe(true);
+
+    // Length/area fields are not geometry and are now filtered by isExcludedKey instead.
+    expect(result.fields.find((f) => f.name === "Shape_Length")!.isGeometry).toBe(false);
+    expect(result.fields.find((f) => f.name === "st_length")!.isGeometry).toBe(false);
   });
 });

@@ -229,7 +229,12 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
             <h3 className="m-0 mb-2 text-[13px] font-semibold text-base-content leading-normal">{result.data.layerName}</h3>
             <div className="mt-4" data-testid="result-attributes">
               {Object.entries(result.data.attributes)
-                .filter(([key, value]) => !isExcludedKey(key) && key !== "bbox" && typeof value !== "object")
+                .filter(([key, value]) => {
+                  const meta = result.data.fieldMetadata;
+                  const alias = resolveFieldAlias(meta, key);
+                  // Keep system fields when the service provides a meaningful alias.
+                  return !isExcludedKey(key, alias) && key !== "bbox" && typeof value !== "object";
+                })
                 .map(([key, value]) => {
                   // ArcGIS layers: prefer the field alias for the label and
                   // the coded-value domain name for the value, when available.
