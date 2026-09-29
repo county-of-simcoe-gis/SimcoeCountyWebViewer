@@ -366,8 +366,10 @@ export async function zoomToFeature(wfsUrl: string, typeName: string, layerId: s
       console.warn("[attributeTable] zoomToFeature: no geometry returned", { typeName, fid, response: f });
       return;
     }
-    // Page fetches request srsName=EPSG:3857 (same as the map), so the
-    // coordinates are already in the map projection — no transform needed.
+    // The geometry returned by fetchOneFeature is already in the map
+    // projection (WFS requests srsName=EPSG:3857, and ArcGIS paths reproject
+    // client-side). Re-read with matching projections so OL doesn't try to
+    // transform it again.
     const mapProj = map.getView().getProjection().getCode();
     feat = new GeoJSON().readFeature({ type: "Feature", id: f.id, geometry: f.geometry, properties: f.properties ?? {} }, { featureProjection: mapProj, dataProjection: mapProj }) as Feature;
     feat.setId(key);

@@ -40,9 +40,14 @@ export class ArcgisPaginationNotSupportedError extends Error {
 const ARCGIS_PAGINATION_ERROR_RE = /pagination is not supported/i;
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { useMapStore } from "@/stores/mapStore";
+import { registerProjections } from "@/utils/projections";
 import EsriJSON from "ol/format/EsriJSON";
 import GeoJSON from "ol/format/GeoJSON";
 import type Feature from "ol/Feature";
+
+// Ensure projections such as EPSG:32190 are registered before we try to
+// reproject ArcGIS geometries. Safe to call multiple times (idempotent).
+registerProjections();
 
 // ---------------------------------------------------------------------------
 // URL parsing
@@ -182,11 +187,7 @@ interface ArcgisServiceInfo {
  */
 const layerSpatialReferenceCache = new Map<string, { wkid?: number; latestWkid?: number } | null>();
 
-async function getLayerSpatialReference(
-  endpoint: ArcgisEndpoint,
-  token: string | null,
-  signal?: AbortSignal,
-): Promise<{ wkid?: number; latestWkid?: number } | null> {
+async function getLayerSpatialReference(endpoint: ArcgisEndpoint, token: string | null, signal?: AbortSignal): Promise<{ wkid?: number; latestWkid?: number } | null> {
   const cached = layerSpatialReferenceCache.get(endpoint.layerUrl);
   if (cached !== undefined) return cached;
   try {
@@ -217,7 +218,11 @@ function esriTypeToColumnType(esriType: string): ColumnType {
   }
 }
 
-export async function describeArcgisLayer(endpoint: ArcgisEndpoint, secured: boolean, signal?: AbortSignal): Promise<{
+export async function describeArcgisLayer(
+  endpoint: ArcgisEndpoint,
+  secured: boolean,
+  signal?: AbortSignal,
+): Promise<{
   fields: WfsFieldDescriptor[];
   objectIdField: string;
   maxRecordCount: number;
@@ -249,9 +254,7 @@ export async function describeArcgisLayer(endpoint: ArcgisEndpoint, secured: boo
     });
   }
 
-  const supportsPagination =
-    info.supportsPagination === true ||
-    info.advancedQueryCapabilities?.supportsPagination === true;
+  const supportsPagination = info.supportsPagination === true || info.advancedQueryCapabilities?.supportsPagination === true;
 
   return {
     fields,
@@ -272,13 +275,7 @@ function findOidField(fields: ArcgisServiceInfo["fields"]): string | null {
 // Count
 // ---------------------------------------------------------------------------
 
-export async function fetchArcgisCount(opts: {
-  endpoint: ArcgisEndpoint;
-  secured: boolean;
-  where?: string;
-  bbox?: [number, number, number, number];
-  signal?: AbortSignal;
-}): Promise<number> {
+export async function fetchArcgisCount(opts: { endpoint: ArcgisEndpoint; secured: boolean; where?: string; bbox?: [number, number, number, number]; signal?: AbortSignal }): Promise<number> {
   const token = await resolveToken(opts.endpoint, opts.secured);
   const params = new URLSearchParams();
   params.set("where", opts.where && opts.where.length > 0 ? opts.where : "1=1");
@@ -514,12 +511,11 @@ function esriFeaturesToGeoJson(
   // Diagnostic: if the user asked for geometry and the server returned none,
   // log once — helps distinguish server-side strip from our parsing.
   if (includeGeometry && olFeatures.length > 0 && !olFeatures.some((f) => f.getGeometry())) {
-    console.warn(
-      "[attributeTable/arcgis] Server returned no geometry for any feature. "
-        + "This usually means the layer doesn't support query-with-geometry. "
-        + "Response shape:",
-      { hasGeometryType: !!response.geometryType, hasSpatialReference: !!response.spatialReference, sample: raw[0] },
-    );
+    console.warn("[attributeTable/arcgis] Server returned no geometry for any feature. " + "This usually means the layer doesn't support query-with-geometry. " + "Response shape:", {
+      hasGeometryType: !!response.geometryType,
+      hasSpatialReference: !!response.spatialReference,
+      sample: raw[0],
+    });
   }
 
   const out: Array<{ id?: string; properties: Record<string, unknown>; geometry?: unknown }> = [];
@@ -544,6 +540,24 @@ function esriFeaturesToGeoJson(
             featureProjection: targetProj,
             dataProjection: targetProj,
           });
+
+          // Sanity check: if the target is Web Mercator, the resulting
+          // coordinates should fit inside the Web Mercator valid area. If
+          // they don't, the source SR was probably unknown to OpenLayers
+          // and the transform silently no-op'd (e.g. EPSG:32190 before it
+          // was registered). Log the details so future mis-projections are
+          // easy to spot, but still return the geometry.
+          if (targetProj === "EPSG:3857" && typeof id === "string") {
+            const extent = g.getExtent();
+            if (extent && extent.every((n) => Number.isFinite(n)) && (extent.some((n) => Math.abs(n) > 20_000_000) || (Math.abs(extent[0]) < 180 && Math.abs(extent[1]) < 90))) {
+              console.warn("[attributeTable/arcgis] Reprojected feature extent looks suspicious " + "— the source spatial reference may not be registered.", {
+                id,
+                sourceSr: srWkid,
+                targetProj,
+                extent,
+              });
+            }
+          }
         } catch {
           geometry = undefined;
         }

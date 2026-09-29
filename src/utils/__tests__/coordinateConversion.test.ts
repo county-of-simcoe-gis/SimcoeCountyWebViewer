@@ -51,6 +51,10 @@ describe("coordinateConversion", () => {
       expect(normalizeEpsg("26917")).toBe("EPSG:26917");
     });
 
+    it("maps '32190' to EPSG:32190", () => {
+      expect(normalizeEpsg("32190")).toBe("EPSG:32190");
+    });
+
     it("returns default for unknown identifiers", () => {
       expect(normalizeEpsg("unknown")).toBe("EPSG:4326");
     });
@@ -67,6 +71,10 @@ describe("coordinateConversion", () => {
 
     it("returns 'UTM Zone 17N (NAD83)' for utm", () => {
       expect(getSRLabel("utm")).toBe("UTM Zone 17N (NAD83)");
+    });
+
+    it("returns 'MTM Zone 9 (NAD83)' for 32190", () => {
+      expect(getSRLabel("32190")).toBe("MTM Zone 9 (NAD83)");
     });
   });
 
@@ -109,6 +117,11 @@ describe("coordinateConversion", () => {
       expect(isWithinBounds(50000, 4912000, "utm")).toBe(false);
     });
 
+    it("validates MTM zone 9 bounds", () => {
+      expect(isWithinBounds(304800, 4950000, "32190")).toBe(true);
+      expect(isWithinBounds(604000, 4912000, "32190")).toBe(false);
+    });
+
     it("falls back to 4326 for unknown systems", () => {
       // 'unknown' normalizes to EPSG:4326, (999,999) is out of lat/long bounds
       expect(isWithinBounds(999, 999, "unknown")).toBe(false);
@@ -137,6 +150,17 @@ describe("coordinateConversion", () => {
       const [x, y] = convertCoordinates(604000, 4912000, "UTM");
       expect(x).not.toBeNaN();
       expect(y).not.toBeNaN();
+    });
+
+    it("converts MTM zone 9 (EPSG:32190) to Web Mercator", () => {
+      // Approximate Simcoe County MTM zone 9 coordinate
+      const [x, y] = convertCoordinates(304800, 4950000, "32190");
+      expect(x).not.toBeNaN();
+      expect(y).not.toBeNaN();
+      // MTM 9 -> Web Mercator should produce large Web Mercator values,
+      // not pass through the small MTM numbers.
+      expect(Math.abs(x)).toBeGreaterThan(1000000);
+      expect(Math.abs(y)).toBeGreaterThan(1000000);
     });
 
     it("throws for invalid coordinates (NaN)", () => {
@@ -261,8 +285,20 @@ describe("coordinateConversion", () => {
       expect(result).toEqual(expected);
     });
 
+    it("reprojects an MTM zone 9 (EPSG:32190) extent to Web Mercator", () => {
+      // Typical Simcoe County MTM 9 extent values
+      const result = reprojectExtentToWebMercator([280000, 4940000, 290000, 4960000], 32190);
+
+      expect(result).not.toBeNull();
+      const [minX, minY, maxX, maxY] = result as number[];
+      expect(minX).toBeLessThan(maxX);
+      expect(minY).toBeLessThan(maxY);
+      expect(Math.abs(minX)).toBeLessThan(20037508.34);
+      expect(Math.abs(maxY)).toBeLessThan(20037508.34);
+    });
+
     it("returns null for an unrecognized wkid instead of silently assuming WGS84", () => {
-      expect(reprojectExtentToWebMercator([590000, 4900000, 620000, 4930000], 3979)).toBeNull();
+      expect(reprojectExtentToWebMercator([590000, 4900000, 620000, 4930000], 99999)).toBeNull();
     });
 
     it("returns null for a malformed extent", () => {
