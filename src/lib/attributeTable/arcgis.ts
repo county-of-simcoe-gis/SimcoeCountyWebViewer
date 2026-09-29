@@ -245,8 +245,8 @@ export async function describeArcgisLayer(
       nillable: f.nullable !== false,
       isGeometry: f.type === "esriFieldTypeGeometry",
       isIdLike: f.type === "esriFieldTypeOID" || f.name === objectIdField,
-      // Surface the alias only when it adds information over the raw name.
-      alias: typeof f.alias === "string" && f.alias.length > 0 && f.alias.toLowerCase() !== f.name.toLowerCase() ? f.alias : undefined,
+      // Surface the alias verbatim whenever the service provides one.
+      alias: typeof f.alias === "string" && f.alias.length > 0 ? f.alias : undefined,
     });
   }
 

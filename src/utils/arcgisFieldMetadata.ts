@@ -61,9 +61,10 @@ export function parseArcgisFieldsMetadata(fields: unknown): ArcgisLayerFieldMeta
     const key = name.toLowerCase();
     const segmentKey = key.split(".").pop() ?? key;
 
-    if (typeof raw.alias === "string" && raw.alias.length > 0 && raw.alias !== name) {
-      // Skip aliases that restate the field name exactly (e.g. "zip_code") —
-      // the caller's formatFieldName fallback beautifies those better.
+    if (typeof raw.alias === "string" && raw.alias.length > 0) {
+      // Keep the alias verbatim whenever the service provides one. The service
+      // author's casing (e.g. "StructureType" or "STATUS") is the intended
+      // display label; falling back to formatFieldName would alter it.
       metadata.aliases[key] = raw.alias;
       if (!(segmentKey in metadata.aliases)) metadata.aliases[segmentKey] = raw.alias;
     }

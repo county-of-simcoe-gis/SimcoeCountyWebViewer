@@ -67,8 +67,10 @@ describe("identifyHelpers", () => {
       expect(isExcludedKey("Shape.STArea()", "Area (sq m)")).toBe(false);
     });
 
-    it("still excludes system fields when the alias matches or is missing", () => {
+    it("still excludes system fields when the alias matches the raw name or is missing", () => {
+      // Alias matches the raw name (case-insensitive) → still treated as system field.
       expect(isExcludedKey("Shape.STLength()", "Shape.STLength()")).toBe(true);
+      expect(isExcludedKey("OBJECTID", "OBJECTID")).toBe(true);
       expect(isExcludedKey("Shape.STLength()", "")).toBe(true);
       expect(isExcludedKey("st_length")).toBe(true);
     });
