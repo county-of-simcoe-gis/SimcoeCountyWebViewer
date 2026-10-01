@@ -12,6 +12,9 @@ import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { useMapStore } from "@/stores/mapStore";
 import type { Five11LayerConfig } from "./types";
 import { getPublicPath } from "@/utils/getPublicPath";
+import { buildEsriStyleFunction, buildEsriLegendItems } from "@/utils/esriSymbology";
+import { fetchArcGISService } from "@/utils/tocHelpers";
+import type { EsriRenderer } from "@/utils/esriSymbology";
 import type { FeatureCollection } from "geojson";
 
 interface Five11LayerTogglerProps {
@@ -25,6 +28,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
   const map = useMapStore((state) => state.map);
   const [recordCount, setRecordCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [legendIconUrl, setLegendIconUrl] = useState<string | null>(null);
   const layerIdRef = useRef<string | null>(null);
   const vectorLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const mountedRef = useRef(true);
@@ -32,8 +36,30 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
   const pendingVisibleRef = useRef<boolean>(visible);
   const initCounterRef = useRef(0);
 
-  // Create style based on layer type
-  const getLayerStyle = useCallback(() => {
+  // Fetch the ArcGIS renderer from the configured symbologyUrl (full layer endpoint).
+  const fetchRenderer = useCallback(async (): Promise<EsriRenderer | null> => {
+    if (!layer.symbologyUrl) return null;
+    try {
+      const json = await fetchArcGISService(layer.symbologyUrl, false);
+      const drawingInfo = json?.drawingInfo as { renderer?: EsriRenderer } | undefined;
+      return drawingInfo?.renderer ?? null;
+    } catch (error) {
+      console.warn(`[511] Failed to fetch renderer for ${layer.displayName}:`, error);
+      return null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layer.symbologyUrl]);
+
+  // Create style based on layer type. If a symbologyUrl is provided, fetch the
+  // renderer from the ArcGIS service and use it directly.
+  const getLayerStyle = useCallback(async () => {
+    if (layer.symbologyUrl) {
+      const renderer = await fetchRenderer();
+      if (renderer) {
+        return buildEsriStyleFunction(renderer);
+      }
+    }
+
     if (layer.geometryType === "LineString") {
       // Line style for jam and irregularity layers
       return new Style({
@@ -51,7 +77,33 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
         }),
       });
     }
-  }, [layer.imageName, layer.geometryType]);
+  }, [layer.symbologyUrl, layer.imageName, layer.geometryType, fetchRenderer]);
+
+  // Load legend swatch from service renderer when available
+  useEffect(() => {
+    if (!layer.symbologyUrl) {
+      setLegendIconUrl(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    fetchRenderer()
+      .then((renderer) => {
+        if (cancelled || !renderer) return;
+        const legendItems = buildEsriLegendItems(renderer, 24);
+        setLegendIconUrl(legendItems[0]?.imageDataUrl ?? null);
+      })
+      .catch((error) => {
+        console.warn(`[511] Failed to load legend icon for ${layer.displayName}:`, error);
+        setLegendIconUrl(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Initialize layer
   useEffect(() => {
@@ -73,12 +125,18 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           initializedRef.current = false;
         }
 
-        // Fetch GeoJSON data - layer.apiUrl is like "/api/public/map/theme/511/..."
-        // publicAxiosInstance baseURL includes /api, so strip /api prefix
-        const apiPath = layer.apiUrl.replace(/^\/api/, "");
-        const response = await axiosInstance.get<FeatureCollection>(apiPath, { signal: abortController.signal });
-
-        const data = response.data;
+        // Fetch GeoJSON data. For internal /api URLs use axiosInstance; for absolute
+        // public ArcGIS URLs (e.g., 511 road closures), fetch directly from the browser.
+        let data: FeatureCollection;
+        if (layer.apiUrl.startsWith("/api")) {
+          // publicAxiosInstance baseURL includes /api, so strip /api prefix
+          const apiPath = layer.apiUrl.replace(/^\/api/, "");
+          const response = await axiosInstance.get<FeatureCollection>(apiPath, { signal: abortController.signal });
+          data = response.data;
+        } else {
+          const response = await fetch(layer.apiUrl, { signal: abortController.signal });
+          data = (await response.json()) as FeatureCollection;
+        }
 
         // Discard if this init was superseded or component unmounted
         if (initId !== initCounterRef.current || !mountedRef.current) return;
@@ -99,10 +157,13 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           }),
         });
 
+        // Resolve style (may be async when loading from service renderer)
+        const style = await getLayerStyle();
+
         // Create vector layer
         const vectorLayer = new VectorLayer({
           source: vectorSource,
-          style: getLayerStyle(),
+          style,
           visible: pendingVisibleRef.current,
         });
 
@@ -198,8 +259,10 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
     <div className="flex items-center gap-2 py-1.5">
       <div className="flex items-center gap-2 flex-1">
         {/* Layer icon */}
-        <div className={`w-8 h-8 flex items-center justify-center flex-shrink-0 ${isLineLayer ? "" : ""}`}>
-          {isLineLayer ? (
+        <div className="w-8 h-8 flex items-center justify-center flex-shrink-0">
+          {legendIconUrl ? (
+            <img src={legendIconUrl} alt={layer.displayName} width={24} height={24} className="object-contain" />
+          ) : isLineLayer ? (
             <div className="w-6 h-1.5 bg-red-500 rounded"></div>
           ) : (
             <Image src={`/images/five11/${layer.imageName}`} alt={layer.displayName} width={32} height={32} className="object-contain" />

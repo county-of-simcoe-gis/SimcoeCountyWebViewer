@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, within } from "@testing-library/react";
 import Five11 from "../Five11";
 import { five11Config } from "../config";
 
@@ -79,7 +79,7 @@ vi.mock("@/utils/openlayers/LayerManager", () => ({
   },
 }));
 
-// Mock Five11CameraPopup, Five11WazePopupContent, Five11MtoPopupContent
+// Mock Five11CameraPopup, Five11WazePopupContent, Five11MtoPopupContent, Five11RoadClosuresPopupContent
 vi.mock("../Five11CameraPopup", () => ({
   default: () => <div data-testid="camera-popup">Camera</div>,
 }));
@@ -88,6 +88,9 @@ vi.mock("../Five11WazePopupContent", () => ({
 }));
 vi.mock("../Five11MtoPopupContent", () => ({
   default: () => <div data-testid="mto-popup">MTO</div>,
+}));
+vi.mock("../Five11RoadClosuresPopupContent", () => ({
+  default: () => <div data-testid="roadclosures-popup">Road Closures</div>,
 }));
 
 describe("Five11", () => {
@@ -117,6 +120,11 @@ describe("Five11", () => {
     expect(screen.getByText("MTO LIVE DATA")).toBeInTheDocument();
   });
 
+  it("renders ROAD CLOSURES section header", () => {
+    render(<Five11 onClose={mockOnClose} />);
+    expect(screen.getByText("ROAD CLOSURES")).toBeInTheDocument();
+  });
+
   it("renders all Waze layer togglers", () => {
     render(<Five11 onClose={mockOnClose} />);
     for (const layer of five11Config.wazeToggleLayers) {
@@ -127,6 +135,13 @@ describe("Five11", () => {
   it("renders all MTO layer togglers", () => {
     render(<Five11 onClose={mockOnClose} />);
     for (const layer of five11Config.mtoToggleLayers) {
+      expect(screen.getByTestId(`layer-toggler-${layer.layerName}`)).toBeInTheDocument();
+    }
+  });
+
+  it("renders all Road Closures layer togglers", () => {
+    render(<Five11 onClose={mockOnClose} />);
+    for (const layer of five11Config.roadClosuresToggleLayers) {
       expect(screen.getByTestId(`layer-toggler-${layer.layerName}`)).toBeInTheDocument();
     }
   });
@@ -146,30 +161,42 @@ describe("Five11", () => {
 
   it("shows Show All button when all layers start hidden", () => {
     render(<Five11 onClose={mockOnClose} />);
-    // All layers start hidden per config
+    // Waze and MTO sections have some layers hidden by default, so they show "Show All"
     const buttons = screen.getAllByText("Show All");
     expect(buttons.length).toBeGreaterThanOrEqual(1);
   });
 
   it("toggles all Waze layers when Show All is clicked", () => {
     render(<Five11 onClose={mockOnClose} />);
-    // Both sections initially show "Show All" since all layers start hidden
-    const showAllButtons = screen.getAllByText("Show All");
-    // Click the first Show All (Waze section)
-    fireEvent.click(showAllButtons[0]);
+    const wazeSection = screen.getByText("WAZE LIVE DATA").parentElement as HTMLElement;
+    const showAllButton = within(wazeSection).getByText("Show All");
+
+    fireEvent.click(showAllButton);
 
     // After toggling all on, the Waze section should show "Hide All"
-    expect(screen.getByText("Hide All")).toBeInTheDocument();
+    expect(within(wazeSection).getByText("Hide All")).toBeInTheDocument();
+  });
+
+  it("toggles all Road Closures layers when Hide All is clicked", () => {
+    render(<Five11 onClose={mockOnClose} />);
+    const roadClosuresSection = screen.getByText("ROAD CLOSURES").parentElement as HTMLElement;
+    // Road Closures layers are all visible by default
+    const hideAllButton = within(roadClosuresSection).getByText("Hide All");
+
+    fireEvent.click(hideAllButton);
+
+    expect(within(roadClosuresSection).getByText("Show All")).toBeInTheDocument();
   });
 
   it("toggles all MTO layers when Show All is clicked", () => {
     render(<Five11 onClose={mockOnClose} />);
-    const showAllButtons = screen.getAllByText("Show All");
-    // Click the second Show All (MTO section)
-    fireEvent.click(showAllButtons[1]);
+    const mtoSection = screen.getByText("MTO LIVE DATA").parentElement as HTMLElement;
+    const showAllButton = within(mtoSection).getByText("Show All");
+
+    fireEvent.click(showAllButton);
 
     // After toggling all MTO on, there should be a "Hide All" in the MTO section
-    expect(screen.getByText("Hide All")).toBeInTheDocument();
+    expect(within(mtoSection).getByText("Hide All")).toBeInTheDocument();
   });
 
   it("toggles individual Waze layer visibility", () => {
@@ -192,6 +219,16 @@ describe("Five11", () => {
     expect(checkbox).toBeChecked();
   });
 
+  it("toggles individual Road Closures layer visibility", () => {
+    render(<Five11 onClose={mockOnClose} />);
+    const roadClosuresLayer = five11Config.roadClosuresToggleLayers[0];
+    const checkbox = screen.getByTestId(`checkbox-${roadClosuresLayer.layerName}`);
+
+    expect(checkbox).toBeChecked();
+    fireEvent.click(checkbox);
+    expect(checkbox).not.toBeChecked();
+  });
+
   it("registers map click handler on mount", () => {
     render(<Five11 onClose={mockOnClose} />);
     expect(mockRegisterHandler).toHaveBeenCalledWith(
@@ -209,10 +246,11 @@ describe("Five11", () => {
     expect(mockUnregisterHandler).toHaveBeenCalledWith("511-identify");
   });
 
-  it("has a divider between Waze and MTO sections", () => {
+  it("has dividers between all sections", () => {
     const { container } = render(<Five11 onClose={mockOnClose} />);
     const dividers = container.querySelectorAll(".divider");
-    expect(dividers.length).toBeGreaterThanOrEqual(1);
+    // Waze | Road Closures | MTO
+    expect(dividers.length).toBeGreaterThanOrEqual(2);
   });
 
   describe("click handler", () => {
@@ -312,6 +350,40 @@ describe("Five11", () => {
 
       expect(results.length).toBe(1);
       expect(results[0].displayName).toBe("Construction");
+    });
+
+    it("handler returns results for Road Closures features at pixel", async () => {
+      const mockFeature = {
+        getId: () => "closures-1",
+        get: (key: string) => {
+          if (key === "uuid") return undefined;
+          if (key === "id") return "closures-feature-1";
+          return undefined;
+        },
+        getProperties: () => ({ street: "Main St", reason: "Construction", description: "Road closed" }),
+      };
+      const mockLayer = {
+        get: (key: string) => {
+          if (key === "name") return "511-roadclosures-closures";
+          if (key === "tocDisplayName") return "Closures";
+          return undefined;
+        },
+        getVisible: () => true,
+      };
+
+      mockMap.forEachFeatureAtPixel.mockImplementation((pixel: any, callback: any, options: any) => {
+        if (options.layerFilter(mockLayer)) {
+          callback(mockFeature, mockLayer);
+        }
+      });
+
+      render(<Five11 onClose={mockOnClose} />);
+
+      const handlerConfig = mockRegisterHandler.mock.calls[0][0];
+      const results = await handlerConfig.handler([0, 0], [100, 100]);
+
+      expect(results.length).toBe(1);
+      expect(results[0].displayName).toBe("Closures");
     });
 
     it("handler deduplicates features with same key", async () => {

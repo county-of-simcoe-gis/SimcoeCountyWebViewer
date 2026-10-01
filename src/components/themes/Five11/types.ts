@@ -4,9 +4,10 @@
 
 export interface Five11LayerConfig {
   apiUrl: string;
+  symbologyUrl?: string;
   layerName: string;
   displayName: string;
-  imageName: string;
+  imageName?: string;
   clickable: boolean;
   visible: boolean;
   zIndex: number;
@@ -16,6 +17,7 @@ export interface Five11LayerConfig {
 export interface Five11Config {
   wazeToggleLayers: Five11LayerConfig[];
   mtoToggleLayers: Five11LayerConfig[];
+  roadClosuresToggleLayers: Five11LayerConfig[];
 }
 
 // Waze alert feature properties

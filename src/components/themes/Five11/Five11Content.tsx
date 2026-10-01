@@ -9,6 +9,7 @@ import type { Five11LayerConfig, MtoCameraProperties } from "./types";
 import Five11LayerToggler from "./Five11LayerToggler";
 import Five11WazePopupContent from "./Five11WazePopupContent";
 import Five11MtoPopupContent from "./Five11MtoPopupContent";
+import Five11RoadClosuresPopupContent from "./Five11RoadClosuresPopupContent";
 import Five11CameraPopup from "./Five11CameraPopup";
 import type Feature from "ol/Feature";
 import type { Geometry } from "ol/geom";
@@ -43,6 +44,16 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
     ),
   );
 
+  const [roadClosuresLayerStates, setRoadClosuresLayerStates] = useState<Record<string, boolean>>(() =>
+    five11Config.roadClosuresToggleLayers.reduce(
+      (acc, layer) => {
+        acc[layer.layerName] = layer.visible;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    ),
+  );
+
   // Track layer IDs for click handling
   const layerIdsRef = useRef<Record<string, string | null>>({});
 
@@ -53,6 +64,10 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
 
   const handleMtoVisibilityChange = useCallback((layerName: string, visible: boolean) => {
     setMtoLayerStates((prev) => ({ ...prev, [layerName]: visible }));
+  }, []);
+
+  const handleRoadClosuresVisibilityChange = useCallback((layerName: string, visible: boolean) => {
+    setRoadClosuresLayerStates((prev) => ({ ...prev, [layerName]: visible }));
   }, []);
 
   // Track layer IDs
@@ -83,6 +98,18 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
       return newStates;
     });
   }, [mtoLayerStates]);
+
+  // Toggle all Road Closures layers
+  const handleToggleAllRoadClosures = useCallback(() => {
+    const allVisible = Object.values(roadClosuresLayerStates).every((v) => v);
+    setRoadClosuresLayerStates((prev) => {
+      const newStates = { ...prev };
+      Object.keys(newStates).forEach((key) => {
+        newStates[key] = !allVisible;
+      });
+      return newStates;
+    });
+  }, [roadClosuresLayerStates]);
 
   // Register map click handler
   useEffect(() => {
@@ -140,6 +167,9 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
             } else if (layerName.includes("waze")) {
               // Waze popup
               renderContent = () => <Five11WazePopupContent properties={properties} layerName={layerName} />;
+            } else if (layerName.includes("roadclosures")) {
+              // Road Closures popup
+              renderContent = () => <Five11RoadClosuresPopupContent properties={properties} />;
             } else {
               // MTO event popup
               renderContent = () => <Five11MtoPopupContent properties={properties} />;
@@ -190,6 +220,7 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
   // Check if all layers are visible for button text
   const allWazeVisible = Object.values(wazeLayerStates).every((v) => v);
   const allMtoVisible = Object.values(mtoLayerStates).every((v) => v);
+  const allRoadClosuresVisible = Object.values(roadClosuresLayerStates).every((v) => v);
 
   return (
     <div className="p-4 space-y-4">
@@ -208,6 +239,38 @@ export default function Five11Content({ visible = true }: Five11ContentProps) {
           <a href="https://www.waze.com/" target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline flex items-center gap-1">
             <FaExternalLinkAlt className="text-[10px]" />
             Data Provided by Waze
+          </a>
+        </div>
+      </div>
+
+      <div className="divider my-2"></div>
+
+      {/* Road Closures Section */}
+      <div>
+        <h3 className="text-sm font-semibold mb-3 text-primary">ROAD CLOSURES</h3>
+        <div className="space-y-1">
+          {five11Config.roadClosuresToggleLayers.map((layer: Five11LayerConfig) => (
+            <Five11LayerToggler
+              key={layer.layerName}
+              layer={layer}
+              visible={roadClosuresLayerStates[layer.layerName]}
+              onVisibilityChange={handleRoadClosuresVisibilityChange}
+              onLayerIdChange={handleLayerIdChange}
+            />
+          ))}
+        </div>
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-base-300">
+          <button className="btn btn-xs btn-outline" onClick={handleToggleAllRoadClosures}>
+            {allRoadClosuresVisible ? "Hide All" : "Show All"}
+          </button>
+          <a
+            href="https://maps2.simcoe.ca/arcgis/rest/services/SimcoeCounty/RoadClosures_Public/MapServer"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-primary hover:underline flex items-center gap-1"
+          >
+            <FaExternalLinkAlt className="text-[10px]" />
+            Data Provided by County of Simcoe
           </a>
         </div>
       </div>
