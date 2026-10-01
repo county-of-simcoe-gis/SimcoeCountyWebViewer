@@ -1,5 +1,12 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useTOCStore, type TOCLayer, type TOCLayerGroup } from "@/stores/tocStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+
+vi.mock("@/utils/openlayers/LayerManager", () => ({
+  LayerManager: {
+    setLayerVisibility: vi.fn(),
+  },
+}));
 
 /**
  * Tests for LIST view layer deduplication with secured-priority.
@@ -28,6 +35,7 @@ describe("tocStore - LIST view deduplication", () => {
       helpLink: "",
       sources: [],
     });
+    vi.mocked(LayerManager.setLayerVisibility).mockClear();
   });
 
   describe("Secured layer priority", () => {
@@ -795,6 +803,123 @@ describe("tocStore - LIST view deduplication", () => {
       expect(allLayersGroup!.layers[0].secured).toBe(true);
       expect(allLayersGroup!.layers[0].visible).toBe(true);
       expect(allLayersGroup!.layers[0].name).toBe("simcoe-secured:Bruce_Trail");
+    });
+  });
+
+  describe("Group-specific visibility with immediate map sync", () => {
+    const baseLayer: TOCLayer = {
+      id: "popular_id",
+      name: "simcoe:Assessment Parcel",
+      displayName: "Assessment Parcel",
+      tocDisplayName: "Assessment Parcel",
+      styleUrl: "",
+      height: 0,
+      drawIndex: 0,
+      index: 0,
+      initialDrawIndex: 0,
+      showLegend: false,
+      legendHeight: 0,
+      legendImage: null,
+      legendObj: null,
+      visible: true,
+      defaultVisible: true,
+      layer: null,
+      metadataUrl: null,
+      opacity: 1,
+      minScale: 0,
+      maxScale: 0,
+      liveLayer: false,
+      groupName: "Popular",
+      group: "Popular",
+      userLayer: false,
+      secured: false,
+    };
+
+    const popularLayer: TOCLayer = { ...baseLayer, id: "popular_id", managedLayerId: "managed_popular" };
+
+    const allLayersPublicLayer: TOCLayer = {
+      ...baseLayer,
+      id: "all_layers_public_id",
+      groupName: "All_Layers_Public",
+      group: "All_Layers_Public",
+      managedLayerId: "managed_all_layers",
+    };
+
+    const popularGroup: TOCLayerGroup = {
+      value: "Popular",
+      label: "Popular",
+      defaultGroup: false,
+      url: "http://test.com/wms",
+      prefix: "",
+      visibleLayers: [],
+      wmsGroupUrl: "http://test.com/wms",
+      customRestUrl: "",
+      layers: [popularLayer],
+      primary: false,
+    };
+
+    const allLayersPublicGroup: TOCLayerGroup = {
+      value: "All_Layers_Public",
+      label: "All_Layers_Public",
+      defaultGroup: false,
+      url: "http://test.com/wms",
+      prefix: "",
+      visibleLayers: [],
+      wmsGroupUrl: "http://test.com/wms",
+      customRestUrl: "",
+      layers: [allLayersPublicLayer],
+      primary: true,
+    };
+
+    it("should not synchronize visibility across groups", () => {
+      useTOCStore.getState().setLayerGroups("LIST", [popularGroup, allLayersPublicGroup]);
+
+      // Toggle off using the Popular layer id
+      useTOCStore.getState().updateLayerVisibilityById("popular_id", false);
+
+      const state = useTOCStore.getState();
+      const popularGroupAfter = state.layerListGroups.find((g) => g.value === "Popular");
+      const allLayersPublicGroupAfter = state.layerListGroups.find((g) => g.value === "All_Layers_Public");
+
+      expect(popularGroupAfter!.layers[0].visible).toBe(false);
+      expect(allLayersPublicGroupAfter!.layers[0].visible).toBe(true);
+    });
+
+    it("should update the map immediately when toggling in a selected group", () => {
+      useTOCStore.getState().setLayerGroups("LIST", [popularGroup, allLayersPublicGroup]);
+      vi.mocked(LayerManager.setLayerVisibility).mockClear();
+
+      // Select the Popular group and toggle its layer off.
+      useTOCStore.getState().setSelectedGroup(popularGroup);
+      useTOCStore.getState().updateLayerVisibilityById("popular_id", false);
+
+      // syncSelectedGroupToMap should drive the Popular group's managed layer
+      // and hide the layer from the other group without a group switch.
+      expect(LayerManager.setLayerVisibility).toHaveBeenCalledWith("managed_popular", false);
+      expect(LayerManager.setLayerVisibility).toHaveBeenCalledWith("managed_all_layers", false);
+    });
+
+    it("should update the map immediately in batch updates", () => {
+      useTOCStore.getState().setLayerGroups("LIST", [popularGroup, allLayersPublicGroup]);
+      vi.mocked(LayerManager.setLayerVisibility).mockClear();
+
+      useTOCStore.getState().setSelectedGroup(popularGroup);
+      useTOCStore.getState().updateLayerVisibilitiesBatch([{ layerId: "popular_id", visible: false }]);
+
+      expect(LayerManager.setLayerVisibility).toHaveBeenCalledWith("managed_popular", false);
+      expect(LayerManager.setLayerVisibility).toHaveBeenCalledWith("managed_all_layers", false);
+    });
+
+    it("should keep All Layers winner behavior when the All Layers group is selected", () => {
+      useTOCStore.getState().setLayerGroups("LIST", [popularGroup, allLayersPublicGroup]);
+      vi.mocked(LayerManager.setLayerVisibility).mockClear();
+
+      const allLayersGroup = useTOCStore.getState().layerListGroups.find((g) => g.value === "all_layers")!;
+      useTOCStore.getState().setSelectedGroup(allLayersGroup);
+      useTOCStore.getState().updateLayerVisibilityById("all_layers_public_id", false);
+
+      // The All Layers winner should drive the single visible map layer.
+      expect(LayerManager.setLayerVisibility).toHaveBeenCalledWith("managed_all_layers", false);
     });
   });
 });
