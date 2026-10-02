@@ -487,7 +487,7 @@ describe("ResultsPopup", () => {
   });
 
   describe("Identify Result Content", () => {
-    it("renders identify result with attributes table", async () => {
+    it("renders identify result with attributes grid", async () => {
       const feature = new Feature({ geometry: new Point([0, 0]) });
       const attributes = {
         name: "Test Feature",
@@ -505,6 +505,10 @@ describe("ResultsPopup", () => {
         // Check attributes container structure
         const attrs = container.querySelector('[data-testid="result-attributes"]');
         expect(attrs).toBeInTheDocument();
+
+        // Labels and values should be in a shared grid container
+        const grid = attrs?.querySelector(".grid.grid-cols-\\[minmax\\(110px\\2c 40\\%\\)_1fr\\]");
+        expect(grid).toBeInTheDocument();
 
         // Check for attribute keys (rendered as InfoRow labels with colons,
         // title-cased via formatFieldName)
