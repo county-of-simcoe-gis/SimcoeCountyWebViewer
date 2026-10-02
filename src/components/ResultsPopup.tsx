@@ -228,21 +228,23 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
           <div className="px-5 pt-1.5 pb-5">
             <h3 className="m-0 mb-2 text-[13px] font-semibold text-base-content leading-normal">{result.data.layerName}</h3>
             <div className="mt-4" data-testid="result-attributes">
-              {Object.entries(result.data.attributes)
-                .filter(([key, value]) => {
-                  const meta = result.data.fieldMetadata;
-                  const alias = resolveFieldAlias(meta, key);
-                  // Keep system fields when the service provides a meaningful alias.
-                  return !isExcludedKey(key, alias) && key !== "bbox" && typeof value !== "object";
-                })
-                .map(([key, value]) => {
-                  // ArcGIS layers: prefer the field alias for the label and
-                  // the coded-value domain name for the value, when available.
-                  const meta = result.data.fieldMetadata;
-                  const alias = resolveFieldAlias(meta, key);
-                  const domainName = resolveDomainName(meta, key, value);
-                  return <InfoRow key={key} label={key} labelOverride={alias} value={domainName ?? (value != null ? String(value) : "")} />;
-                })}
+              <div className="grid grid-cols-[minmax(110px,40%)_1fr] gap-x-2 gap-y-1.5 items-start text-xs">
+                {Object.entries(result.data.attributes)
+                  .filter(([key, value]) => {
+                    const meta = result.data.fieldMetadata;
+                    const alias = resolveFieldAlias(meta, key);
+                    // Keep system fields when the service provides a meaningful alias.
+                    return !isExcludedKey(key, alias) && key !== "bbox" && typeof value !== "object";
+                  })
+                  .map(([key, value]) => {
+                    // ArcGIS layers: prefer the field alias for the label and
+                    // the coded-value domain name for the value, when available.
+                    const meta = result.data.fieldMetadata;
+                    const alias = resolveFieldAlias(meta, key);
+                    const domainName = resolveDomainName(meta, key, value);
+                    return <InfoRow key={key} label={key} labelOverride={alias} value={domainName ?? (value != null ? String(value) : "")} styleMode="grid" />;
+                  })}
+              </div>
             </div>
           </div>
         );

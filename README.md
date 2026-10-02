@@ -419,6 +419,38 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.4 (2026-10-02)
+
+- **511 Live Feeds Road Closures** — Added public road closures (Blocks, Detours, and Closures) into the 511 Live Feeds theme with layer toggles, distinct line indicators, and feature popup details.
+- **Custom Coordinate Projections** — Added support for custom EPSG projections (including EPSG:32190 / MTM Zone 9) for coordinate transforms and layer reprojection.
+- **Grid Layout for Results & Identify** — Modernized the Results popup and attribute info rows to a structured grid layout with preserved field alias casing.
+- **General Maintenance** — Updated Waze symbology and applied general stability fixes.
+
+### v2.0.3 (2026-09-28)
+
+- **Sidebar Navigation & Deep Linking** — Added sidebar shortcut URL parameters to navigate directly into specific tools and themes.
+- **Waze Event Information** — Expanded Waze traffic feed popup content with richer event details and formatted descriptions.
+- **ArcGIS Token Print Support** — Enhanced Print Tool request handling with ArcGIS token management to support printing secured map and basemap services.
+- **Search Usability Improvements** — Added automatic whitespace trimming to search inputs and keywords to improve match accuracy.
+- **General Maintenance** — Proactive token refresh buffer tuning, session stability enhancements, and bug fixes.
+
+### v2.0.2 (2026-09-18)
+
+- **ArcGIS Token Management** — Enhanced ArcGIS token handling with proactive token renewal and immediate refresh on expired credentials.
+- **Municipality Search Matching** — Added string normalization for municipality matching to improve accuracy in spatial queries and search filters.
+- **Header Layout Refinement** — Cleaned up header branding and removed legacy overlay text from app configuration.
+- **General Maintenance** — Layer loading gating and stability bug fixes across map services.
+
+### v2.0.1 (2026-09-17)
+
+- **Attribute Table Column Resizing** — Added interactive column resizing in the Attribute Table grid along with column type formatting (dates, URLs) and automatic system field filtering.
+- **Direct Property Links** — Added a direct shareable link button in the property popup for quick sharing of specific parcels.
+- **ArcGIS Field Metadata & Aliases** — Enhanced Identify and feature popups with support for ArcGIS field metadata, aliases, and formatted values.
+- **Basemap Switcher UI Upgrade** — Refreshed Basemap Switcher with improved button styling, options panel positioning, and updated iconography.
+- **Property Report Multi-Record Handling** — Enhanced Property Report handling to support multiple records per Assessment Roll Number (ARN) with fallback municipality lookup.
+- **Docker Containerization** — Added production Docker support with a multi-stage Dockerfile and Docker Compose configurations.
+- **General Maintenance** — Migrated token persistence to localStorage for improved session handling, updated package dependencies, and improved dark mode loading placeholders in layer legends.
+
 ### v2.0.0 (2026-07-07)
 
 Major upgrade from the legacy viewer to the Next.js platform.

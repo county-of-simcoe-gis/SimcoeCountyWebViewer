@@ -61,6 +61,20 @@ describe("InfoRow", () => {
     expect(label.className).toContain("bg-base-200");
   });
 
+  it("renders in grid style mode", () => {
+    const { container } = render(<InfoRow label="Test Label" value="Test Value" styleMode="grid" />);
+
+    // Grid mode: wrapper should be display: contents so the label/value become grid items
+    const infoRow = container.querySelector("[data-testid='info-row']");
+    expect(infoRow).toHaveClass("contents");
+
+    const label = screen.getByText("Test Label:");
+    expect(label.className).not.toContain("min-w-[110px]");
+    expect(label.className).toContain("font-semibold");
+
+    expect(screen.getByText("Test Value")).toBeInTheDocument();
+  });
+
   it("hides value when imageData is true", () => {
     const { container } = render(<InfoRow label="Test Label" value="Test Value" imageData={true} />);
 
