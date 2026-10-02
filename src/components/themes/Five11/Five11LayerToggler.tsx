@@ -50,6 +50,9 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layer.symbologyUrl]);
 
+  // Line color for Waze line layers so jams and irregularities are visually distinct.
+  const lineColor = layer.layerName === "511-waze-irregularity-lines" ? "#eeff00" : "#ff8800";
+
   // Create style based on layer type. If a symbologyUrl is provided, fetch the
   // renderer from the ArcGIS service and use it directly.
   const getLayerStyle = useCallback(async () => {
@@ -64,7 +67,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
       // Line style for jam and irregularity layers
       return new Style({
         stroke: new Stroke({
-          color: "#ff0000",
+          color: lineColor,
           width: 4,
         }),
       });
@@ -77,7 +80,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
         }),
       });
     }
-  }, [layer.symbologyUrl, layer.imageName, layer.geometryType, fetchRenderer]);
+  }, [layer.symbologyUrl, layer.imageName, layer.geometryType, fetchRenderer, lineColor]);
 
   // Load legend swatch from service renderer when available
   useEffect(() => {
@@ -263,7 +266,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           {legendIconUrl ? (
             <img src={legendIconUrl} alt={layer.displayName} width={24} height={24} className="object-contain" />
           ) : isLineLayer ? (
-            <div className="w-6 h-1.5 bg-red-500 rounded"></div>
+            <div className="w-6 h-1.5 rounded" style={{ backgroundColor: lineColor }}></div>
           ) : (
             <Image src={`/images/five11/${layer.imageName}`} alt={layer.displayName} width={32} height={32} className="object-contain" />
           )}
