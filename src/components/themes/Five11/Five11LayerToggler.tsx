@@ -266,7 +266,7 @@ export default function Five11LayerToggler({ layer, visible, onVisibilityChange,
           {legendIconUrl ? (
             <img src={legendIconUrl} alt={layer.displayName} width={24} height={24} className="object-contain" />
           ) : isLineLayer ? (
-            <div className="w-6 h-1.5 rounded" style={{ backgroundColor: lineColor }}></div>
+            <div className="five11-line-indicator w-6 h-1.5 rounded" style={{ backgroundColor: lineColor }}></div>
           ) : (
             <Image src={`/images/five11/${layer.imageName}`} alt={layer.displayName} width={32} height={32} className="object-contain" />
           )}

@@ -178,7 +178,7 @@ describe("Five11LayerToggler", () => {
     const { container } = render(<Five11LayerToggler layer={lineLayer} visible={true} onVisibilityChange={mockOnVisibilityChange} onLayerIdChange={mockOnLayerIdChange} />);
 
     // Line layers render a colored div instead of an Image
-    const lineIndicator = container.querySelector(".bg-red-500");
+    const lineIndicator = container.querySelector(".five11-line-indicator");
     expect(lineIndicator).toBeInTheDocument();
   });
 
