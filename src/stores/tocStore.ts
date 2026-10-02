@@ -260,6 +260,10 @@ interface TOCState {
   // enforcing LIST dedup winners (and forcing suppressed duplicates off).
   syncActiveViewVisibilityToMap: () => void;
 
+  // Push the currently selected group's visibility onto the map so toggles
+  // within a group update the map immediately without a group switch.
+  syncSelectedGroupToMap: () => void;
+
   // Global opacity delegation to LayerManager
   setGlobalOpacity: (opacity: number) => void;
   getGlobalOpacity: () => number;
@@ -829,6 +833,37 @@ export const useTOCStore = create<TOCState>()(
       });
     },
 
+    syncSelectedGroupToMap: () => {
+      // Push the currently selected group's committed visibility onto the map
+      // so individual toggles are reflected immediately without a group switch.
+      const state = get();
+      const selectedGroup = state.selectedGroup;
+
+      if (!selectedGroup || state.tocType !== "LIST" || selectedGroup.value === "all_layers") {
+        // No selected group, FOLDER view, or "All Layers" selected: use the
+        // existing active-view sync (winner-wins for LIST All Layers, all
+        // layers for FOLDER).
+        get().syncActiveViewVisibilityToMap();
+        return;
+      }
+
+      // Specific LIST group: hide layers that are not members of the selected
+      // group; show/hide group members per their stored visible state.
+      const groupLayerIds = new Set(selectedGroup.layers.map((l) => l.id));
+      const updated = new Set<string>();
+      state.allLayers.forEach((layer) => {
+        if (layer.managedLayerId && !updated.has(layer.managedLayerId)) {
+          updated.add(layer.managedLayerId);
+          const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
+          LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
+        } else if (layer.layer && !updated.has(layer.id)) {
+          updated.add(layer.id);
+          const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
+          (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
+        }
+      });
+    },
+
     setIsLoading: (loading) => {
       set((state) => {
         state.isLoading = loading;
@@ -943,42 +978,8 @@ export const useTOCStore = create<TOCState>()(
         }
       });
 
-      // Update OpenLayers layer visibility AFTER state commit
-      const currentState = get();
-      if (isAllLayersGroup) {
-        // All Layers group: apply each layer's visibility to its own OL layer.
-        // In LIST view, the visible "all_layers" group shows only deduped winners;
-        // force suppressed duplicates (present in allLayers but not in the group) off.
-        const winnerIds = new Set(group.layers.map((l) => l.id));
-        const updated = new Set<string>();
-        currentState.allLayers.forEach((layer) => {
-          if (layer.managedLayerId && !updated.has(layer.managedLayerId)) {
-            updated.add(layer.managedLayerId);
-            const shouldBeVisible = winnerIds.has(layer.id) ? layer.visible : false;
-            LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
-          } else if (layer.layer && !updated.has(layer.id)) {
-            updated.add(layer.id);
-            const shouldBeVisible = winnerIds.has(layer.id) ? layer.visible : false;
-            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
-          }
-        });
-      } else {
-        // Specific group: hide all layers not in this group; show/hide group layers per state.
-        // Use layer id (not name) for membership to handle duplicate names correctly.
-        const groupLayerIds = new Set(group.layers.map((l) => l.id));
-        const updated = new Set<string>();
-        currentState.allLayers.forEach((layer) => {
-          if (layer.managedLayerId && !updated.has(layer.managedLayerId)) {
-            updated.add(layer.managedLayerId);
-            const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
-            LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
-          } else if (layer.layer && !updated.has(layer.id)) {
-            updated.add(layer.id);
-            const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
-            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
-          }
-        });
-      }
+      // Sync the newly selected group's visibility onto the map.
+      get().syncSelectedGroupToMap();
 
       // Update map z-indices to match the new group's layer ordering
       get().updateLayerManagerZIndices();
@@ -1254,7 +1255,9 @@ export const useTOCStore = create<TOCState>()(
         return;
       }
 
-      // Update TOC store state in all views
+      // Update TOC store state for the target layer only (group-specific
+      // visibility). Each LIST group maintains its own visibility state; we do
+      // NOT synchronize the same layer across groups.
       set((state) => {
         const updateLayerInAllGroups = (groups: TOCLayerGroup[]) => {
           groups.forEach((group) => {
@@ -1283,34 +1286,18 @@ export const useTOCStore = create<TOCState>()(
         }
       });
 
-      // Handle OpenLayers layer visibility
-      if (targetLayer.managedLayerId) {
-        LayerManager.setLayerVisibility(targetLayer.managedLayerId, visible);
-      } else if (targetLayer.layer) {
-        (targetLayer.layer as OpenLayersLayer).setVisible(visible);
-      }
+      // Push the selected group's visibility onto the map immediately so the
+      // toggle is reflected without requiring a group switch.
+      get().syncSelectedGroupToMap();
     },
 
     // Batch update visibility for multiple layers in a single set() call
     updateLayerVisibilitiesBatch: (updates) => {
       if (updates.length === 0) return;
 
-      const state = get();
       const updateMap = new Map(updates.map((u) => [u.layerId, u.visible]));
-      const olUpdates: { managedLayerId?: string; layer?: OpenLayersLayer; visible: boolean }[] = [];
 
-      // Capture OL layer info before set()
-      for (const { layerId, visible } of updates) {
-        const targetLayer = state.allLayers.find((l) => l.id === layerId);
-        if (targetLayer && targetLayer.visible !== visible) {
-          if (targetLayer.managedLayerId) {
-            olUpdates.push({ managedLayerId: targetLayer.managedLayerId, visible });
-          } else if (targetLayer.layer) {
-            olUpdates.push({ layer: targetLayer.layer as OpenLayersLayer, visible });
-          }
-        }
-      }
-
+      // Update TOC store state by unique id only (group-specific visibility).
       set((state) => {
         const updateInGroups = (groups: TOCLayerGroup[]) => {
           groups.forEach((group) => {
@@ -1343,18 +1330,8 @@ export const useTOCStore = create<TOCState>()(
         }
       });
 
-      // Apply OL visibility changes after commit
-      const seen = new Set<string>();
-      olUpdates.forEach(({ managedLayerId, layer, visible }) => {
-        if (managedLayerId) {
-          if (!seen.has(managedLayerId)) {
-            seen.add(managedLayerId);
-            LayerManager.setLayerVisibility(managedLayerId, visible);
-          }
-        } else if (layer) {
-          layer.setVisible(visible);
-        }
-      });
+      // Push the selected group's visibility onto the map immediately.
+      get().syncSelectedGroupToMap();
     },
 
     // Set visibility for ALL layers at once (single Immer set call)
