@@ -18,6 +18,7 @@ const DEFAULT_CONTROL_VISIBILITY = {
   attribution: true,
   attributeTable: true,
   shareMap: true,
+  boxSelectResults: true,
 };
 
 const localStorageState: Record<string, string> = {};

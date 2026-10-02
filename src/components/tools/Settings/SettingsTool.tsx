@@ -41,6 +41,7 @@ const controlGroups = {
   other: [
     { key: "gitHubButton" as keyof ControlVisibility, label: "GitHub Button", tooltip: "Shows a link to the project's GitHub repository" },
     { key: "attributeTable" as keyof ControlVisibility, label: "Attribute Table", tooltip: "Shows an attribute table for querying layer data" },
+    { key: "boxSelectResults" as keyof ControlVisibility, label: "Box Select Results", tooltip: "Shows a map control for selecting an area and viewing its results" },
     { key: "shareMap" as keyof ControlVisibility, label: "Share Map", tooltip: "Shows a button to copy a shareable URL of the current map view" },
   ],
 };

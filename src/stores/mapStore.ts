@@ -19,6 +19,7 @@ export interface ControlVisibility {
   attribution: boolean;
   attributeTable: boolean;
   shareMap: boolean;
+  boxSelectResults: boolean;
 }
 
 const STORAGE_KEY_MAP_CONTROLS = "Map Control Settings";
@@ -114,6 +115,7 @@ const getDefaultControlVisibility = (config?: { controls?: Partial<ControlVisibi
     attribution: config?.controls?.attribution ?? true,
     attributeTable: config?.controls?.attributeTable ?? true,
     shareMap: config?.controls?.shareMap ?? true,
+    boxSelectResults: config?.controls?.boxSelectResults ?? true,
   };
 };
 

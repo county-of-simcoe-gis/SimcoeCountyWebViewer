@@ -41,6 +41,7 @@ vi.mock("@/stores/mapStore", () => ({
         extentHistory: false,
         attribution: true,
         attributeTable: true,
+        boxSelectResults: true,
       },
     })),
     {
@@ -221,6 +222,7 @@ describe("LayerOptionsMenu", () => {
         extentHistory: false,
         attribution: true,
         attributeTable: true,
+        boxSelectResults: true,
       },
     };
     vi.mocked(useMapStore).mockImplementation(((selector?: any) => (typeof selector === "function" ? selector(mockMapStore) : mockMapStore)) as any);
