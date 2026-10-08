@@ -383,13 +383,10 @@ export const SearchZoom: React.FC = () => {
         if (searchIconLayerRef.current) {
           searchIconLayerRef.current.getSource()?.addFeature(feature);
 
-          // Zoom to the point
-          const geometry = feature.getGeometry();
-          if (geometry) {
-            const extent = geometry.getExtent();
-            map.getView().fit(extent, { duration: 1000 });
-            map.getView().setZoom(18);
-          }
+          // setZoom cancels running animations and keeps the old center, so animate instead
+          const view = map.getView();
+          view.cancelAnimations();
+          view.animate({ center: coords, zoom: 18, duration: 1000 });
         }
 
         // Store the feature so the map click handler can show the popup
