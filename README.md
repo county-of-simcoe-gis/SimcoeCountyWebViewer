@@ -25,6 +25,7 @@ An interactive web mapping application for exploring geographic data, property i
 - [Drawing & Annotation](#drawing--annotation)
 - [Signing In](#signing-in)
 - [URL Sharing & Deep Linking](#url-sharing--deep-linking)
+- [Layer Setup](#layer-setup)
 - [Developer Guide](#developer-guide)
 - [Revision History](#revision-history)
 
@@ -125,6 +126,14 @@ The Layers tab, also called the Table of Contents, controls the map layers that 
 - Use the layer menu to access **Layer Info**, **Zoom to Layer**, **Download**, **Attribute Table**, **Opacity**, and **Remove Layer** when available.
 - Adjust per-layer opacity directly in the layer list.
 - Open the settings menu to switch between **List** and **Folder** view, sort alphabetically, adjust global opacity, save or reset layer state, and open the full legend.
+
+#### Timed Refresh
+
+Layers that define a refresh interval show a play/pause button. Folder headers in Folder view and the group selector in List view also show one, which controls every refreshable layer in that group.
+
+- Turning a layer on starts its refresh, and turning it off stops it. Play state is not saved when the page reloads.
+- WMS layers that publish a list of time values step through them and wrap back to the first. Other layers re-request their current data on each interval.
+- Publishers set the refresh interval with `REFRESH_INTERVAL` (GeoServer) or `REFRESH` (ArcGIS). See [Layer Setup](#layer-setup).
 
 ### Tools
 
@@ -335,6 +344,43 @@ You can also build links manually with query parameters.
 | `SLIDER_OPEN`                  | `?BASEMAP=imagery&SLIDER_OPEN=true`                      | Open the imagery year slider when the map loads.                                |
 
 The property popup's **Share** button can also generate a direct property link.
+
+---
+
+## Layer Setup
+
+Publishers control how a layer appears in the app with keywords. GeoServer keywords are added to the layer's keyword list as `KEY=VALUE` entries. ArcGIS keywords are added to the layer description as `#KEY=VALUE` entries.
+
+### GeoServer Keywords
+
+Keyword names are case-sensitive. Set each keyword on the level shown in the **Set on** column.
+
+| Keyword               | Set on     | Value                                        | Effect                                                                                                            |
+| --------------------- | ---------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `DEFAULT_GROUP`       | Root layer | Group name                                   | Opens this group by default. Matching ignores case.                                                               |
+| `VISIBLE_LAYERS`      | Group      | Layer names separated by commas              | Turns these layers on when the map loads. Use `VISIBLE_LAYERS=ALL` to turn on every layer in the group.           |
+| `GROUP_PREFIX`        | Group      | Text                                         | Adds the text and a dash before each layer name in the group.                                                     |
+| `LIVE_LAYER`          | Layer      | `true` or `false` (a bare keyword is `true`) | Shows the info icon and makes the layer interactive for identify.                                                 |
+| `DISPLAY_NAME`        | Layer      | Text                                         | Sets the layer name used in Identify results and shared map layer lists.                                          |
+| `OPACITY`             | Layer      | Number from 0 to 1                           | Sets the starting opacity. A value of 0 is ignored and the default of 1 is used.                                  |
+| `DOWNLOAD`            | Layer      | `true` or `false`                            | Adds a download option to the layer.                                                                              |
+| `WARNING`             | Layer      | Text                                         | Shows a disclaimer with this message before the layer can be turned on.                                           |
+| `DISCLAIMER_TITLE`    | Layer      | Text                                         | Sets the title of the disclaimer dialog. Acceptance lasts for the session.                                        |
+| `DISCLAIMER_URL`      | Layer      | URL                                          | Adds a link to more information in the disclaimer dialog.                                                         |
+| `STATIC_IMAGE_LEGEND` | Layer      | `true` or `false`                            | Resizes the legend image to the size declared by the layer's style.                                               |
+| `REFRESH_INTERVAL`    | Layer      | Seconds                                      | Sets the timed refresh interval. Values under 5 are raised to 5. A zero or missing value turns off timed refresh. |
+
+### ArcGIS Keywords
+
+Keyword names are not case-sensitive. Values cannot contain `#` or `=`.
+
+| Keyword       | Value                           | Effect                                                                                                                                    |
+| ------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `CATEGORY`    | Group names separated by commas | Places the layer in each named Table of Contents group. Underscores display as spaces. Layers without a category go to **Uncategorized**. |
+| `VISIBLE`     | `TRUE` or `FALSE`               | Turns the layer on or off when the map loads. Overrides the service default.                                                              |
+| `LIVELAYER`   | `TRUE` or `FALSE`               | Shows the info icon and makes the layer interactive for identify.                                                                         |
+| `DESCRIPTION` | Text                            | Sets the abstract shown in Layer Info.                                                                                                    |
+| `REFRESH`     | Seconds                         | Sets the timed refresh interval, with the same rules as `REFRESH_INTERVAL`.                                                               |
 
 ---
 
