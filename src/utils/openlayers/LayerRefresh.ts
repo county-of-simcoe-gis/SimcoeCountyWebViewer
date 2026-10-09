@@ -53,7 +53,6 @@ function tick(layerId: string): void {
 export function startLayerRefresh(layerId: string): void {
   const layer = findTOCLayer(layerId);
   if (!layer || !layer.visible || timers.has(layerId) || !canRefreshLayer(layer)) return;
-  if (!getOLLayer(layer)?.getVisible()) return;
 
   timers.set(
     layerId,

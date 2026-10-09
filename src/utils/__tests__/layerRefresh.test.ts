@@ -211,14 +211,17 @@ describe("visibility transitions", () => {
     expect(useLayerRefreshStore.getState().playing["layer-1"]).toBeFalsy();
   });
 
-  it("does not start when the OpenLayers layer is suppressed by view dedup", () => {
-    const { state } = addOLLayer("managed-1");
+  it("starts before the map layer visibility is applied and refreshes once it is visible", () => {
+    const { updateParams, state } = addOLLayer("managed-1");
     state.visible = false;
     const layer = makeTOCLayer({});
     setLayers(layer);
 
     handleTOCVisibilityChange({ allLayers: [layer] }, { allLayers: [makeTOCLayer({ visible: false })] });
+    expect(useLayerRefreshStore.getState().playing["layer-1"]).toBe(true);
 
-    expect(useLayerRefreshStore.getState().playing["layer-1"]).toBeFalsy();
+    state.visible = true;
+    vi.advanceTimersByTime(10_000);
+    expect(updateParams).toHaveBeenCalledTimes(1);
   });
 });
