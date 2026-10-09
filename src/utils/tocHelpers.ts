@@ -601,6 +601,7 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
             customRestUrl: rootUrl,
             layers: [],
             secured,
+            showAllFields: source.showAllFields ?? false,
             primary: source.primary || false,
             rawLayers: [],
           };
@@ -882,6 +883,8 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
         secured: source.secure,
         useRedFolder: source.useRedFolder || false,
         sourceOpen: source.open !== undefined ? source.open : undefined,
+        showAllFields: source.showAllFields ?? false,
+        layers: group.layers.map((layer) => ({ ...layer, showAllFields: source.showAllFields ?? false })),
       }));
 
       // Find default group from primary source
@@ -1150,6 +1153,7 @@ export interface BuildESRILayerOptions {
 export async function buildESRILayer(options: BuildESRILayerOptions, callback: (layer: TOCLayer) => void): Promise<void> {
   const { group, layer, layerIndex } = options;
   const secured = group.secured || false;
+  const showAllFields = group.showAllFields ?? false;
 
   if (!layer) {
     console.error("Layer is undefined in buildESRILayer");
@@ -1290,6 +1294,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         hasAttachments: hasAttachments,
         isArcGIS: true,
         secured: secured,
+        showAllFields,
         group: group.label,
         extendedProperties: {
           keywords: {
@@ -1366,6 +1371,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         groupName: group.label,
         userLayer: false,
         secured: secured,
+        showAllFields,
         canDownload: canDownload,
         displayName: displayName,
         tocDisplayName: tocDisplayName,

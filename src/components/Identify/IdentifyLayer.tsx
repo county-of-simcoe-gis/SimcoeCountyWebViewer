@@ -11,10 +11,10 @@ import type Geometry from "ol/geom/Geometry";
 import { filterFeatureKeys } from "@/utils/identifyHelpers";
 
 /** Export layer features to a CSV file */
-function exportLayerToCSV(title: string, features: Feature<Geometry>[]): void {
+function exportLayerToCSV(title: string, features: Feature<Geometry>[], showAllFields: boolean): void {
   if (features.length === 0) return;
 
-  const fields = filterFeatureKeys(features[0]);
+  const fields = filterFeatureKeys(features[0], showAllFields);
   if (fields.length === 0) return;
 
   const headers = fields.map((f) => `"${f}"`).join(",");
@@ -48,6 +48,7 @@ const IdentifyLayerComponent: React.FC<IdentifyLayerProps> = ({ layer, expanded 
     exportLayerToCSV(
       layer.type,
       layer.features.map((f) => f.feature),
+      layer.showAllFields ?? false,
     );
   }, [layer]);
 
@@ -71,7 +72,14 @@ const IdentifyLayerComponent: React.FC<IdentifyLayerProps> = ({ layer, expanded 
           </div>
         )}
         {layer.features.map((featureItem, idx) => (
-          <IdentifyFeatureItem key={`feature-${idx}`} featureItem={featureItem} layerName={layer.name} minScale={layer.minScale} fieldMetadata={layer.fieldMetadata} />
+          <IdentifyFeatureItem
+            key={`feature-${idx}`}
+            featureItem={featureItem}
+            layerName={layer.name}
+            minScale={layer.minScale}
+            fieldMetadata={layer.fieldMetadata}
+            showAllFields={layer.showAllFields}
+          />
         ))}
       </div>
     </div>

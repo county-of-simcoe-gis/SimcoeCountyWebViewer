@@ -43,18 +43,18 @@ export function isExcludedKey(key: string, alias?: string | null): boolean {
 }
 
 /** Filter an OL Feature's property keys, removing internal/system fields and object values */
-export function filterFeatureKeys(feature: Feature<Geometry>): string[] {
+export function filterFeatureKeys(feature: Feature<Geometry>, showAllFields = false): string[] {
   const props = feature.getProperties();
   return Object.keys(props).filter((key) => {
     const val = props[key];
     if (val !== null && typeof val === "object") return false;
-    return !isExcludedKey(key);
+    return showAllFields || !isExcludedKey(key);
   });
 }
 
 /** Filter a plain properties object's keys, removing internal/system fields */
-export function filterPropertyKeys(properties: Record<string, unknown>): string[] {
-  return Object.keys(properties).filter((key) => !isExcludedKey(key));
+export function filterPropertyKeys(properties: Record<string, unknown>, showAllFields = false): string[] {
+  return Object.keys(properties).filter((key) => showAllFields || !isExcludedKey(key));
 }
 
 /** Field labels that should never be reformatted as dates (false-positive guards) */

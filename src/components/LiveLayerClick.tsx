@@ -107,6 +107,8 @@ export interface LiveLayerResult {
   displayName?: string;
   /** ArcGIS field aliases + coded-value domains for the layer, when available. */
   fieldMetadata?: ArcgisLayerFieldMetadata;
+  /** Source flag: skip isExcludedKey filtering for this layer's fields. */
+  showAllFields?: boolean;
   /** True when this result comes from a theme layer (uses ThemePopupContent) */
   isThemeLayer?: boolean;
   /** Optional theme-specific popup metadata */
@@ -412,6 +414,7 @@ export default function LiveLayerClick() {
               layerZIndex: candidate.layerZIndex,
               layerId: candidate.layerId,
               fieldMetadata: fieldMetadata ?? undefined,
+              showAllFields: candidate.layer.get("showAllFields") === true,
               displayName: candidate.displayFieldName ? (cleanAttributes[String(candidate.displayFieldName)] as string | undefined) : undefined,
               isThemeLayer: candidate.isThemeLayer,
               moreInfoUrlFieldName: candidate.moreInfoUrlFieldName,
@@ -459,6 +462,7 @@ export default function LiveLayerClick() {
               layerId: result.layerId,
               displayName: result.displayName,
               fieldMetadata: result.fieldMetadata,
+              showAllFields: result.showAllFields,
             });
 
             // Attach themed popup rendering for theme layers
