@@ -101,6 +101,7 @@ const mockMapStore: Record<string, any> = {
     grid: false,
     gitHubButton: true,
     scaleSelector: false,
+    boxSelectResults: true,
   },
   setControlVisibility: vi.fn(),
   resetControlVisibilityToDefaults: vi.fn(),
@@ -118,16 +119,21 @@ vi.mock("@/stores/mapStore", () => ({
   ),
 }));
 
-vi.mock("@/stores/eventStore", () => ({
-  useEventStore: vi.fn((selector?: any) => {
-    const state = {
-      emit: vi.fn(),
-      addListener: vi.fn(() => "listener-id"),
-      removeListener: vi.fn(),
-    };
-    return typeof selector === "function" ? selector(state) : state;
-  }),
-}));
+vi.mock("@/stores/eventStore", () => {
+  const state = {
+    emit: vi.fn(),
+    addListener: vi.fn(() => "listener-id"),
+    removeListener: vi.fn(),
+  };
+  return {
+    useEventStore: Object.assign(
+      vi.fn((selector?: any) => (typeof selector === "function" ? selector(state) : state)),
+      {
+        getState: vi.fn(() => state),
+      },
+    ),
+  };
+});
 
 const mockLayerManagerStoreState = {
   addLayer: vi.fn(() => "test-layer-id"),

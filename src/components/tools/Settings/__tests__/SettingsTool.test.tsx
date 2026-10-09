@@ -65,6 +65,7 @@ describe("SettingsTool", () => {
         attribution: true,
         attributeTable: true,
         shareMap: true,
+        boxSelectResults: true,
       },
     });
   });
@@ -200,6 +201,7 @@ describe("SettingsTool", () => {
       expect(screen.getByText("Other")).toBeInTheDocument();
       expect(screen.getByText("GitHub Button")).toBeInTheDocument();
       expect(screen.getByText("Scale Selector")).toBeInTheDocument();
+      expect(screen.getByText("Box Select Results")).toBeInTheDocument();
     });
 
     it("displays correct initial checkbox states for other controls", () => {
@@ -207,9 +209,22 @@ describe("SettingsTool", () => {
 
       const githubCheckbox = screen.getByRole("checkbox", { name: /GitHub Button/i });
       const scaleSelectorCheckbox = screen.getByRole("checkbox", { name: /Scale Selector/i });
+      const boxSelectCheckbox = screen.getByRole("checkbox", { name: /Box Select Results/i });
 
       expect(githubCheckbox).not.toBeChecked();
       expect(scaleSelectorCheckbox).toBeChecked();
+      expect(boxSelectCheckbox).toBeChecked();
+    });
+
+    it("persists the Box Select Results visibility toggle", async () => {
+      const setControlVisibilitySpy = vi.spyOn(useMapStore.getState(), "setControlVisibility");
+      render(<SettingsTool onClose={mockOnClose} />);
+
+      await user.click(screen.getByRole("checkbox", { name: /Box Select Results/i }));
+
+      await waitFor(() => {
+        expect(setControlVisibilitySpy).toHaveBeenCalledWith("boxSelectResults", false);
+      });
     });
   });
 

@@ -80,7 +80,7 @@ export default function PropertyReportClick() {
   const hidePopup = usePopupStore((s) => s.hide);
   const urlParameters = useAppStore((state) => state.urlParameters);
   const config = useAppStore((state) => state.config);
-  const { registerHandler, unregisterHandler } = useInteractionManager();
+  const { registerHandler, unregisterHandler, registerBoxSelectHandler, unregisterBoxSelectHandler } = useInteractionManager();
 
   const parcelLayerRef = useRef<VectorLayer<VectorSource> | null>(null);
   const parcelLayerIdRef = useRef<string | null>(null);
@@ -376,6 +376,84 @@ export default function PropertyReportClick() {
     [config, toLatLongFromWebMercator, fetchPropertyInfo],
   );
 
+  const fetchParcelResultsByExtent = useCallback(
+    async (extent: [number, number, number, number]) => {
+      try {
+        const parcelLayerUrl = config?.parcelLayer?.url;
+        if (!parcelLayerUrl || !map) return [];
+
+        const view = map.getView();
+        const resolution = view.getResolution() ?? 1;
+        const units = view.getProjection().getUnits();
+        const scale = resolution * (units === "degrees" ? 111194.87428468118 : 1) * 39.37 * (25.4 / 0.28);
+        if (scale > 20000) return [];
+
+        const parcelURL = `${parcelLayerUrl}&cql_filter=BBOX(geom,${extent.join(",")})`;
+        const response = await getAxiosClient(parcelURL).get<WFSResponse>(parcelURL);
+        if (!response.data.features?.length) return [];
+
+        const features = new GeoJSON().readFeatures(response.data);
+        features.forEach((feature) => feature.setStyle(parcelLayerStyle));
+        parcelLayerRef.current?.setSource(new VectorSource({ features }));
+        const clearParcelLayer = () => parcelLayerRef.current?.getSource()?.clear();
+
+        const resultGroups = await Promise.all(
+          response.data.features.map(async (parcel, index) => {
+            const parcelResults: ClickResult[] = [];
+            const feature = features[index];
+            const arn = String(parcel.properties.arn ?? "");
+            const geometryExtent = feature?.getGeometry()?.getExtent();
+            if (!feature || !arn || !geometryExtent) return parcelResults;
+
+            feature.set("arn", arn);
+            const pointerPoint = [(geometryExtent[0] + geometryExtent[2]) / 2, (geometryExtent[1] + geometryExtent[3]) / 2];
+            const latLongCoords = toLatLongFromWebMercator(pointerPoint);
+
+            if (arn.length === 20) {
+              try {
+                const apiUrl = `/api/public/reports/condo-children/${arn}`;
+                const client = getAxiosClientUtil(apiUrl);
+                const requestPath = apiUrl.replace(/^\/api/, "");
+                const condoResponse = await client.get(requestPath);
+                if (Array.isArray(condoResponse.data)) {
+                  condoResponse.data.forEach((unit: CondoUnit) => {
+                    const condoResult: ClickResult = createCondoResult(unit.ARN, unit.UnitNumber, unit.Address, feature);
+                    condoResult.loadDetails = async () => {
+                      if (!condoResult.data.propInfo) {
+                        const records = await fetchPropertyInfo(unit.ARN, feature, pointerPoint, latLongCoords);
+                        condoResult.data.propInfo = records[0];
+                        condoResult.data.feature = feature;
+                      }
+                    };
+                    condoResult.clearParcelLayer = clearParcelLayer;
+                    parcelResults.push(condoResult);
+                  });
+                }
+              } catch (error) {
+                console.error("Error fetching condo children:", error);
+              }
+              return parcelResults;
+            }
+
+            const records = await fetchPropertyInfo(arn, feature, pointerPoint, latLongCoords);
+            records.forEach((propInfo, recordIndex) => {
+              const propertyResult = createPropertyResult(arn, propInfo.Address || "", feature, propInfo, records.length > 1 ? recordIndex : undefined) as ClickResult;
+              propertyResult.clearParcelLayer = clearParcelLayer;
+              parcelResults.push(propertyResult);
+            });
+            return parcelResults;
+          }),
+        );
+
+        return resultGroups.flat();
+      } catch (error) {
+        console.error("Error fetching parcels in selection box:", error);
+        return [];
+      }
+    },
+    [config, map, toLatLongFromWebMercator, fetchPropertyInfo],
+  );
+
   // Register handler for parcel clicks using new system
   useEffect(() => {
     if (!map) return;
@@ -401,6 +479,12 @@ export default function PropertyReportClick() {
       unregisterHandler("property-report-click");
     };
   }, [map, checkGlobalDisable, fetchParcelResults, registerHandler, unregisterHandler]);
+
+  useEffect(() => {
+    if (!map) return;
+    registerBoxSelectHandler("property-report-click", fetchParcelResultsByExtent);
+    return () => unregisterBoxSelectHandler("property-report-click");
+  }, [map, fetchParcelResultsByExtent, registerBoxSelectHandler, unregisterBoxSelectHandler]);
 
   // Handle ARN URL parameter
   useEffect(() => {

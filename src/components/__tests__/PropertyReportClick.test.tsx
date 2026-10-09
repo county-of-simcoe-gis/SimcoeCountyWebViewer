@@ -22,12 +22,16 @@ vi.mock("@/config.json", () => ({
 // Mock interaction manager functions
 const mockRegisterHandler = vi.fn();
 const mockUnregisterHandler = vi.fn();
+const mockRegisterBoxSelectHandler = vi.fn();
+const mockUnregisterBoxSelectHandler = vi.fn();
 
 // Mock useInteractionManager hook
 vi.mock("@/components/map/MapContainer", () => ({
   useInteractionManager: vi.fn(() => ({
     registerHandler: mockRegisterHandler,
     unregisterHandler: mockUnregisterHandler,
+    registerBoxSelectHandler: mockRegisterBoxSelectHandler,
+    unregisterBoxSelectHandler: mockUnregisterBoxSelectHandler,
     registerInteraction: vi.fn(),
     unregisterInteraction: vi.fn(),
   })),

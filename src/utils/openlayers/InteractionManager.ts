@@ -269,7 +269,7 @@ export class InteractionManager extends Interaction {
    *   4. Dev-mode warn when results lack `layerId` so we can incrementally
    *      tighten coverage of the new contract.
    */
-  private static aggregateAndSuppress(entries: Array<{ handler: InteractionHandler; result: InteractionResult[] | void | null }>): Result[] {
+  static aggregateAndSuppress(entries: Array<{ handler: InteractionHandler; result: InteractionResult[] | void | null }>): Result[] {
     const suppressLayerIds = LayerManager.getSuppressLayerIds();
     let propertyReportSuppressed = false;
     let mymapsExclusive = false;

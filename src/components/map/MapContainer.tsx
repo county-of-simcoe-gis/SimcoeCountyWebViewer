@@ -6,6 +6,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { useInteractionManagerStore, type InteractionHandler as StoreInteractionHandler } from "@/stores/interactionManagerStore";
+import { useEventStore } from "@/stores/eventStore";
 import { useSession } from "next-auth/react";
 import type { Interaction as OLInteraction } from "ol/interaction";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -51,10 +52,10 @@ import { activateTab } from "@/utils/helpersUI";
 
 
 // Extended Result type with optional methods that may be added at runtime
-interface ResultWithMethods extends Result {
+type ResultWithMethods = Result & {
   clearParcelLayer?: () => void;
   loadDetails?: () => Promise<void>;
-}
+};
 
 // Import static config as fallback
 import staticConfig from "@/config.json";
@@ -88,6 +89,7 @@ const dynamicControlImports = {
   ExtentHistoryButtons: () => import("@/components/map/controls/ExtentHistory").then((m) => ({ default: m.ExtentHistoryButtons })),
   ZoomToExtentButton: () => import("@/components/map/controls/ZoomToExtent").then((m) => ({ default: m.ZoomToExtentButton })),
   GridButton: () => import("@/components/map/controls/Grid"),
+  BoxSelectResults: () => import("@/components/map/controls/BoxSelectResults"),
   GitHubButtonDisplay: () => import("@/components/map/controls/GithubButton").then((m) => ({ default: m.GitHubButtonDisplay })),
   ScaleDisplay: () => import("@/components/map/controls/Scale").then((m) => ({ default: m.ScaleDisplay })),
   ScaleSelector: () => import("@/components/map/controls/ScaleSelector").then((m) => ({ default: m.ScaleSelector })),
@@ -104,6 +106,7 @@ const LazyCurrentLocationButton = lazy(dynamicControlImports.CurrentLocationButt
 const LazyExtentHistoryButtons = lazy(dynamicControlImports.ExtentHistoryButtons);
 const LazyZoomToExtentButton = lazy(dynamicControlImports.ZoomToExtentButton);
 const LazyGridButton = lazy(dynamicControlImports.GridButton);
+const LazyBoxSelectResults = lazy(dynamicControlImports.BoxSelectResults);
 const LazyGitHubButtonDisplay = lazy(dynamicControlImports.GitHubButtonDisplay);
 const LazyScaleDisplay = lazy(dynamicControlImports.ScaleDisplay);
 const LazyScaleSelector = lazy(dynamicControlImports.ScaleSelector);
@@ -149,6 +152,9 @@ interface InteractionManagerContextType {
   unregisterHandler: (handlerId: string) => void;
   registerInteraction: (id: string, interaction: OLInteraction, owner?: string) => void;
   unregisterInteraction: (id: string) => void;
+  registerBoxSelectHandler: (id: string, handler: (extent: [number, number, number, number], coordinate: number[]) => Promise<Result[]> | Result[]) => void;
+  unregisterBoxSelectHandler: (id: string) => void;
+  runBoxSelect: (extent: [number, number, number, number]) => Promise<void>;
 }
 
 const InteractionManagerContext = createContext<InteractionManagerContextType | null>(null);
@@ -215,6 +221,7 @@ export default function MapContainer() {
   const [aggregatedResults, setAggregatedResults] = useState<Result[]>([]);
   const [resultsCoordinate, setResultsCoordinate] = useState<number[] | null>(null);
   const [isLoadingResults, setIsLoadingResults] = useState(false);
+  const boxSelectHandlersRef = useRef(new globalThis.Map<string, (extent: [number, number, number, number], coordinate: number[]) => Promise<Result[]> | Result[]>());
 
   // Generation counter to prevent stale cleanup callbacks from clearing new click results.
   // Each new click increments the counter; cleanup callbacks captured from a previous
@@ -347,14 +354,65 @@ export default function MapContainer() {
     [storeUnregisterInteraction],
   );
 
+  const registerBoxSelectHandler = useCallback((id: string, handler: (extent: [number, number, number, number], coordinate: number[]) => Promise<Result[]> | Result[]) => {
+    boxSelectHandlersRef.current.set(id, handler);
+  }, []);
+
+  const unregisterBoxSelectHandler = useCallback((id: string) => {
+    boxSelectHandlersRef.current.delete(id);
+  }, []);
+
+  const runBoxSelect = useCallback(async (extent: [number, number, number, number]) => {
+    const coordinate = [(extent[0] + extent[2]) / 2, (extent[1] + extent[3]) / 2];
+    clickGenerationRef.current += 1;
+    const generation = clickGenerationRef.current;
+    setResultsCoordinate(coordinate);
+    setAggregatedResults([]);
+    setIsLoadingResults(true);
+
+    try {
+      const entries = await Promise.all(
+        Array.from(boxSelectHandlersRef.current.entries()).map(async ([id, handler]) => {
+          try {
+            return { handler: { id, eventType: "singleclick" as const, handler: () => [] }, result: await handler(extent, coordinate) };
+          } catch (error) {
+            console.error(`Error executing box-select handler "${id}":`, error);
+            return { handler: { id, eventType: "singleclick" as const, handler: () => [] }, result: [] as Result[] };
+          }
+        }),
+      );
+
+      if (clickGenerationRef.current !== generation) return;
+      setAggregatedResults(InteractionManager.aggregateAndSuppress(entries));
+      setIsLoadingResults(false);
+    } catch (error) {
+      console.error("Error collecting box-selection results:", error);
+      if (clickGenerationRef.current === generation) setIsLoadingResults(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const listenerId = useEventStore.getState().addListener("results-box-select", (data) => {
+      const extent = data?.extent;
+      if (Array.isArray(extent) && extent.length === 4 && extent.every((value) => typeof value === "number")) {
+        void runBoxSelect(extent as [number, number, number, number]);
+      }
+    });
+
+    return () => useEventStore.getState().removeListener(listenerId);
+  }, [runBoxSelect]);
+
   const interactionManager = useMemo(
     () => ({
       registerHandler,
       unregisterHandler,
       registerInteraction,
       unregisterInteraction,
+      registerBoxSelectHandler,
+      unregisterBoxSelectHandler,
+      runBoxSelect,
     }),
-    [registerHandler, unregisterHandler, registerInteraction, unregisterInteraction],
+    [registerHandler, unregisterHandler, registerInteraction, unregisterInteraction, registerBoxSelectHandler, unregisterBoxSelectHandler, runBoxSelect],
   );
 
   useEffect(() => {
@@ -481,6 +539,7 @@ export default function MapContainer() {
       extentHistory: activeConfig.controls?.extentHistory ?? false,
       attribution: activeConfig.controls?.attribution ?? true,
       attributeTable: activeConfig.controls?.attributeTable ?? true,
+      boxSelectResults: activeConfig.controls?.boxSelectResults ?? true,
     };
 
     // Add OpenLayers built-in controls based on configuration
@@ -939,6 +998,14 @@ export default function MapContainer() {
     );
   }, []);
 
+  const BoxSelectResultsWrapper = useCallback(({ map }: { map: Map }) => {
+    return (
+      <Suspense fallback={<ControlLoadingPlaceholder />}>
+        <LazyBoxSelectResults map={map} />
+      </Suspense>
+    );
+  }, []);
+
   const ScaleDisplayWrapper = useCallback(({ map }: { map: Map }) => {
     return (
       <Suspense fallback={<ControlLoadingPlaceholder />}>
@@ -1050,10 +1117,16 @@ export default function MapContainer() {
         order: 7,
         enabled: controlVisibility.grid,
       },
+      boxSelectResults: {
+        component: BoxSelectResultsWrapper,
+        zone: "top-left",
+        order: 8,
+        enabled: controlVisibility.boxSelectResults,
+      },
       shareMap: {
         component: ShareMapWrapper,
         zone: "top-left",
-        order: 8,
+        order: 9,
         enabled: controlVisibility.shareMap,
       },
 
@@ -1110,6 +1183,7 @@ export default function MapContainer() {
       ExtentHistoryWrapper,
       ZoomToExtentWrapper,
       GridWrapper,
+      BoxSelectResultsWrapper,
       GitHubButtonWrapper,
       FullscreenControlWrapper,
       RotateControlWrapper,

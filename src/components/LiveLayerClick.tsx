@@ -120,11 +120,11 @@ export default function LiveLayerClick() {
   const map = useMapStore((s) => s.map);
   const isToolActive = useMapStore((s) => s.isToolActive);
   const allLayers = useTOCStore((s) => s.allLayers);
-  const { registerHandler, unregisterHandler } = useInteractionManager();
+  const { registerHandler, unregisterHandler, registerBoxSelectHandler, unregisterBoxSelectHandler } = useInteractionManager();
 
   // Query a single live layer for features at coordinate
   const queryLiveLayer = useCallback(
-    async (layer: Layer, coordinate: number[]): Promise<Feature<Geometry>[]> => {
+    async (layer: Layer, coordinate: number[], boxExtent?: [number, number, number, number]): Promise<Feature<Geometry>[]> => {
       const displayName = layer.get("tocDisplayName") || layer.get("displayName") || layer.get("name");
 
       if (!map) {
@@ -140,6 +140,12 @@ export default function LiveLayerClick() {
       // server-side identify endpoint to call; hit-test the already-loaded features at the
       // clicked pixel locally instead of making a network request.
       if (source instanceof VectorSource) {
+        if (boxExtent) {
+          const hitFeatures = source.getFeaturesInExtent(boxExtent).filter((feature) => feature.getGeometry()?.intersectsExtent(boxExtent));
+          hitFeatures.forEach((feature) => feature.setProperties({ layerDisplayName: displayName }));
+          return hitFeatures;
+        }
+
         const pixel = map.getPixelFromCoordinate(coordinate);
         if (!pixel) return [];
 
@@ -185,23 +191,43 @@ export default function LiveLayerClick() {
         const zoom = map.getView().getZoom() || 0;
         const tolerance = 20 - zoom;
 
+        const geometry = boxExtent ? JSON.stringify({ xmin: boxExtent[0], ymin: boxExtent[1], xmax: boxExtent[2], ymax: boxExtent[3], spatialReference: { wkid: 3857 } }) : coordinate.join(",");
+
         url = wfsUrl
-          .replace("#GEOMETRY#", coordinate.join(","))
-          .replace("#GEOMETRYTYPE#", "esriGeometryPoint")
+          .replace("#GEOMETRY#", encodeURIComponent(geometry))
+          .replace("#GEOMETRYTYPE#", boxExtent ? "esriGeometryEnvelope" : "esriGeometryPoint")
           .replace("#TOLERANCE#", String(tolerance >= 10 ? tolerance : 10))
           .replace("#EXTENT#", extent.join(","))
           .replace("#RESOLUTION#", arcgisResolution);
       } else {
-        // WMS GetFeatureInfo
+        // WMS GetFeatureInfo for points; WFS spatial query for box selections.
         const wmsSource = source as TileWMS | ImageWMS;
-        if (!wmsSource || !wmsSource.getFeatureInfoUrl) {
-          return [];
-        }
+        if (boxExtent) {
+          const sourceAny = wmsSource as unknown as { getUrls?: () => string[] | undefined; getUrl?: () => string | undefined };
+          const wmsUrl = sourceAny.getUrls?.()?.[0] ?? sourceAny.getUrl?.();
+          const wfsUrl = (layer.get("wfsUrl") as string | undefined) ?? wmsUrl?.replace(/\/wms(?=\?|$)/i, "/wfs");
+          const typeName = String(wmsSource.getParams().LAYERS || layer.get("name") || "");
+          if (!wfsUrl || !typeName) return [];
 
-        url = wmsSource.getFeatureInfoUrl(coordinate, viewResolution!, "EPSG:3857", {
-          INFO_FORMAT: "application/json",
-          FEATURE_COUNT: 50,
-        });
+          const params = new URLSearchParams({
+            service: "wfs",
+            version: "2.0.0",
+            request: "GetFeature",
+            typeNames: typeName,
+            outputFormat: "application/json",
+            cql_filter: `BBOX(geom,${boxExtent.join(",")})`,
+          });
+          url = `${wfsUrl.split("?")[0]}?${params.toString()}`;
+        } else {
+          if (!wmsSource || !wmsSource.getFeatureInfoUrl) {
+            return [];
+          }
+
+          url = wmsSource.getFeatureInfoUrl(coordinate, viewResolution!, "EPSG:3857", {
+            INFO_FORMAT: "application/json",
+            FEATURE_COUNT: 50,
+          });
+        }
       }
 
       if (!url) {
@@ -264,7 +290,7 @@ export default function LiveLayerClick() {
 
   // Query all visible live layers at coordinate
   const queryAllLiveLayers = useCallback(
-    async (coordinate: number[]): Promise<LiveLayerResult[]> => {
+    async (coordinate: number[], boxExtent?: [number, number, number, number]): Promise<LiveLayerResult[]> => {
       type IdentifyCandidate = {
         name: string;
         layer: Layer;
@@ -346,7 +372,7 @@ export default function LiveLayerClick() {
       const results: LiveLayerResult[] = [];
       const identifyPromises = identifyCandidates.map(async (candidate) => {
         try {
-          const identifyFeatures = await queryLiveLayer(candidate.layer, coordinate);
+          const identifyFeatures = await queryLiveLayer(candidate.layer, coordinate, boxExtent);
           if (identifyFeatures.length === 0) return;
 
           // ArcGIS layers carry field aliases + coded-value domains in the
@@ -460,6 +486,31 @@ export default function LiveLayerClick() {
       unregisterHandler("live-layer-click");
     };
   }, [map, isToolActive, queryAllLiveLayers, registerHandler, unregisterHandler]);
+
+  useEffect(() => {
+    if (!map) return;
+
+    registerBoxSelectHandler("live-layer-click", async (extent, coordinate) => {
+      const liveLayerResults = await queryAllLiveLayers(coordinate, extent);
+      return liveLayerResults.map((result) => {
+        const identifyResult = createIdentifyResult(result.layerName, result.featureId, result.attributes, result.feature, result.layerZIndex, {
+          layerId: result.layerId,
+          displayName: result.displayName,
+          fieldMetadata: result.fieldMetadata,
+        });
+
+        if (result.isThemeLayer) {
+          (identifyResult as IdentifyResult).renderContent = () => (
+            <ThemePopupContent properties={result.attributes} moreInfoUrlFieldName={result.moreInfoUrlFieldName} popupLogoImage={result.popupLogoImage} />
+          );
+        }
+
+        return identifyResult;
+      });
+    });
+
+    return () => unregisterBoxSelectHandler("live-layer-click");
+  }, [map, queryAllLiveLayers, registerBoxSelectHandler, unregisterBoxSelectHandler]);
 
   return null; // This component doesn't render anything directly
 }
