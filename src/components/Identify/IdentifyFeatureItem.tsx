@@ -20,9 +20,11 @@ interface IdentifyFeatureItemProps {
   minScale?: number;
   /** ArcGIS field aliases + coded-value domains for the layer, when available. */
   fieldMetadata?: ArcgisLayerFieldMetadata;
+  /** Source flag: skip isExcludedKey filtering for this layer's fields. */
+  showAllFields?: boolean;
 }
 
-const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ featureItem, layerName, minScale = 0, fieldMetadata }) => {
+const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ featureItem, layerName, minScale = 0, fieldMetadata, showAllFields = false }) => {
   const map = useMapStore((s) => s.map);
   const { highlightFeature, clearHighlight } = useFeatureHighlight();
   const [open, setOpen] = useState(false);
@@ -60,7 +62,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
 
   const renderFeatureContent = () => {
     const props = feature.getProperties();
-    const keys = filterFeatureKeys(feature);
+    const keys = filterFeatureKeys(feature, showAllFields);
     const attachmentUrl = feature.get("attachmentUrl") as string | undefined;
 
     if (keys.length === 0 && !attachmentUrl) {

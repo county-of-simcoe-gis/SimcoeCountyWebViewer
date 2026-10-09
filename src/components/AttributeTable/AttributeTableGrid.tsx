@@ -185,7 +185,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
       // Skip system/internal fields like objectid, geometry, shape_area, etc.
       // Fields with a meaningful alias (e.g. Shape.STLength() -> "Length (m)")
       // are treated as user-facing and are kept.
-      if (isExcludedKey(col.name, col.alias)) continue;
+      if (!tab.showAllFields && isExcludedKey(col.name, col.alias)) continue;
 
       out.push({
         id: col.name,
@@ -203,7 +203,22 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
       });
     }
     return out;
-  }, [tab.schema, tab.store, tab.domains, tab.selection, tab.layerId, tab.wfsUrl, tab.typeName, tab.secured, tab.hasAttachments, tab.columnSizes, toggleSelection, setSelection, clearSelection]);
+  }, [
+    tab.schema,
+    tab.store,
+    tab.domains,
+    tab.selection,
+    tab.layerId,
+    tab.wfsUrl,
+    tab.typeName,
+    tab.secured,
+    tab.showAllFields,
+    tab.hasAttachments,
+    tab.columnSizes,
+    toggleSelection,
+    setSelection,
+    clearSelection,
+  ]);
 
   // --- Stable row refs (one object per loaded row, reused across renders) --
 

@@ -882,6 +882,8 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
         secured: source.secure,
         useRedFolder: source.useRedFolder || false,
         sourceOpen: source.open !== undefined ? source.open : undefined,
+        showAllFields: source.showAllFields ?? false,
+        layers: group.layers.map((layer) => ({ ...layer, showAllFields: source.showAllFields ?? false })),
       }));
 
       // Find default group from primary source

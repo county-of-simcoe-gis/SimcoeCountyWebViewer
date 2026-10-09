@@ -121,6 +121,7 @@ export interface AppConfig {
       urlType: string;
       type: string;
       descriptionOverride?: string;
+      showAllFields?: boolean;
     }>;
     helpLink: string;
     layerInfoURL: string;

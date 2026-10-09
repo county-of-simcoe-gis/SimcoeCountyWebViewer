@@ -99,6 +99,15 @@ describe("identifyHelpers", () => {
       const props = { id: "1", geometry: {}, objectid: 42 };
       expect(filterPropertyKeys(props)).toEqual([]);
     });
+
+    it("keeps system keys when showAllFields is true, but still drops object values", () => {
+      const props = { id: "1", geometry: {}, objectid: 42, Name: "Simcoe" };
+      const result = filterPropertyKeys(props, true);
+      expect(result).toContain("id");
+      expect(result).toContain("objectid");
+      expect(result).toContain("Name");
+      expect(result).toContain("geometry");
+    });
   });
 
   describe("filterFeatureKeys", () => {
@@ -122,6 +131,21 @@ describe("identifyHelpers", () => {
     it("returns empty array for feature with no user properties", () => {
       const feature = new Feature({ geometry: new Point([0, 0]) });
       expect(filterFeatureKeys(feature)).toEqual([]);
+    });
+
+    it("keeps system keys when showAllFields is true, but still drops object values", () => {
+      const feature = new Feature({
+        geometry: new Point([0, 0]),
+        Name: "Test",
+        objectid: 1,
+        nestedObj: { a: 1 },
+      });
+
+      const result = filterFeatureKeys(feature, true);
+      expect(result).toContain("Name");
+      expect(result).toContain("objectid");
+      expect(result).not.toContain("geometry");
+      expect(result).not.toContain("nestedObj");
     });
   });
 

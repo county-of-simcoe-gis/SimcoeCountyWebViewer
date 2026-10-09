@@ -86,6 +86,7 @@ export interface SettingsType {
       primary: boolean;
       urlType: string;
       type: string;
+      showAllFields?: boolean;
     }>;
     helpLink?: string;
   };
