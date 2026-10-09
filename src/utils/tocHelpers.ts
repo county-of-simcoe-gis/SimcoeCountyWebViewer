@@ -7,6 +7,7 @@ import type { Layer as OpenLayersLayer } from "ol/layer";
 import { buildAuthFetchOptions, getAccessToken } from "@/utils/auth";
 import { apiUrl } from "@/lib/axiosInstance";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
+import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 
 // Types for WMS Capabilities parsing
 interface WMSLayer {
@@ -18,6 +19,7 @@ interface WMSLayer {
   MaxScaleDenominator?: number;
   queryable?: boolean;
   opaque?: boolean;
+  Dimension?: Array<{ name?: string; values?: string }>;
   Style?: Array<{
     LegendURL: Array<{
       OnlineResource: string;
@@ -116,6 +118,19 @@ export function parseGeoServerKeywords(keywords: string[], config: Config): Reco
   });
 
   return returnKeywords;
+}
+
+/**
+ * Discrete WMS TIME values; range-based (start/end/period) extents return an empty list.
+ */
+function parseTimeValues(dimensions: WMSLayer["Dimension"]): string[] {
+  const timeDimension = dimensions?.find((dimension) => dimension.name?.toLowerCase() === "time");
+  const values = timeDimension?.values?.trim() ?? "";
+  if (values === "" || values.includes("/")) return [];
+  return values
+    .split(",")
+    .map((value) => value.trim())
+    .filter((value) => value !== "");
 }
 
 /**
@@ -230,6 +245,8 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     extendedProperties: { keywords: { ...allKeywords } },
     wfsUrl: `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerNameOnly}&outputFormat=application/json&cql_filter=`,
     serverUrl: serverUrl + "/",
+    refreshInterval: normalizeRefreshInterval(allKeywords["REFRESH_INTERVAL"]),
+    timeValues: parseTimeValues(wmsLayer.Dimension),
   };
 }
 
@@ -1378,6 +1395,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
           },
         },
         wfsUrl: wfsUrl,
+        refreshInterval: normalizeRefreshInterval(layer.options.refreshInterval),
       };
 
       callback(returnLayer);

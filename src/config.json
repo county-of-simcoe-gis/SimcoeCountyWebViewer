@@ -285,6 +285,11 @@
         "type": "array",
         "value": [],
         "splitChar": ","
+      },
+      "REFRESH_INTERVAL": {
+        "keyword": "REFRESH_INTERVAL",
+        "type": "int",
+        "value": 0
       }
     }
   },

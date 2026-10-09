@@ -89,6 +89,8 @@ export interface TOCLayer {
   sourceType?: string; // Source type override (e.g. "WMTS") for non-WMS layers
   layerUrl?: string; // Direct URL for non-WMS layers (e.g. WMTS capabilities URL)
   projection?: string; // Projection override for non-WMS layers
+  refreshInterval?: number; // Timed refresh interval in seconds; 0 or undefined means none
+  timeValues?: string[]; // Discrete WMS TIME values stepped through on each refresh
 }
 
 // Layer group interface based on the old app's group structure

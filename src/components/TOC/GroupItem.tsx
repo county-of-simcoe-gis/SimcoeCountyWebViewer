@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
+import GroupRefreshButton from "@/components/TOC/GroupRefreshButton";
 import { trackGroup } from "@/lib/appStats";
 
 interface GroupItemProps {
@@ -166,6 +167,7 @@ export default function GroupItem({
           title="Turn all layers in this group on/off"
         />
         <div className="w-[310px] ml-[5px]">{`${group.label} - (${activeLayerCount}/${group.layers.length})`}</div>
+        <GroupRefreshButton layers={group.layers} />
       </div>
 
       <div className={panelOpen || (isGroupVisible() && searchText !== "") ? "relative pl-5 border-l-2 border-dotted border-base-300 ml-2.5" : "hidden"} key={`${id}-sc-toc-group-list-item-container`}>

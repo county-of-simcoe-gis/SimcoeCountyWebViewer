@@ -5,10 +5,12 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { useMapStore } from "@/stores/mapStore";
 import { getMapScale } from "@/utils/mapHelpers";
-import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical } from "react-icons/fa";
+import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical, FaPlay, FaPause } from "react-icons/fa";
 import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
 import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
 import { trackLayer } from "@/lib/appStats";
+import { useLayerRefreshStore } from "@/stores/layerRefreshStore";
+import { canRefreshLayer, toggleLayerRefresh } from "@/utils/openlayers/LayerRefresh";
 
 interface LayerItemProps {
   layerInfo: TOCLayer;
@@ -29,6 +31,8 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
   // Get the live layer data from the store to ensure we have the latest legend data
   // Use id as primary lookup (unique), fall back to name for legacy layers
   const currentLayerData = useTOCStore((state) => state.allLayers.find((l) => (layerInfo.id ? l.id === layerInfo.id : l.name === layerInfo.name)) || layerInfo);
+  const isRefreshPlaying = useLayerRefreshStore((state) => !!state.playing[currentLayerData.id]);
+  const hasRefreshControl = canRefreshLayer(currentLayerData);
 
   // Memoize the legend data to prevent unnecessary recalculations
   const legendData = useMemo(
@@ -225,9 +229,23 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
           </div>
         )}
 
+        {/* Timed refresh play/pause - only for layers with a refresh interval */}
+        {hasRefreshControl && (
+          <button
+            type="button"
+            className={`btn btn-ghost btn-xs btn-square min-h-0 h-6 w-6 shrink-0 ${!showDragHandle ? "ml-auto" : "ml-[5px]"}`}
+            title={isRefreshPlaying ? "Pause timed refresh" : "Start timed refresh"}
+            aria-label={isRefreshPlaying ? "Pause timed refresh" : "Start timed refresh"}
+            disabled={!isRefreshPlaying && !currentLayerData.visible}
+            onClick={() => toggleLayerRefresh(currentLayerData.id)}
+          >
+            {isRefreshPlaying ? <FaPause size={12} /> : <FaPlay size={12} />}
+          </button>
+        )}
+
         {/* Layer options menu button - moved inside flex container */}
         <div
-          className={`cursor-pointer flex items-center ml-[5px] pr-[5px]${!showDragHandle ? " ml-auto" : ""}`}
+          className={`cursor-pointer flex items-center ml-[5px] pr-[5px]${!showDragHandle && !hasRefreshControl ? " ml-auto" : ""}`}
           title="Layer Options"
           role="button"
           onClick={(evt) => onLayerOptionsClick(evt, layerInfo)}
