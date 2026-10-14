@@ -61,6 +61,8 @@ export interface IdentifyResult extends BaseResult {
     feature?: Feature;
     /** ArcGIS field aliases + coded-value domains for the layer, when available. */
     fieldMetadata?: ArcgisLayerFieldMetadata;
+    /** Source flag: skip isExcludedKey filtering for this layer's fields. */
+    showAllFields?: boolean;
   };
 }
 
@@ -234,7 +236,7 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
                     const meta = result.data.fieldMetadata;
                     const alias = resolveFieldAlias(meta, key);
                     // Keep system fields when the service provides a meaningful alias.
-                    return !isExcludedKey(key, alias) && key !== "bbox" && typeof value !== "object";
+                    return (result.data.showAllFields || !isExcludedKey(key, alias)) && key !== "bbox" && typeof value !== "object";
                   })
                   .map(([key, value]) => {
                     // ArcGIS layers: prefer the field alias for the label and
@@ -319,7 +321,7 @@ export function createIdentifyResult(
   attributes: Record<string, unknown>,
   feature?: Feature,
   layerZIndex?: number,
-  options?: { layerId?: string; displayName?: string; fieldMetadata?: ArcgisLayerFieldMetadata },
+  options?: { layerId?: string; displayName?: string; fieldMetadata?: ArcgisLayerFieldMetadata; showAllFields?: boolean },
 ): IdentifyResult {
   // Try to create a meaningful display name from attributes, with caller override for
   // layers that expose a configured display field such as Name or Address.
@@ -337,6 +339,7 @@ export function createIdentifyResult(
       attributes,
       feature,
       fieldMetadata: options?.fieldMetadata,
+      showAllFields: options?.showAllFields,
     },
   };
 }

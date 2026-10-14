@@ -57,6 +57,8 @@ export interface AttributeTableTab {
   wfsUrl: string;
   sourceType: AttributeSourceType;
   secured: boolean;
+  /** Source flag: show fields normally hidden by isExcludedKey. */
+  showAllFields?: boolean;
   canDownload: boolean;
   /** True when the underlying ArcGIS layer exposes per-feature attachments. */
   hasAttachments: boolean;
@@ -168,6 +170,7 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
     wfsUrl: url,
     sourceType,
     secured: layer.secured ?? false,
+    showAllFields: layer.showAllFields ?? false,
     canDownload: layer.canDownload ?? false,
     hasAttachments,
     attachmentUrlTemplate,

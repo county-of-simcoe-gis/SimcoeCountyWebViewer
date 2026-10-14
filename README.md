@@ -465,6 +465,12 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.5 (2026-10-09)
+
+- **Box Select Results** — Added a map control to draw a box and view results for layers and parcels within the selected area, with a Settings toggle to show or hide it.
+- **Show All Fields Option** — Layers and sources can now be configured to show system fields that are hidden by default in Identify, the Results popup, CSV export, and the Attribute Table.
+- **General Maintenance** — Fixed search result zoom so the map centers on the located place, and updated package dependencies.
+
 ### v2.0.4 (2026-10-02)
 
 - **511 Live Feeds Road Closures** — Added public road closures (Blocks, Detours, and Closures) into the 511 Live Feeds theme with layer toggles, distinct line indicators, and feature popup details.

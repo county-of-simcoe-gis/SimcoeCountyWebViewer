@@ -39,6 +39,8 @@ export interface IdentifyResult {
   features: IdentifyFeature[];
   minScale?: number;
   html_url?: string;
+  /** Source flag: skip isExcludedKey filtering for this layer's fields. */
+  showAllFields?: boolean;
   /** ArcGIS field aliases + coded-value domains for this layer, when available. */
   fieldMetadata?: ArcgisLayerFieldMetadata;
 }
@@ -52,7 +54,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
   const lastGeometryRef = React.useRef<Geometry | null>(null); // Track geometry changes
 
   // Filter to display name field from a feature
-  const getDisplayNameFromFeature = useCallback((feature: Feature<Geometry>): string => {
+  const getDisplayNameFromFeature = useCallback((feature: Feature<Geometry>, showAllFields = false): string => {
     // Look for existing fields
     const nameFields = ["name", "display_name", "Name", "Display Name"];
     let displayName = "";
@@ -88,7 +90,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
     // returned for attribute-less WMS features and crash React rendering).
     if (displayName === "") {
       for (const [fieldName, value] of Object.entries(feature.getProperties())) {
-        if (isExcludedKey(fieldName)) continue;
+        if (!showAllFields && isExcludedKey(fieldName)) continue;
         if (value !== null && typeof value === "object") continue;
         return fieldName;
       }
@@ -156,6 +158,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       const displayName = layer.get("tocDisplayName") || name;
       const secured = layer.get("secured");
       const minScale = layer.get("minScale");
+      const showAllFields = layer.get("showAllFields") === true;
       const isArcGISLayer = layer.get("isArcGIS") || false;
 
       // Build axios config with auth headers for secured GeoServer layers
@@ -330,7 +333,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
                 }
               }
 
-              const displayNameField = getDisplayNameFromFeature(featureList[0]);
+              const displayNameField = getDisplayNameFromFeature(featureList[0], showAllFields);
               const features: IdentifyFeature[] = featureList.map((feature) => ({
                 feature,
                 displayName: displayNameField,
@@ -342,6 +345,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
                 type: displayName,
                 features,
                 minScale,
+                showAllFields,
                 fieldMetadata: fieldMetadata ?? undefined,
               });
               continue; // Skip WMS query if WFS succeeded
@@ -408,7 +412,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
           });
         }
 
-        const displayNameField = getDisplayNameFromFeature(featureList[0]);
+        const displayNameField = getDisplayNameFromFeature(featureList[0], showAllFields);
         const features: IdentifyFeature[] = featureList.map((feature) => ({
           feature,
           displayName: displayNameField,
@@ -420,6 +424,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
           type: displayName,
           features,
           minScale,
+          showAllFields,
         });
       } catch (error) {
         console.error(`Identify: Error querying layer ${name}:`, error);

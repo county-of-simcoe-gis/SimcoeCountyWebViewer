@@ -91,6 +91,7 @@ export interface TOCLayer {
   projection?: string; // Projection override for non-WMS layers
   refreshInterval?: number; // Timed refresh interval in seconds; 0 or undefined means none
   timeValues?: string[]; // Discrete WMS TIME values stepped through on each refresh
+  showAllFields?: boolean; // Show fields normally hidden by isExcludedKey
 }
 
 // Layer group interface based on the old app's group structure
@@ -109,6 +110,7 @@ export interface TOCLayerGroup {
   panelOpen?: boolean; // Track if the group panel is open in the UI
   useRedFolder?: boolean; // Use red folder icons instead of default gray
   sourceOpen?: boolean; // Whether the source folder should be initially expanded
+  showAllFields?: boolean; // Show fields normally hidden by isExcludedKey
 }
 
 // Configuration for TOC sources from config.json
@@ -125,6 +127,7 @@ export interface TOCSource {
   type: string;
   useRedFolder?: boolean;
   open?: boolean;
+  showAllFields?: boolean;
   // Fields for type: "layer" (direct layer config, e.g. WMTS)
   sourceType?: string;
   source?: string;
@@ -2481,6 +2484,7 @@ export const useTOCStore = create<TOCState>()(
                     queryable: layer.isQueryable !== undefined ? layer.isQueryable : true, // Default to queryable
                     liveLayer: layer.liveLayer, // Keep liveLayer for special features
                     secured: layer.secured,
+                    showAllFields: layer.showAllFields ?? false,
                     disableParcelClick: false,
                     extendedProperties: layer.extendedProperties,
                     wfsUrl: layer.wfsUrl,
