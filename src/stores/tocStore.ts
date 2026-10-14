@@ -10,7 +10,7 @@ import { type LayerCategory, type ManagedLayer } from "@/stores/layerManagerStor
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { fetchWithAuth, isSecuredUrl } from "@/utils/auth";
 import { useToastStore } from "@/hooks/useToast";
-import type { TimeDimension } from "@/utils/timeDimension";
+import { getTimeValueAt, type TimeDimension } from "@/utils/timeDimension";
 
 // Helper function to calculate z-index for a layer based on category and position
 // Layers at the beginning of the array (index 0) should have HIGHER z-index (drawn on top)
@@ -2470,6 +2470,7 @@ export const useTOCStore = create<TOCState>()(
                 name: layer.name,
                 projection: layer.projection || "EPSG:3857",
                 secured: !!layer.secured,
+                timeValue: !isDirectLayer && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
               },
               (olLayer: unknown) => {
                 if (olLayer) {
