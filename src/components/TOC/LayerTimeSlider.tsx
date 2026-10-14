@@ -25,8 +25,9 @@ export default function LayerTimeSlider({ layer, onInteractionChange }: LayerTim
     window.addEventListener("pointercancel", release, { once: true });
   };
 
+  // The list ancestor uses select-all, so a press here would otherwise select and drag the whole list.
   return (
-    <div className="pl-7 pr-2 pb-1 text-[8pt]">
+    <div className="pl-7 pr-2 pb-1 text-[8pt] select-none">
       <input
         type="range"
         className="range range-xs w-full"
