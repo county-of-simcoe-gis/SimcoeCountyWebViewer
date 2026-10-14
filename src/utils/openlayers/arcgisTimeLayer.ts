@@ -30,7 +30,6 @@ interface EsriQueryResponse {
 
 const EPSG_3857 = "EPSG:3857";
 const DEFAULT_FILL = "rgba(255, 153, 0, 0.5)";
-const esriJSON = new EsriJSON();
 
 async function resolveToken(layerUrl: string, secured: boolean): Promise<string | null> {
   const urlToken = new URL(layerUrl).searchParams.get("token");
@@ -72,7 +71,7 @@ async function fetchFeaturesAt(layerUrl: string, timeInfo: ArcGISVectorTimeInfo,
 
   while (hasMore) {
     const data = await queryJSON(buildQueryUrl(layerUrl, { where, outFields: "*", outSR: "3857", orderByFields: timeInfo.objectIdField, resultOffset: String(features.length) }, token));
-    const page = esriJSON.readFeatures(data, { dataProjection: EPSG_3857, featureProjection: EPSG_3857 });
+    const page = new EsriJSON().readFeatures(data, { dataProjection: EPSG_3857, featureProjection: EPSG_3857 });
     features.push(...page);
     hasMore = data.exceededTransferLimit === true && page.length > 0;
   }
