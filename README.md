@@ -129,10 +129,10 @@ The Layers tab, also called the Table of Contents, controls the map layers that 
 
 #### Timed Refresh
 
-Layers that define a refresh interval show a play/pause button. Folder headers in Folder view and the group selector in List view also show one, which controls every refreshable layer in that group.
+Layers that define a refresh interval, and layers with a time dimension, show a play/pause button. Time layers use 5 seconds when no interval is set. Folder headers in Folder view and the group selector in List view also show one, which controls every refreshable layer in that group.
 
 - Turning a layer on starts its refresh, and turning it off stops it. Play state is not saved when the page reloads.
-- WMS layers that publish a list of time values step through them and wrap back to the first. Other layers re-request their current data on each interval.
+- WMS layers with a time dimension show a slider below the layer. Play steps through the times and wraps back to the first, and dragging the slider pauses playback. Other layers re-request their current data on each interval.
 - Publishers set the refresh interval with `REFRESH_INTERVAL` (GeoServer) or `REFRESH` (ArcGIS). See [Layer Setup](#layer-setup).
 
 ### Tools
@@ -355,20 +355,20 @@ Publishers control how a layer appears in the app with keywords. GeoServer keywo
 
 Keyword names are case-sensitive. Set each keyword on the level shown in the **Set on** column.
 
-| Keyword               | Set on     | Value                                        | Effect                                                                                                            |
-| --------------------- | ---------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `DEFAULT_GROUP`       | Root layer | Group name                                   | Opens this group by default. Matching ignores case.                                                               |
-| `VISIBLE_LAYERS`      | Group      | Layer names separated by commas              | Turns these layers on when the map loads. Use `VISIBLE_LAYERS=ALL` to turn on every layer in the group.           |
-| `GROUP_PREFIX`        | Group      | Text                                         | Adds the text and a dash before each layer name in the group.                                                     |
-| `LIVE_LAYER`          | Layer      | `true` or `false` (a bare keyword is `true`) | Shows the info icon and makes the layer interactive for identify.                                                 |
-| `DISPLAY_NAME`        | Layer      | Text                                         | Sets the layer name used in Identify results and shared map layer lists.                                          |
-| `OPACITY`             | Layer      | Number from 0 to 1                           | Sets the starting opacity. A value of 0 is ignored and the default of 1 is used.                                  |
-| `DOWNLOAD`            | Layer      | `true` or `false`                            | Adds a download option to the layer.                                                                              |
-| `WARNING`             | Layer      | Text                                         | Shows a disclaimer with this message before the layer can be turned on.                                           |
-| `DISCLAIMER_TITLE`    | Layer      | Text                                         | Sets the title of the disclaimer dialog. Acceptance lasts for the session.                                        |
-| `DISCLAIMER_URL`      | Layer      | URL                                          | Adds a link to more information in the disclaimer dialog.                                                         |
-| `STATIC_IMAGE_LEGEND` | Layer      | `true` or `false`                            | Resizes the legend image to the size declared by the layer's style.                                               |
-| `REFRESH_INTERVAL`    | Layer      | Seconds                                      | Sets the timed refresh interval. Values under 5 are raised to 5. A zero or missing value turns off timed refresh. |
+| Keyword               | Set on     | Value                                        | Effect                                                                                                                                                                         |
+| --------------------- | ---------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DEFAULT_GROUP`       | Root layer | Group name                                   | Opens this group by default. Matching ignores case.                                                                                                                            |
+| `VISIBLE_LAYERS`      | Group      | Layer names separated by commas              | Turns these layers on when the map loads. Use `VISIBLE_LAYERS=ALL` to turn on every layer in the group.                                                                        |
+| `GROUP_PREFIX`        | Group      | Text                                         | Adds the text and a dash before each layer name in the group.                                                                                                                  |
+| `LIVE_LAYER`          | Layer      | `true` or `false` (a bare keyword is `true`) | Shows the info icon and makes the layer interactive for identify.                                                                                                              |
+| `DISPLAY_NAME`        | Layer      | Text                                         | Sets the layer name used in Identify results and shared map layer lists.                                                                                                       |
+| `OPACITY`             | Layer      | Number from 0 to 1                           | Sets the starting opacity. A value of 0 is ignored and the default of 1 is used.                                                                                               |
+| `DOWNLOAD`            | Layer      | `true` or `false`                            | Adds a download option to the layer.                                                                                                                                           |
+| `WARNING`             | Layer      | Text                                         | Shows a disclaimer with this message before the layer can be turned on.                                                                                                        |
+| `DISCLAIMER_TITLE`    | Layer      | Text                                         | Sets the title of the disclaimer dialog. Acceptance lasts for the session.                                                                                                     |
+| `DISCLAIMER_URL`      | Layer      | URL                                          | Adds a link to more information in the disclaimer dialog.                                                                                                                      |
+| `STATIC_IMAGE_LEGEND` | Layer      | `true` or `false`                            | Resizes the legend image to the size declared by the layer's style.                                                                                                            |
+| `REFRESH_INTERVAL`    | Layer      | Seconds                                      | Sets the timed refresh interval. Values under 5 are raised to 5. A zero or missing value turns off timed refresh, except on layers with a time dimension, which use 5 seconds. |
 
 ### ArcGIS Keywords
 

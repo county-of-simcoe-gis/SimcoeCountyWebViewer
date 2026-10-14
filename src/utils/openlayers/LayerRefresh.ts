@@ -4,6 +4,7 @@ import { useLayerRefreshStore } from "@/stores/layerRefreshStore";
 import { useLayerTimeStore } from "@/stores/layerTimeStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { TIME_VALUE_APPLIER_PROPERTY, getTimeCount, getTimeValueAt, type TimeValueApplier } from "@/utils/timeDimension";
+import { DEFAULT_TIME_STEP_SECONDS } from "@/utils/refreshInterval";
 
 interface ParamSource {
   updateParams: (params: Record<string, unknown>) => void;
@@ -28,8 +29,10 @@ const getTimeApplier = (olLayer: Layer | null): TimeValueApplier | null => {
 
 const canStepLayer = (layer: TOCLayer, olLayer: Layer | null): boolean => (layer.timeDimension ? getTimeApplier(olLayer) !== null : getParamSource(olLayer) !== null);
 
+const getRefreshIntervalSeconds = (layer: TOCLayer): number => layer.refreshInterval || (layer.timeDimension ? DEFAULT_TIME_STEP_SECONDS : 0);
+
 export function canRefreshLayer(layer: TOCLayer): boolean {
-  return (layer.refreshInterval ?? 0) > 0 && canStepLayer(layer, getOLLayer(layer));
+  return getRefreshIntervalSeconds(layer) > 0 && canStepLayer(layer, getOLLayer(layer));
 }
 
 function getTimeIndex(layer: TOCLayer): number {
@@ -78,7 +81,7 @@ export function startLayerRefresh(layerId: string): void {
 
   timers.set(
     layerId,
-    setInterval(() => tick(layerId), (layer.refreshInterval ?? 0) * 1000),
+    setInterval(() => tick(layerId), getRefreshIntervalSeconds(layer) * 1000),
   );
   useLayerRefreshStore.getState().setPlaying(layerId, true);
 }
@@ -104,11 +107,11 @@ export function stopGroupRefresh(layers: TOCLayer[]): void {
 }
 
 export function handleTOCVisibilityChange(current: { allLayers: TOCLayer[] }, previous: { allLayers: TOCLayer[] }): void {
-  if (current.allLayers === previous.allLayers || !current.allLayers.some((layer) => (layer.refreshInterval ?? 0) > 0)) return;
+  if (current.allLayers === previous.allLayers || !current.allLayers.some((layer) => getRefreshIntervalSeconds(layer) > 0)) return;
 
   const previousVisible = new Map(previous.allLayers.map((layer) => [layer.id, layer.visible]));
   current.allLayers.forEach((layer) => {
-    if ((layer.refreshInterval ?? 0) <= 0) return;
+    if (getRefreshIntervalSeconds(layer) <= 0) return;
     const wasVisible = previousVisible.get(layer.id);
     if (wasVisible === false && layer.visible) startLayerRefresh(layer.id);
     else if (wasVisible === true && !layer.visible) stopLayerRefresh(layer.id);

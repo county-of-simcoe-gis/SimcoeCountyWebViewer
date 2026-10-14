@@ -16,6 +16,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   const [layers, setLayers] = useState<TOCLayer[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [dragSuspended, setDragSuspended] = useState(false);
   const dragCounter = useRef(0);
 
   const moveLayer = useTOCStore((s) => s.moveLayer);
@@ -140,7 +141,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
             onDrop={sortAlpha ? undefined : (e) => handleDrop(e, index)}
           >
             <div
-              draggable={!sortAlpha}
+              draggable={!sortAlpha && !dragSuspended}
               onDragStart={sortAlpha ? undefined : (e) => handleDragStart(e, index)}
               onDragEnd={sortAlpha ? undefined : handleDragEnd}
               className={!sortAlpha && draggedIndex === index ? "dragging" : ""}
@@ -150,6 +151,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
                 group={group}
                 searchText={searchText}
                 showDragHandle={!sortAlpha}
+                onTimeControlInteraction={setDragSuspended}
                 onLayerChange={onLayerChange}
                 onLegendToggle={onLegendToggle}
                 onLayerOptionsClick={onLayerOptionsClick}

@@ -147,6 +147,16 @@ describe("timed refresh engine", () => {
     expect(applyTimeValue).toHaveBeenCalledWith("t2");
   });
 
+  it("steps time layers every 5 seconds when no refresh interval is set", () => {
+    const { updateParams } = addOLLayer("managed-1");
+    setLayers(makeTOCLayer({ refreshInterval: 0, timeDimension: { kind: "list", values: ["t1", "t2"], defaultIndex: 0 } }));
+
+    startLayerRefresh("layer-1");
+    vi.advanceTimersByTime(5_000);
+
+    expect(updateParams).toHaveBeenCalledWith({ TIME: "t2" });
+  });
+
   it("does not start a hidden layer", () => {
     const { updateParams } = addOLLayer("managed-1");
     setLayers(makeTOCLayer({ visible: false }));

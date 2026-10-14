@@ -21,9 +21,10 @@ interface LayerItemProps {
   onLayerChange: (layer: TOCLayer, group: TOCLayerGroup) => void;
   onLegendToggle: (layerInfo: TOCLayer, group: TOCLayerGroup) => void;
   onLayerOptionsClick: (evt: React.MouseEvent, layerInfo: TOCLayer) => void;
+  onTimeControlInteraction?: (active: boolean) => void;
 }
 
-export default function LayerItem({ layerInfo, group, searchText, showDragHandle = true, onLayerChange, onLegendToggle, onLayerOptionsClick }: LayerItemProps) {
+export default function LayerItem({ layerInfo, group, searchText, showDragHandle = true, onLayerChange, onLegendToggle, onLayerOptionsClick, onTimeControlInteraction }: LayerItemProps) {
   const [isVisibleAtScale, setIsVisibleAtScale] = useState(true);
   const [shouldLoadLegend, setShouldLoadLegend] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -256,7 +257,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
       </div>
 
       {/* Time slider - only for layers with a WMS TIME dimension */}
-      {currentLayerData.timeDimension && <LayerTimeSlider layer={currentLayerData} />}
+      {currentLayerData.timeDimension && <LayerTimeSlider layer={currentLayerData} onInteractionChange={onTimeControlInteraction} />}
 
       {/* Legend container - Legend content appears below when expanded */}
       {legendDisplayMode === "expandable" && currentLayerData.showLegend && (
