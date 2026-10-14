@@ -10,6 +10,7 @@ import { type LayerCategory, type ManagedLayer } from "@/stores/layerManagerStor
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { fetchWithAuth, isSecuredUrl } from "@/utils/auth";
 import { useToastStore } from "@/hooks/useToast";
+import type { TimeDimension } from "@/utils/timeDimension";
 
 // Helper function to calculate z-index for a layer based on category and position
 // Layers at the beginning of the array (index 0) should have HIGHER z-index (drawn on top)
@@ -90,7 +91,7 @@ export interface TOCLayer {
   layerUrl?: string; // Direct URL for non-WMS layers (e.g. WMTS capabilities URL)
   projection?: string; // Projection override for non-WMS layers
   refreshInterval?: number; // Timed refresh interval in seconds; 0 or undefined means none
-  timeValues?: string[]; // Discrete WMS TIME values stepped through on each refresh
+  timeDimension?: TimeDimension; // WMS TIME dimension (discrete list or ISO range) stepped by refresh and the time slider
   showAllFields?: boolean; // Show fields normally hidden by isExcludedKey
 }
 

@@ -8,6 +8,8 @@ import { buildAuthFetchOptions, getAccessToken } from "@/utils/auth";
 import { apiUrl } from "@/lib/axiosInstance";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { normalizeRefreshInterval } from "@/utils/refreshInterval";
+import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
+import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
 
 // Types for WMS Capabilities parsing
 interface WMSLayer {
@@ -19,7 +21,7 @@ interface WMSLayer {
   MaxScaleDenominator?: number;
   queryable?: boolean;
   opaque?: boolean;
-  Dimension?: Array<{ name?: string; values?: string }>;
+  Dimension?: Array<{ name?: string; values?: string; default?: string | null }>;
   Style?: Array<{
     LegendURL: Array<{
       OnlineResource: string;
@@ -118,19 +120,6 @@ export function parseGeoServerKeywords(keywords: string[], config: Config): Reco
   });
 
   return returnKeywords;
-}
-
-/**
- * Discrete WMS TIME values; range-based (start/end/period) extents return an empty list.
- */
-function parseTimeValues(dimensions: WMSLayer["Dimension"]): string[] {
-  const timeDimension = dimensions?.find((dimension) => dimension.name?.toLowerCase() === "time");
-  const values = timeDimension?.values?.trim() ?? "";
-  if (values === "" || values.includes("/")) return [];
-  return values
-    .split(",")
-    .map((value) => value.trim())
-    .filter((value) => value !== "");
 }
 
 /**
@@ -246,7 +235,7 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
     wfsUrl: `${serverUrl}/wfs?service=wfs&version=2.0.0&request=GetFeature&typeNames=${layerNameOnly}&outputFormat=application/json&cql_filter=`,
     serverUrl: serverUrl + "/",
     refreshInterval: normalizeRefreshInterval(allKeywords["REFRESH_INTERVAL"]),
-    timeValues: parseTimeValues(wmsLayer.Dimension),
+    timeDimension: parseTimeDimension(wmsLayer.Dimension?.find((dimension) => dimension.name?.toLowerCase() === "time")),
   };
 }
 
@@ -599,6 +588,11 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
         // services commonly report `extent` in Web Mercator even when the layer's native
         // storage SR (sourceSpatialReference) is something else (e.g. UTM 17N/26917).
         extentSpatialReference: item.extent?.spatialReference,
+        // Non-Map services cannot be exported as images, so time-enabled ones render as vector features.
+        vectorTime:
+          item.timeInfo?.startTimeField && typeof item.capabilities === "string" && !item.capabilities.split(",").includes("Map")
+            ? { timeField: item.timeInfo.startTimeField, objectIdField: item.objectIdField || "OBJECTID", drawingInfo: item.drawingInfo }
+            : undefined,
       };
 
       // Group by category
@@ -1132,6 +1126,7 @@ export interface BuildESRILayerOptions {
     url: string;
     rootUrl?: string;
     id: number;
+    vectorTime?: ArcGISVectorTimeInfo;
     options: ESRILayerOptions & {
       title?: string;
       opacity?: number;
@@ -1240,7 +1235,15 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   };
 
   try {
-    LayerHelpers.getLayer(layerOptions, (newLayer: unknown) => {
+    let timeDimension: TimeDimension | undefined;
+    let vectorLayer: ReturnType<typeof createArcGISTimeLayer> | undefined;
+    if (layer.vectorTime) {
+      const timeValues = await fetchArcGISTimeValues(layer.url, layer.vectorTime.timeField, secured);
+      timeDimension = parseTimeDimension({ values: timeValues.join(","), default: "current" });
+      vectorLayer = createArcGISTimeLayer(layer.url, secured, layer.vectorTime);
+    }
+
+    const attachOLLayer = (newLayer: unknown) => {
       // Type assertion for OpenLayers layer
       const olLayer = newLayer as {
         setVisible: (visible: boolean) => void;
@@ -1402,10 +1405,21 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         },
         wfsUrl: wfsUrl,
         refreshInterval: normalizeRefreshInterval(layer.options.refreshInterval),
+        timeDimension,
       };
 
       callback(returnLayer);
-    });
+    };
+
+    if (vectorLayer) {
+      attachOLLayer(vectorLayer);
+      if (timeDimension) {
+        const applyTimeValue = vectorLayer.get(TIME_VALUE_APPLIER_PROPERTY) as TimeValueApplier;
+        applyTimeValue(getTimeValueAt(timeDimension, timeDimension.defaultIndex));
+      }
+    } else {
+      LayerHelpers.getLayer(layerOptions, attachOLLayer);
+    }
   } catch (error) {
     console.error("Error building ESRI layer:", error);
   }

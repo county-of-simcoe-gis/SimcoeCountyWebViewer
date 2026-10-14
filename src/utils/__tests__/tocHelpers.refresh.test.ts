@@ -1,6 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
 import { buildESRILayer, buildLayerFromWMS, type BuildESRILayerOptions } from "@/utils/tocHelpers";
 import type { TOCLayer } from "@/stores/tocStore";
+import { createArcGISTimeLayer, fetchArcGISTimeValues } from "@/utils/openlayers/arcgisTimeLayer";
+
+vi.mock("@/utils/openlayers/arcgisTimeLayer", () => ({
+  createArcGISTimeLayer: vi.fn(),
+  fetchArcGISTimeValues: vi.fn(),
+}));
 
 vi.mock("@/utils/openlayers/LayerHelpers", () => ({
   LayerHelpers: {
@@ -49,19 +55,23 @@ describe("buildLayerFromWMS refresh metadata", () => {
     const layer = buildWMSLayer({
       Dimension: [{ name: "time", values: "2026-10-09T10:00:00.000Z, 2026-10-09T10:15:00.000Z" }],
     });
-    expect(layer.timeValues).toEqual(["2026-10-09T10:00:00.000Z", "2026-10-09T10:15:00.000Z"]);
+    expect(layer.timeDimension).toEqual({
+      kind: "list",
+      values: ["2026-10-09T10:00:00.000Z", "2026-10-09T10:15:00.000Z"],
+      defaultIndex: 1,
+    });
   });
 
-  it("returns no TIME values for range-based extents", () => {
+  it("returns a stepped TIME range for start/end/period extents", () => {
     const layer = buildWMSLayer({
       Dimension: [{ name: "time", values: "2026-10-09T10:00:00.000Z/2026-10-09T12:00:00.000Z/PT15M" }],
     });
-    expect(layer.timeValues).toEqual([]);
+    expect(layer.timeDimension).toMatchObject({ kind: "range", periodMs: 900_000, count: 9 });
   });
 
-  it("returns no TIME values when there is no time dimension", () => {
+  it("returns no time dimension when there is no time dimension", () => {
     const layer = buildWMSLayer({ Dimension: [{ name: "elevation", values: "0,10" }] });
-    expect(layer.timeValues).toEqual([]);
+    expect(layer.timeDimension).toBeUndefined();
   });
 });
 
@@ -116,5 +126,25 @@ describe("buildESRILayer refresh metadata", () => {
       buildESRILayer({ group: esriGroup, layer: esriLayer, layerIndex: 0 }, (built) => resolve(built));
     });
     expect(layer.refreshInterval).toBe(300);
+  });
+
+  it("builds a stepped vector layer for time-enabled services without Map capability", async () => {
+    const timeValues = ["2026-10-14T09:00:00.000Z", "2026-10-14T10:00:00.000Z"];
+    const applyTimeValue = vi.fn();
+    vi.mocked(fetchArcGISTimeValues).mockResolvedValue(timeValues);
+    vi.mocked(createArcGISTimeLayer).mockReturnValue({
+      setVisible: vi.fn(),
+      setOpacity: vi.fn(),
+      setProperties: vi.fn(),
+      setZIndex: vi.fn(),
+      get: vi.fn(() => applyTimeValue),
+    } as unknown as ReturnType<typeof createArcGISTimeLayer>);
+
+    const layer = await new Promise<TOCLayer>((resolve) => {
+      buildESRILayer({ group: esriGroup, layer: { ...esriLayer, vectorTime: { timeField: "timestamp", objectIdField: "OBJECTID" } }, layerIndex: 0 }, resolve);
+    });
+
+    expect(layer.timeDimension).toMatchObject({ kind: "list", values: timeValues });
+    expect(applyTimeValue).toHaveBeenCalledWith(timeValues[layer.timeDimension?.defaultIndex ?? 0]);
   });
 });

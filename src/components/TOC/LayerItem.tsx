@@ -11,6 +11,7 @@ import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
 import { trackLayer } from "@/lib/appStats";
 import { useLayerRefreshStore } from "@/stores/layerRefreshStore";
 import { canRefreshLayer, toggleLayerRefresh } from "@/utils/openlayers/LayerRefresh";
+import LayerTimeSlider from "@/components/TOC/LayerTimeSlider";
 
 interface LayerItemProps {
   layerInfo: TOCLayer;
@@ -253,6 +254,9 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
           <FaEllipsisV size={16} className="opacity-70 text-[#666]" />
         </div>
       </div>
+
+      {/* Time slider - only for layers with a WMS TIME dimension */}
+      {currentLayerData.timeDimension && <LayerTimeSlider layer={currentLayerData} />}
 
       {/* Legend container - Legend content appears below when expanded */}
       {legendDisplayMode === "expandable" && currentLayerData.showLegend && (

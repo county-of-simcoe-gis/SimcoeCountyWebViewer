@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import type { TOCLayer } from "@/stores/tocStore";
 import { useLayerRefreshStore } from "@/stores/layerRefreshStore";
-import { canRefreshLayer, startLayerRefresh, toggleLayerRefresh, startGroupRefresh, stopGroupRefresh, handleTOCVisibilityChange } from "@/utils/openlayers/LayerRefresh";
+import { useLayerTimeStore } from "@/stores/layerTimeStore";
+import { TIME_VALUE_APPLIER_PROPERTY } from "@/utils/timeDimension";
+import { canRefreshLayer, startLayerRefresh, toggleLayerRefresh, startGroupRefresh, stopGroupRefresh, handleTOCVisibilityChange, setTimeIndex } from "@/utils/openlayers/LayerRefresh";
 
 const mockState = vi.hoisted(() => ({
   allLayers: [] as TOCLayer[],
@@ -55,6 +57,7 @@ beforeEach(() => {
   mockState.olLayers.clear();
   setLayers();
   useLayerRefreshStore.setState({ playing: {} });
+  useLayerTimeStore.setState({ indexes: {} });
 });
 
 afterEach(() => {
@@ -98,12 +101,50 @@ describe("timed refresh engine", () => {
 
   it("steps TIME through the values and wraps to the first", () => {
     const { updateParams } = addOLLayer("managed-1");
-    setLayers(makeTOCLayer({ timeValues: ["t1", "t2"] }));
+    setLayers(makeTOCLayer({ timeDimension: { kind: "list", values: ["t1", "t2"], defaultIndex: 0 } }));
 
     startLayerRefresh("layer-1");
     vi.advanceTimersByTime(30_000);
 
-    expect(updateParams.mock.calls).toEqual([[{ TIME: "t1" }], [{ TIME: "t2" }], [{ TIME: "t1" }]]);
+    expect(updateParams.mock.calls).toEqual([[{ TIME: "t2" }], [{ TIME: "t1" }], [{ TIME: "t2" }]]);
+  });
+
+  it("continues stepping from the index chosen with the time slider", () => {
+    const { updateParams } = addOLLayer("managed-1");
+    setLayers(makeTOCLayer({ timeDimension: { kind: "list", values: ["t1", "t2", "t3"], defaultIndex: 0 } }));
+
+    setTimeIndex("layer-1", 1);
+    startLayerRefresh("layer-1");
+    vi.advanceTimersByTime(10_000);
+
+    expect(updateParams.mock.calls).toEqual([[{ TIME: "t2" }], [{ TIME: "t3" }]]);
+    expect(useLayerTimeStore.getState().indexes["layer-1"]).toBe(2);
+  });
+
+  it("wraps a slider index outside the range", () => {
+    const { updateParams } = addOLLayer("managed-1");
+    setLayers(makeTOCLayer({ timeDimension: { kind: "list", values: ["t1", "t2"], defaultIndex: 0 } }));
+
+    setTimeIndex("layer-1", -1);
+
+    expect(updateParams).toHaveBeenCalledWith({ TIME: "t2" });
+  });
+
+  it("steps a vector time layer through the applier attached to the OpenLayers layer", () => {
+    const applyTimeValue = vi.fn();
+    mockState.olLayers.set("managed-1", {
+      getVisible: () => true,
+      getSource: () => ({}),
+      get: (key: string) => (key === TIME_VALUE_APPLIER_PROPERTY ? applyTimeValue : undefined),
+    });
+    const layer = makeTOCLayer({ timeDimension: { kind: "list", values: ["t1", "t2"], defaultIndex: 0 } });
+    setLayers(layer);
+
+    expect(canRefreshLayer(layer)).toBe(true);
+    startLayerRefresh("layer-1");
+    vi.advanceTimersByTime(10_000);
+
+    expect(applyTimeValue).toHaveBeenCalledWith("t2");
   });
 
   it("does not start a hidden layer", () => {
