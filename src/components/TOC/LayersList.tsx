@@ -16,6 +16,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   const [layers, setLayers] = useState<TOCLayer[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const timeControlPressed = useRef(false);
   const dragCounter = useRef(0);
 
   const moveLayer = useTOCStore((s) => s.moveLayer);
@@ -36,6 +37,10 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
 
   // Drag and drop handlers
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (timeControlPressed.current) {
+      e.preventDefault();
+      return;
+    }
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", `${index}:${layers[index].id}`);
@@ -150,6 +155,9 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
                 group={group}
                 searchText={searchText}
                 showDragHandle={!sortAlpha}
+                onTimeControlInteraction={(active) => {
+                  timeControlPressed.current = active;
+                }}
                 onLayerChange={onLayerChange}
                 onLegendToggle={onLegendToggle}
                 onLayerOptionsClick={onLayerOptionsClick}

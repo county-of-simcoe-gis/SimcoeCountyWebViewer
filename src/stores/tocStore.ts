@@ -10,6 +10,7 @@ import { type LayerCategory, type ManagedLayer } from "@/stores/layerManagerStor
 import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { fetchWithAuth, isSecuredUrl } from "@/utils/auth";
 import { useToastStore } from "@/hooks/useToast";
+import { getTimeValueAt, type TimeDimension } from "@/utils/timeDimension";
 
 // Helper function to calculate z-index for a layer based on category and position
 // Layers at the beginning of the array (index 0) should have HIGHER z-index (drawn on top)
@@ -89,6 +90,8 @@ export interface TOCLayer {
   sourceType?: string; // Source type override (e.g. "WMTS") for non-WMS layers
   layerUrl?: string; // Direct URL for non-WMS layers (e.g. WMTS capabilities URL)
   projection?: string; // Projection override for non-WMS layers
+  refreshInterval?: number; // Timed refresh interval in seconds; 0 or undefined means none
+  timeDimension?: TimeDimension; // WMS TIME dimension (discrete list or ISO range) stepped by refresh and the time slider
   showAllFields?: boolean; // Show fields normally hidden by isExcludedKey
 }
 
@@ -1880,6 +1883,9 @@ export const useTOCStore = create<TOCState>()(
               DOWNLOAD: { keyword: "DOWNLOAD", type: "bool", value: false },
               NO_ATTRIBUTE_TABLE: { keyword: "NO_ATTRIBUTE_TABLE", type: "bool", value: false },
               STATIC_IMAGE_LEGEND: { keyword: "STATIC_IMAGE_LEGEND", type: "bool", value: false },
+              SAR: { keyword: "SAR", type: "bool", value: false },
+              CATEGORY: { keyword: "CATEGORY", type: "array", value: [], splitChar: "," },
+              REFRESH_INTERVAL: { keyword: "REFRESH_INTERVAL", type: "int", value: 0 },
             },
             default_group: "All_Layers_Public",
           },
@@ -2464,6 +2470,7 @@ export const useTOCStore = create<TOCState>()(
                 name: layer.name,
                 projection: layer.projection || "EPSG:3857",
                 secured: !!layer.secured,
+                timeValue: !isDirectLayer && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
               },
               (olLayer: unknown) => {
                 if (olLayer) {

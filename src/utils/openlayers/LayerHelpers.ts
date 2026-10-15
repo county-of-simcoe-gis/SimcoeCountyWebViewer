@@ -146,6 +146,7 @@ export class LayerHelpers {
       rootPath = null,
       minZoom = null,
       maxZoom = null,
+      timeValue,
     }: LayerOptions,
     callback: (layer: Layer) => void,
   ): void {
@@ -160,6 +161,7 @@ export class LayerHelpers {
       extent,
       name,
       background,
+      timeValue,
     };
 
     let finalName = name;
@@ -321,6 +323,7 @@ export class LayerHelpers {
               FORMAT: "image/png",
               SRS: "EPSG:3857",
               TRANSPARENT: true,
+              ...(timeValue && { TIME: timeValue }),
             },
             ratio: 1,
             crossOrigin: "anonymous", // Enable CORS for print functionality
