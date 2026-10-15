@@ -1,3 +1,5 @@
+import { getStorageItem, removeStorageItem, setStorageItem } from "@/utils/storage";
+
 /**
  * Legacy style compatibility helpers.
  *
@@ -120,4 +122,110 @@ export function transformOLStyle(old: OldOLStyle): NewStyleJSON {
   }
 
   return result;
+}
+
+// ---------------------------------------------------------------------------
+// Versioned localStorage rules
+// ---------------------------------------------------------------------------
+
+export type StorageMigrationAction =
+  | { type: "removeKey"; key: string }
+  | { type: "setKey"; key: string; value: string }
+  | { type: "removeField"; key: string; field: string }
+  | { type: "setField"; key: string; field: string; value: unknown };
+
+export interface StorageMigration {
+  version: string;
+  description: string;
+  actions: StorageMigrationAction[];
+}
+
+export const STORAGE_VERSION_KEY = "currentVersion";
+const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
+
+// Add rules here. Each runs once for users upgrading from an older version; order does not matter.
+export const STORAGE_MIGRATIONS: StorageMigration[] = [
+  {
+    version: "2.0.6",
+    description: "Imagery is saved by name; clear the legacy slider index",
+    actions: [
+      // Must match BASEMAP_STORAGE_KEY in BasemapSwitcher.tsx.
+      { type: "removeField", key: "Saved Basemap Options", field: "imagerySliderValue" },
+      { type: "removeField", key: "Saved Basemap Options", field: "imageryServiceName" },
+    ],
+  },
+];
+
+/** Compares dotted numeric versions; missing segments count as zero. */
+export function compareVersions(a: string, b: string): number {
+  const partsA = a.split(".").map((part) => parseInt(part, 10) || 0);
+  const partsB = b.split(".").map((part) => parseInt(part, 10) || 0);
+  const length = Math.max(partsA.length, partsB.length);
+  for (let i = 0; i < length; i++) {
+    const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+function parseObject(raw: string): Record<string, unknown> | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return parsed !== null && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function applyStorageAction(action: StorageMigrationAction): void {
+  if (action.type === "removeKey") {
+    if (getStorageItem(action.key) !== null) removeStorageItem(action.key);
+    return;
+  }
+  if (action.type === "setKey") {
+    setStorageItem(action.key, action.value);
+    return;
+  }
+
+  const stored = getStorageItem(action.key);
+  if (stored === null) return;
+  const data = parseObject(stored);
+  if (!data) {
+    console.warn(`[StorageMigration] "${action.key}" is not a JSON object; skipped`);
+    return;
+  }
+  if (action.type === "removeField") {
+    if (!(action.field in data)) return;
+    delete data[action.field];
+  } else {
+    data[action.field] = action.value;
+  }
+  setStorageItem(action.key, JSON.stringify(data));
+}
+
+export interface RunStorageMigrationsOptions {
+  appVersion?: string;
+  migrations?: StorageMigration[];
+}
+
+/**
+ * Applies every rule newer than the stored currentVersion, up to appVersion.
+ * A missing currentVersion is treated as 0.0.0, so all rules apply to it.
+ */
+export function runStorageMigrations({ appVersion = APP_VERSION, migrations = STORAGE_MIGRATIONS }: RunStorageMigrationsOptions = {}): void {
+  const storedVersion = getStorageItem(STORAGE_VERSION_KEY) ?? "0.0.0";
+  if (compareVersions(storedVersion, appVersion) >= 0) return;
+
+  const pending = migrations
+    .filter((migration) => compareVersions(migration.version, storedVersion) > 0 && compareVersions(migration.version, appVersion) <= 0)
+    .sort((a, b) => compareVersions(a.version, b.version));
+
+  try {
+    pending.forEach((migration) => migration.actions.forEach(applyStorageAction));
+  } catch (error) {
+    console.error("[StorageMigration] Failed; will retry on next load:", error);
+    return;
+  }
+
+  setStorageItem(STORAGE_VERSION_KEY, appVersion);
 }
