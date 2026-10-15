@@ -465,6 +465,13 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.6 (2026-10-15)
+
+- **Timed Layer Refresh** — Layers with a refresh interval or time dimension get play/pause controls, and Folder headers and List group selectors control every refreshable layer in that group.
+- **WMS Time Slider** — WMS layers with a time dimension show a slider that steps through available times, and dragging the slider pauses playback.
+- **Layer Setup Keywords** — Added `REFRESH_INTERVAL` and `CATEGORY` keyword support for publishers, documented in [Layer Setup](#layer-setup).
+- **2026 Imagery** — Added the 2026 imagery service to the Basemap Switcher.
+
 ### v2.0.5 (2026-10-09)
 
 - **Box Select Results** — Added a map control to draw a box and view results for layers and parcels within the selected area, with a Settings toggle to show or hide it.
