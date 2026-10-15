@@ -51,12 +51,14 @@ export const ShareMap = React.memo(({ map }: ShareMapProps) => {
         const basemapOptions = JSON.parse(savedBasemap) as {
           activeButton?: string;
           selectedTopoServiceName?: string | null;
+          imageryServiceName?: string | null;
         };
         if (basemapOptions.activeButton) {
           params.set("BASEMAP", basemapOptions.activeButton);
         }
-        if (basemapOptions.selectedTopoServiceName) {
-          params.set("NAME", basemapOptions.selectedTopoServiceName);
+        const basemapName = basemapOptions.activeButton === "imagery" ? basemapOptions.imageryServiceName : basemapOptions.selectedTopoServiceName;
+        if (basemapName) {
+          params.set("NAME", basemapName);
         }
       }
     } catch {

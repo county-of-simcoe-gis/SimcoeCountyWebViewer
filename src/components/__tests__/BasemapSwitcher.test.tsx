@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, renderHook, fireEvent, waitFor, act } from "@testing-library/react";
-import BasemapSwitcher from "@/components/BasemapSwitcher";
+import BasemapSwitcher, { getImageryNameAtSlider, resolveSavedImageryIndex, type SavedBasemapOptions } from "@/components/BasemapSwitcher";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -24,6 +24,8 @@ vi.mock("next/image", () => ({
 // Mock react-icons
 vi.mock("react-icons/md", () => ({
   MdManageHistory: () => <div data-testid="manage-history-icon" />,
+  MdKeyboardArrowDown: () => <div data-testid="arrow-down-icon" />,
+  MdKeyboardArrowUp: () => <div data-testid="arrow-up-icon" />,
 }));
 
 // Create a comprehensive mock config that matches the actual structure
@@ -238,6 +240,110 @@ describe("BasemapSwitcher", () => {
       expect(mockBasemapConfig.imageryServices).toBeDefined();
       expect(mockBasemapConfig.topoServices.length).toBeGreaterThan(0);
       expect(mockBasemapConfig.imageryServices.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Imagery position persistence", () => {
+    const savedBase: SavedBasemapOptions = {
+      activeButton: "imagery",
+      selectedTopoServiceName: null,
+      streetsCheckbox: true,
+    };
+    const services = [
+      { name: "2022", url: "", type: "TileImage" },
+      { name: "2023", url: "", type: "TileImage" },
+      { name: "2024", url: "", type: "TileImage" },
+    ];
+
+    it("returns the service name at the rounded slider position", () => {
+      expect(getImageryNameAtSlider(services, 1.4)).toBe("2023");
+      expect(getImageryNameAtSlider(services, 9)).toBeNull();
+    });
+
+    it("resolves a saved name to its current index after a service is inserted", () => {
+      const withInserted = [services[0], { name: "New", url: "", type: "TileImage" }, services[1], services[2]];
+      expect(resolveSavedImageryIndex(withInserted, { ...savedBase, imageryServiceName: "2023" })).toBe(2);
+    });
+
+    it("returns null when the saved name is no longer available", () => {
+      expect(resolveSavedImageryIndex(services, { ...savedBase, imageryServiceName: "Google" })).toBeNull();
+    });
+
+    it("falls back to the legacy index when no name is saved", () => {
+      expect(resolveSavedImageryIndex(services, { ...savedBase, imagerySliderValue: 1 })).toBe(1);
+      expect(resolveSavedImageryIndex(services, { ...savedBase, imagerySliderValue: 9 })).toBe(2);
+    });
+
+    it("returns null when no imagery position is saved", () => {
+      expect(resolveSavedImageryIndex(services, savedBase)).toBeNull();
+    });
+
+    describe("restore from localStorage", () => {
+      beforeEach(() => {
+        localStorage.setItem("Saved Basemap Options", JSON.stringify({ ...savedBase, imageryServiceName: "2022" }));
+      });
+
+      afterEach(() => {
+        localStorage.removeItem("Saved Basemap Options");
+      });
+
+      it("restores the saved imagery year by name", async () => {
+        useMapStore.setState({ map: mockMap as any });
+
+        const { findByTestId } = render(<BasemapSwitcher />);
+        const slider = await findByTestId("imagery-slider");
+
+        // Let async init finish so the default-max effect cannot override the restored value.
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        });
+
+        expect(slider).toHaveAttribute("data-value", "0");
+      });
+
+      it("keeps the saved imagery year when URL params load after restore", async () => {
+        useAppStore.setState({ urlParametersLoaded: false });
+        useMapStore.setState({ map: mockMap as any });
+
+        const { findByTestId, getByTestId } = render(<BasemapSwitcher />);
+        await findByTestId("imagery-slider");
+
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        });
+        act(() => {
+          useAppStore.setState({ urlParametersLoaded: true });
+        });
+        await act(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        });
+
+        expect(getByTestId("imagery-slider")).toHaveAttribute("data-value", "0");
+      });
+    });
+
+    describe("save on slider move", () => {
+      afterEach(() => {
+        localStorage.removeItem("Saved Basemap Options");
+      });
+
+      it("saves the imagery name when the slider is released", async () => {
+        useMapStore.setState({ map: mockMap as any });
+
+        const { findByTestId } = render(<BasemapSwitcher />);
+        const slider = (await findByTestId("imagery-slider")).querySelector("input") as HTMLInputElement;
+
+        await waitFor(() => {
+          expect(slider.parentElement).toHaveAttribute("data-value", "1");
+        });
+
+        fireEvent.mouseUp(slider, { target: { value: "0" } });
+
+        await waitFor(() => {
+          const saved = JSON.parse(localStorage.getItem("Saved Basemap Options") ?? "{}");
+          expect(saved.imageryServiceName).toBe("2022");
+        });
+      });
     });
   });
 
