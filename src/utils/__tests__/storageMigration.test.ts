@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { isOldOLStyleFormat, transformOLStyle } from "../storageMigration";
+import { beforeEach, describe, expect, it } from "vitest";
+import { compareVersions, isOldOLStyleFormat, runStorageMigrations, transformOLStyle, type StorageMigration } from "../storageMigration";
 
 describe("isOldOLStyleFormat", () => {
   it("returns true for legacy underscore-suffixed OL style objects", () => {
@@ -109,5 +109,99 @@ describe("transformOLStyle", () => {
     });
 
     expect(transformOLStyle({})).toEqual({});
+  });
+});
+
+describe("compareVersions", () => {
+  it("compares numeric segments and treats missing segments as zero", () => {
+    expect(compareVersions("2.0.10", "2.0.9")).toBeGreaterThan(0);
+    expect(compareVersions("1.9.9", "2.0.0")).toBeLessThan(0);
+    expect(compareVersions("2.0", "2.0.0")).toBe(0);
+  });
+});
+
+describe("runStorageMigrations", () => {
+  const BASEMAP_KEY = "Saved Basemap Options";
+  const VERSION_KEY = "currentVersion";
+
+  const testMigrations: StorageMigration[] = [
+    { version: "2.0.9", description: "third", actions: [{ type: "setKey", key: "order", value: "2.0.9" }] },
+    {
+      version: "2.0.2",
+      description: "first",
+      actions: [
+        { type: "setKey", key: "order", value: "2.0.2" },
+        { type: "setKey", key: "seen-2.0.2", value: "1" },
+      ],
+    },
+    { version: "2.0.5", description: "second", actions: [{ type: "setKey", key: "order", value: "2.0.5" }] },
+  ];
+
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it("treats a new user as current and clears nothing", () => {
+    runStorageMigrations({ appVersion: "2.0.6" });
+
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.6");
+    expect(localStorage.getItem(BASEMAP_KEY)).toBeNull();
+  });
+
+  it("clears the legacy imagery slider when no version is stored", () => {
+    localStorage.setItem(BASEMAP_KEY, JSON.stringify({ activeButton: "imagery", selectedTopoServiceName: null, imagerySliderValue: 15, streetsCheckbox: true }));
+
+    runStorageMigrations({ appVersion: "2.0.6" });
+
+    expect(JSON.parse(localStorage.getItem(BASEMAP_KEY) ?? "{}")).toEqual({ activeButton: "imagery", selectedTopoServiceName: null, streetsCheckbox: true });
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.6");
+  });
+
+  it("applies every rule between the stored version and the app version in order", () => {
+    localStorage.setItem(VERSION_KEY, "2.0.1");
+
+    runStorageMigrations({ appVersion: "2.0.9", migrations: testMigrations });
+
+    expect(localStorage.getItem("order")).toBe("2.0.9");
+    expect(localStorage.getItem("seen-2.0.2")).toBe("1");
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.9");
+  });
+
+  it("skips rules newer than the app version", () => {
+    localStorage.setItem(VERSION_KEY, "2.0.1");
+
+    runStorageMigrations({ appVersion: "2.0.5", migrations: testMigrations });
+
+    expect(localStorage.getItem("order")).toBe("2.0.5");
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.5");
+  });
+
+  it("skips rules at or below the stored version", () => {
+    localStorage.setItem(VERSION_KEY, "2.0.2");
+
+    runStorageMigrations({ appVersion: "2.0.9", migrations: testMigrations });
+
+    expect(localStorage.getItem("seen-2.0.2")).toBeNull();
+    expect(localStorage.getItem("order")).toBe("2.0.9");
+  });
+
+  it("does nothing when the stored version is newer than the app version", () => {
+    localStorage.setItem(VERSION_KEY, "2.0.9");
+
+    runStorageMigrations({ appVersion: "2.0.6", migrations: testMigrations });
+
+    expect(localStorage.getItem("order")).toBeNull();
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.9");
+  });
+
+  it("sets a field and keeps the other fields in a JSON entry", () => {
+    localStorage.setItem(BASEMAP_KEY, JSON.stringify({ imagerySliderValue: 3, streetsCheckbox: false }));
+
+    runStorageMigrations({
+      appVersion: "2.0.9",
+      migrations: [{ version: "2.0.7", description: "override", actions: [{ type: "setField", key: BASEMAP_KEY, field: "streetsCheckbox", value: true }] }],
+    });
+
+    expect(JSON.parse(localStorage.getItem(BASEMAP_KEY) ?? "{}")).toEqual({ imagerySliderValue: 3, streetsCheckbox: true });
   });
 });

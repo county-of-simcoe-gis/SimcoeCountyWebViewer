@@ -12,6 +12,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { showURLWindow } from "@/utils/helpersUI";
 import { enableUserStorage, getUserStorage, userStorageReady } from "@/utils/userStorage";
 import { getStorageItem } from "@/utils/storage";
+import { runStorageMigrations } from "@/utils/storageMigration";
 import { trackMapLoad } from "@/lib/appStats";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -61,6 +62,11 @@ export default function Layout({ children }: LayoutProps) {
     }
   }, [session, sessionStatus, setUserName]);
 
+  // Apply versioned localStorage rules before stores and basemaps read them.
+  useEffect(() => {
+    runStorageMigrations();
+  }, []);
+
   // --- User storage sync (restore localStorage from server for saveToServer users) ---
   const userStorageFiredRef = useRef(false);
   const [storageReady, setStorageReady] = useState(false);
@@ -87,7 +93,11 @@ export default function Layout({ children }: LayoutProps) {
     }
 
     // Signal that localStorage is populated (or user doesn't have the role)
-    userStorageReady.then(() => setStorageReady(true));
+    userStorageReady.then(() => {
+      // Server-restored values may come from an older build; re-apply the rules.
+      runStorageMigrations();
+      setStorageReady(true);
+    });
   }, [session, sessionStatus]);
 
   // For unauthenticated users, disable server sync (resolves userStorageReady) and mark ready
