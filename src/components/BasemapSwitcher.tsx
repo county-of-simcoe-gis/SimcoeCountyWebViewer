@@ -83,10 +83,12 @@ function mergeServicesByName<T extends { name: string }>(local: T[], api: T[]): 
 
 const BASEMAP_STORAGE_KEY = "Saved Basemap Options";
 
-interface SavedBasemapOptions {
+export interface SavedBasemapOptions {
   activeButton: string;
   selectedTopoServiceName: string | null;
-  imagerySliderValue: number;
+  imageryServiceName?: string | null;
+  /** Legacy index from before imagery was saved by name; read-only. */
+  imagerySliderValue?: number;
   streetsCheckbox: boolean;
 }
 
@@ -104,6 +106,23 @@ function loadBasemapOptions(): SavedBasemapOptions | null {
     if (stored) return JSON.parse(stored) as SavedBasemapOptions;
   } catch {
     /* ignore */
+  }
+  return null;
+}
+
+/** Returns the imagery service name at a slider position (slider step is 0.01, so round). */
+export function getImageryNameAtSlider(services: ImageryService[], sliderValue: number): string | null {
+  return services[Math.round(sliderValue)]?.name ?? null;
+}
+
+/** Resolves the saved imagery year to an index, or null when it is unavailable. */
+export function resolveSavedImageryIndex(services: ImageryService[], saved: SavedBasemapOptions): number | null {
+  if (saved.imageryServiceName) {
+    const index = services.findIndex((service) => service.name === saved.imageryServiceName);
+    return index === -1 ? null : index;
+  }
+  if (typeof saved.imagerySliderValue === "number" && services.length > 0) {
+    return Math.min(Math.max(Math.round(saved.imagerySliderValue), 0), services.length - 1);
   }
   return null;
 }
@@ -212,7 +231,8 @@ export default function BasemapSwitcher() {
         if (saved) {
           setActiveButton(saved.activeButton);
           setStreetsCheckbox(saved.streetsCheckbox);
-          setImagerySliderValue(saved.imagerySliderValue);
+          const savedImageryIndex = resolveSavedImageryIndex(data.imageryServices, saved);
+          if (savedImageryIndex !== null) setImagerySliderValue(savedImageryIndex);
           if (saved.selectedTopoServiceName && data.topoServices) {
             const savedService = data.topoServices.find((s) => s.name === saved.selectedTopoServiceName);
             if (savedService) setSelectedTopoService(savedService);
@@ -586,7 +606,8 @@ export default function BasemapSwitcher() {
           if (ml.metadata?.isStreets) ml.layer.setVisible(streets);
         });
 
-        const sliderValue = saved?.imagerySliderValue ?? (config.imageryServices?.length ? config.imageryServices.length - 1 : 0);
+        const savedImageryIndex = saved ? resolveSavedImageryIndex(config.imageryServices, saved) : null;
+        const sliderValue = savedImageryIndex ?? (config.imageryServices?.length ? config.imageryServices.length - 1 : 0);
         updateImageryLayers(sliderValue);
         setImagerySliderValue(sliderValue);
         setStreetsCheckbox(streets);
@@ -647,18 +668,28 @@ export default function BasemapSwitcher() {
   }, []);
 
   // Event handlers
+  const persistImageryPosition = (sliderValue: number) => {
+    saveBasemapOptions({
+      activeButton,
+      selectedTopoServiceName: selectedTopoService?.name ?? null,
+      imageryServiceName: getImageryNameAtSlider(config?.imageryServices ?? [], sliderValue),
+      streetsCheckbox,
+    });
+  };
+
   const onSliderChange = (value: number | number[]) => {
     const sliderValue = Array.isArray(value) ? value[0] : value;
     updateImageryLayers(sliderValue);
     setImagerySliderValue(sliderValue);
 
     // Fallback for rc-slider controlled-mode issue where onChangeComplete
-    // may not fire: track the final basemap after the user stops moving.
+    // may not fire: track and save the final basemap after the user stops moving.
     if (sliderTrackTimeoutRef.current) {
       clearTimeout(sliderTrackTimeoutRef.current);
     }
     sliderTrackTimeoutRef.current = setTimeout(() => {
       trackSliderBasemap(sliderValue);
+      persistImageryPosition(sliderValue);
     }, 400);
   };
 
@@ -669,6 +700,7 @@ export default function BasemapSwitcher() {
     }
     const sliderValue = Array.isArray(value) ? value[0] : value;
     trackSliderBasemap(sliderValue);
+    persistImageryPosition(sliderValue);
   };
 
   const onBasemapImageClick = () => {
@@ -796,7 +828,7 @@ export default function BasemapSwitcher() {
     saveBasemapOptions({
       activeButton,
       selectedTopoServiceName: selectedTopoService?.name ?? null,
-      imagerySliderValue,
+      imageryServiceName: getImageryNameAtSlider(config?.imageryServices ?? [], imagerySliderValue),
       streetsCheckbox: event.target.checked,
     });
   };
@@ -814,7 +846,7 @@ export default function BasemapSwitcher() {
     saveBasemapOptions({
       activeButton: "topo",
       selectedTopoServiceName: service.name,
-      imagerySliderValue,
+      imageryServiceName: getImageryNameAtSlider(config?.imageryServices ?? [], imagerySliderValue),
       streetsCheckbox,
     });
   };
@@ -828,7 +860,7 @@ export default function BasemapSwitcher() {
     saveBasemapOptions({
       activeButton: "imagery",
       selectedTopoServiceName: selectedTopoService?.name ?? null,
-      imagerySliderValue,
+      imageryServiceName: getImageryNameAtSlider(config?.imageryServices ?? [], imagerySliderValue),
       streetsCheckbox,
     });
   };
@@ -947,8 +979,9 @@ export default function BasemapSwitcher() {
       // No BASEMAP URL param, set defaults
       hasSetDefaultSliderRef.current = true;
       hasProcessedUrlParamsRef.current = true;
-      const maxValue = config.imageryServices.length - 1;
-      setImagerySliderValue(maxValue);
+      const saved = loadBasemapOptions();
+      const savedImageryIndex = saved ? resolveSavedImageryIndex(config.imageryServices, saved) : null;
+      setImagerySliderValue(savedImageryIndex ?? config.imageryServices.length - 1);
     }
   }, [config, urlParameters, urlParametersLoaded, getUrlParam, handleURLParameters]);
 
