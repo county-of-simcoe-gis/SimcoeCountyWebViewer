@@ -146,7 +146,7 @@ const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 // Add rules here. Each runs once for users upgrading from an older version; order does not matter.
 export const STORAGE_MIGRATIONS: StorageMigration[] = [
   {
-    version: "2.0.6",
+    version: "2.0.7",
     description: "Imagery is saved by name; clear the legacy slider index",
     actions: [
       // Must match BASEMAP_STORAGE_KEY in BasemapSwitcher.tsx.
