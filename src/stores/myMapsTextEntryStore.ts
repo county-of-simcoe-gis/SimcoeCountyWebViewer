@@ -7,12 +7,19 @@ import { getMinimumPathPoints, type TextEntryGeometry, type TextEntryUnit } from
 // Tools that complete after a single bearing and distance.
 export const SINGLE_SEGMENT_DRAW_TYPES: string[] = ["Bearing", "Measure"];
 
+export interface MyMapsTextEntrySegment {
+  bearing: number;
+  distance: number;
+  unit: TextEntryUnit;
+}
+
 export interface MyMapsTextEntryState {
   enabled: boolean;
   unit: TextEntryUnit;
   drawType: string;
   // EPSG:3857 coordinates; the start point is first.
   points: number[][];
+  segments: MyMapsTextEntrySegment[];
   error: string | null;
   completed: TextEntryGeometry | null;
 
@@ -20,7 +27,7 @@ export interface MyMapsTextEntryState {
   setUnit: (unit: TextEntryUnit) => void;
   startSession: (drawType: DrawType) => void;
   setStartPoint: (coordinate: number[]) => void;
-  addPoint: (coordinate: number[]) => void;
+  addPoint: (coordinate: number[], segment?: MyMapsTextEntrySegment) => void;
   undo: () => void;
   finish: () => void;
   complete: (geometry: TextEntryGeometry) => void;
@@ -34,34 +41,36 @@ export const useMyMapsTextEntryStore = create<MyMapsTextEntryState>((set, get) =
   unit: "m",
   drawType: "Cancel",
   points: [],
+  segments: [],
   error: null,
   completed: null,
 
-  setEnabled: (enabled) => set({ enabled, drawType: "Cancel", points: [], error: null, completed: null }),
+  setEnabled: (enabled) => set({ enabled, drawType: "Cancel", points: [], segments: [], error: null, completed: null }),
 
   setUnit: (unit) => set({ unit }),
 
-  startSession: (drawType) => set({ drawType, points: [], error: null, completed: null }),
+  startSession: (drawType) => set({ drawType, points: [], segments: [], error: null, completed: null }),
 
-  setStartPoint: (coordinate) => set({ points: [coordinate], error: null }),
+  setStartPoint: (coordinate) => set({ points: [coordinate], segments: [], error: null }),
 
-  addPoint: (coordinate) => {
-    const { drawType, points } = get();
+  addPoint: (coordinate, segment) => {
+    const { drawType, points, segments } = get();
     const nextPoints = [...points, coordinate];
+    const nextSegments = segment ? [...segments, segment] : segments;
 
     if (SINGLE_SEGMENT_DRAW_TYPES.includes(drawType)) {
-      set({ points: nextPoints, error: null, completed: { kind: "path", drawType, points: nextPoints } });
+      set({ points: nextPoints, segments: nextSegments, error: null, completed: { kind: "path", drawType, points: nextPoints } });
       return;
     }
 
-    set({ points: nextPoints, error: null });
+    set({ points: nextPoints, segments: nextSegments, error: null });
   },
 
   undo: () => {
-    const { points } = get();
+    const { points, segments } = get();
     // The start point is kept; leaving the tool cancels the session.
     if (points.length > 1) {
-      set({ points: points.slice(0, -1), error: null });
+      set({ points: points.slice(0, -1), segments: segments.slice(0, -1), error: null });
     }
   },
 
@@ -83,5 +92,5 @@ export const useMyMapsTextEntryStore = create<MyMapsTextEntryState>((set, get) =
 
   clearCompleted: () => set({ completed: null }),
 
-  reset: () => set({ drawType: "Cancel", points: [], error: null, completed: null }),
+  reset: () => set({ drawType: "Cancel", points: [], segments: [], error: null, completed: null }),
 }));

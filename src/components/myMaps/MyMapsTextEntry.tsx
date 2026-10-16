@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import { SINGLE_SEGMENT_DRAW_TYPES, useMyMapsTextEntryStore } from "@/stores/myMapsTextEntryStore";
-import { destinationPoint, getMinimumPathPoints, parseBearing, parseDistance, supportsTextEntry, unitsToMeters, type TextEntryUnit } from "@/utils/myMapsTextEntry";
+import { destinationPoint, formatLatLon, getMinimumPathPoints, parseBearing, parseDistance, supportsTextEntry, unitsToMeters, type TextEntryUnit } from "@/utils/myMapsTextEntry";
 
 const UNIT_OPTIONS: TextEntryUnit[] = ["m", "km", "ft", "mi"];
 
@@ -14,6 +14,7 @@ const MyMapsTextEntry: React.FC = () => {
   const enabled = useMyMapsTextEntryStore((s) => s.enabled);
   const unit = useMyMapsTextEntryStore((s) => s.unit);
   const points = useMyMapsTextEntryStore((s) => s.points);
+  const segments = useMyMapsTextEntryStore((s) => s.segments);
   const error = useMyMapsTextEntryStore((s) => s.error);
   const setEnabled = useMyMapsTextEntryStore((s) => s.setEnabled);
   const setUnit = useMyMapsTextEntryStore((s) => s.setUnit);
@@ -55,7 +56,7 @@ const MyMapsTextEntry: React.FC = () => {
     }
 
     const lastPoint = points[points.length - 1];
-    addPoint(destinationPoint(lastPoint, bearing, unitsToMeters(distance, unit)));
+    addPoint(destinationPoint(lastPoint, bearing, unitsToMeters(distance, unit)), { bearing, distance, unit });
     setBearingInput("");
     setDistanceInput("");
   };
@@ -79,20 +80,28 @@ const MyMapsTextEntry: React.FC = () => {
     complete({ kind: "rectangle", corner: points[0], widthM: unitsToMeters(width, unit), heightM: unitsToMeters(height, unit) });
   };
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-
+  const handleSubmit = () => {
     if (isCircle) {
       submitCircle();
     } else if (isRectangle) {
       submitRectangle();
-    } else if (canFinish && bearingInput.trim() === "" && distanceInput.trim() === "") {
-      finish();
     } else {
       submitSegment();
     }
   };
+
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+
+    if (canFinish && bearingInput.trim() === "" && distanceInput.trim() === "") {
+      finish();
+    } else {
+      handleSubmit();
+    }
+  };
+
+  const submitLabel = isPath && !isSingleSegment ? "Next" : "Submit";
 
   let statusText = "Click the start point on the map.";
   if (hasStart && isCircle) statusText = "Enter the radius.";
@@ -115,6 +124,19 @@ const MyMapsTextEntry: React.FC = () => {
       {enabled && (
         <>
           <p className="text-base-content/70">{statusText}</p>
+
+          {hasStart && (
+            <ol data-testid="mymaps-text-entry-history" className="flex flex-col gap-0.5 max-h-32 overflow-y-auto text-base-content/80">
+              <li>
+                {isCircle ? "Center" : isRectangle ? "Corner" : "Start"}: {formatLatLon(points[0])}
+              </li>
+              {segments.map((segment, index) => (
+                <li key={index}>
+                  {index + 1}. {segment.bearing}° {segment.distance} {segment.unit} to {formatLatLon(points[index + 1])}
+                </li>
+              ))}
+            </ol>
+          )}
 
           {hasStart && (
             <div className="flex flex-wrap items-end gap-2">
@@ -175,6 +197,11 @@ const MyMapsTextEntry: React.FC = () => {
           )}
 
           <div className="flex flex-wrap gap-1">
+            {hasStart && (
+              <button type="button" className="btn btn-xs btn-primary" onClick={handleSubmit}>
+                {submitLabel}
+              </button>
+            )}
             {hasStart && isPath && !isSingleSegment && (
               <>
                 <button type="button" className="btn btn-xs" onClick={undo} disabled={points.length <= 1}>

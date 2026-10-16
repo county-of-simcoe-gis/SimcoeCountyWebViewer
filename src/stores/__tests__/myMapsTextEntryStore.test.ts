@@ -7,7 +7,7 @@ const THIRD = [-8798000, 5500000];
 
 describe("myMapsTextEntryStore", () => {
   beforeEach(() => {
-    useMyMapsTextEntryStore.setState({ enabled: false, unit: "m", drawType: "Cancel", points: [], error: null, completed: null });
+    useMyMapsTextEntryStore.setState({ enabled: false, unit: "m", drawType: "Cancel", points: [], segments: [], error: null, completed: null });
   });
 
   it("records the start point for a session", () => {
@@ -65,6 +65,19 @@ describe("myMapsTextEntryStore", () => {
     useMyMapsTextEntryStore.getState().complete({ kind: "circle", center: START, radiusM: 50 });
 
     expect(useMyMapsTextEntryStore.getState().completed).toEqual({ kind: "circle", center: START, radiusM: 50 });
+  });
+
+  it("keeps typed segment inputs aligned with points through undo", () => {
+    const segment = { bearing: 90, distance: 100, unit: "m" as const };
+    const store = useMyMapsTextEntryStore.getState();
+    store.startSession("LineString");
+    store.setStartPoint(START);
+    store.addPoint(SECOND, segment);
+
+    expect(useMyMapsTextEntryStore.getState().segments).toEqual([segment]);
+
+    useMyMapsTextEntryStore.getState().undo();
+    expect(useMyMapsTextEntryStore.getState().segments).toEqual([]);
   });
 
   it("clears the session when the toggle changes", () => {

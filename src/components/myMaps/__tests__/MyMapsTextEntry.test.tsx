@@ -11,7 +11,7 @@ const THIRD = [-8798000, 5500000];
 
 const setSession = (drawType: DrawType, points: number[][], enabled = true) => {
   useMyMapsStore.setState({ drawType });
-  useMyMapsTextEntryStore.setState({ enabled, unit: "m", drawType, points, error: null, completed: null });
+  useMyMapsTextEntryStore.setState({ enabled, unit: "m", drawType, points, segments: [], error: null, completed: null });
 };
 
 describe("MyMapsTextEntry", () => {
@@ -46,6 +46,31 @@ describe("MyMapsTextEntry", () => {
     await user.type(screen.getByLabelText("Distance"), "100{Enter}");
 
     expect(useMyMapsTextEntryStore.getState().points).toHaveLength(2);
+  });
+
+  it("adds a segment when the Next button is clicked", async () => {
+    const user = userEvent.setup();
+    setSession("LineString", [START]);
+    render(<MyMapsTextEntry />);
+
+    await user.type(screen.getByLabelText("Bearing (°)"), "90");
+    await user.type(screen.getByLabelText("Distance"), "100");
+    await user.click(screen.getByRole("button", { name: "Next" }));
+
+    expect(useMyMapsTextEntryStore.getState().points).toHaveLength(2);
+  });
+
+  it("lists the start coordinate and each entered segment", async () => {
+    const user = userEvent.setup();
+    setSession("LineString", [START]);
+    render(<MyMapsTextEntry />);
+
+    await user.type(screen.getByLabelText("Bearing (°)"), "90");
+    await user.type(screen.getByLabelText("Distance"), "100{Enter}");
+
+    const history = screen.getByTestId("mymaps-text-entry-history");
+    expect(history).toHaveTextContent(/Start: -?\d+\.\d{6}, -?\d+\.\d{6}/);
+    expect(history).toHaveTextContent("1. 90° 100 m to");
   });
 
   it("shows an error for a bearing outside 0 to 360", async () => {

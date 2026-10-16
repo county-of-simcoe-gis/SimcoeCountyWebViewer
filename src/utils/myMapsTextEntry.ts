@@ -74,8 +74,13 @@ export const parseDistance = (text: string): number | null => {
   return Number.isFinite(value) && value > 0 ? value : null;
 };
 
-export const supportsTextEntry = (drawType: string): boolean =>
-  myMapsConfig.drawingTools.some((tool) => tool.drawType === drawType && tool.supportsTextEntry === true);
+export const supportsTextEntry = (drawType: string): boolean => myMapsConfig.drawingTools.some((tool) => tool.drawType === drawType && tool.supportsTextEntry === true);
 
 // Points including the start point. Polygon needs three to close a ring.
 export const getMinimumPathPoints = (drawType: string): number => (drawType === "Polygon" ? 3 : 2);
+
+// Display format matches the map context menu (lat, lon at 6 decimals).
+export const formatLatLon = (coordinate: number[]): string => {
+  const [lon, lat] = transform(coordinate, "EPSG:3857", "EPSG:4326");
+  return `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+};
