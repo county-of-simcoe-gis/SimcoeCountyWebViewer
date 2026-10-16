@@ -151,10 +151,10 @@ describe("runStorageMigrations", () => {
   it("clears the legacy imagery slider when no version is stored", () => {
     localStorage.setItem(BASEMAP_KEY, JSON.stringify({ activeButton: "imagery", selectedTopoServiceName: null, imagerySliderValue: 15, streetsCheckbox: true }));
 
-    runStorageMigrations({ appVersion: "2.0.6" });
+    runStorageMigrations({ appVersion: "2.0.7" });
 
     expect(JSON.parse(localStorage.getItem(BASEMAP_KEY) ?? "{}")).toEqual({ activeButton: "imagery", selectedTopoServiceName: null, streetsCheckbox: true });
-    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.6");
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.7");
   });
 
   it("applies every rule between the stored version and the app version in order", () => {
