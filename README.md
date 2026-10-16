@@ -465,6 +465,13 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.7 (2026-10-16)
+
+- **MyMaps Keyboard Entry** — Draw MyMaps geometries by typing bearings and distances, with segment tracking and submission handling.
+- **MyMaps Rotate** — Rotate MyMaps features, with undo support for geometry changes.
+- **Related Records** — Results, Identify, and the Attribute Table show related ArcGIS records, with report details loaded on demand.
+- **Basemap Imagery** — Removed the 2026 imagery service and restored the 2025 imagery service in the Basemap Switcher due to quality issues.
+
 ### v2.0.6 (2026-10-15)
 
 - **Timed Layer Refresh** — Layers with a refresh interval or time dimension get play/pause controls, and Folder headers and List group selectors control every refreshable layer in that group.
