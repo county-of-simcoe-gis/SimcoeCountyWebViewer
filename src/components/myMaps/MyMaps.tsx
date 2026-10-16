@@ -9,6 +9,7 @@ import { useReportsStore } from "@/stores/reportsStore";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import ButtonBar from "@/components/myMaps/ButtonBar";
 import ColorBar from "@/components/myMaps/ColorBar";
+import MyMapsTextEntry from "@/components/myMaps/MyMapsTextEntry";
 import MyMapsItems from "@/components/myMaps/MyMapsItems";
 import MyMapsAdvanced from "@/components/myMaps/MyMapsAdvanced";
 import MyMapsItemPopup from "@/components/myMaps/MyMapsItemPopup";
@@ -303,7 +304,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   // Handle edit mode toggle from Advanced panel
   const handleEditFeatures = (editing: boolean, mode = "vertices") => {
-    setEditMode(editing, editing ? (mode as "vertices" | "translate") : null);
+    setEditMode(editing, editing ? (mode as "vertices" | "translate" | "rotate") : null);
     if (editing) {
       setDrawType("Cancel"); // Cancel any active drawing
     }
@@ -509,6 +510,9 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
       {/* Color Picker */}
       <ColorBar isEditing={isEditing} />
+
+      {/* Keyboard Entry */}
+      <MyMapsTextEntry />
 
       {/* Items List */}
       <MyMapsItems

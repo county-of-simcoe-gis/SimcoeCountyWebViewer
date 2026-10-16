@@ -32,6 +32,7 @@ beforeEach(() => {
     isEditing: false,
     editMode: null,
     items: [],
+    geometryUndoStack: [],
     drawOpacity: 0.8,
     drawingCounter: 1,
     toolTipId: "",
@@ -99,6 +100,80 @@ describe("myMapsStore", () => {
       result.current.setEditMode(false);
       expect(useMyMapsStore.getState().isEditing).toBe(false);
       expect(useMyMapsStore.getState().editMode).toBeNull();
+    });
+
+    it("should set rotate editing mode", () => {
+      const { result } = renderHook(() => useMyMapsStore());
+
+      result.current.setEditMode(true, "rotate");
+      expect(useMyMapsStore.getState().editMode).toBe("rotate");
+    });
+  });
+
+  describe("Geometry Undo", () => {
+    const lineA = '{"type":"Feature","geometry":{"type":"LineString","coordinates":[[0,0],[1,0]]}}';
+    const lineB = '{"type":"Feature","geometry":{"type":"LineString","coordinates":[[0,0],[0,1]]}}';
+    const makeItem = (id: string): MyMapsItem => ({
+      id,
+      label: "Line",
+      labelVisible: false,
+      labelRotation: 0,
+      drawType: "LineString",
+      geometryType: "LineString",
+      visible: true,
+      featureGeoJSON: lineA,
+      style: {},
+    });
+
+    it("records the previous geometry and applies the new one", () => {
+      useMyMapsStore.setState({ items: [makeItem("a")] });
+
+      useMyMapsStore.getState().updateItemGeometry("a", lineB);
+
+      expect(useMyMapsStore.getState().items[0].featureGeoJSON).toBe(lineB);
+      expect(useMyMapsStore.getState().geometryUndoStack).toEqual([{ id: "a", featureGeoJSON: lineA }]);
+    });
+
+    it("restores the previous geometry on undo", () => {
+      useMyMapsStore.setState({ items: [makeItem("a")] });
+      useMyMapsStore.getState().updateItemGeometry("a", lineB);
+
+      expect(useMyMapsStore.getState().undoGeometryEdit()).toBe(true);
+
+      expect(useMyMapsStore.getState().items[0].featureGeoJSON).toBe(lineA);
+      expect(useMyMapsStore.getState().geometryUndoStack).toEqual([]);
+    });
+
+    it("ignores unchanged geometry", () => {
+      useMyMapsStore.setState({ items: [makeItem("a")] });
+
+      useMyMapsStore.getState().updateItemGeometry("a", lineA);
+
+      expect(useMyMapsStore.getState().geometryUndoStack).toEqual([]);
+    });
+
+    it("skips history entries for removed items", () => {
+      useMyMapsStore.setState({ items: [makeItem("a"), makeItem("b")] });
+      useMyMapsStore.getState().updateItemGeometry("a", lineB);
+      useMyMapsStore.getState().updateItemGeometry("b", lineB);
+      useMyMapsStore.setState({ items: [useMyMapsStore.getState().items[1]] });
+
+      expect(useMyMapsStore.getState().undoGeometryEdit()).toBe(true);
+
+      expect(useMyMapsStore.getState().items[0].featureGeoJSON).toBe(lineA);
+    });
+
+    it("returns false when there is nothing to undo", () => {
+      expect(useMyMapsStore.getState().undoGeometryEdit()).toBe(false);
+    });
+
+    it("clears undo history when all items are cleared", () => {
+      useMyMapsStore.setState({ items: [makeItem("a")] });
+      useMyMapsStore.getState().updateItemGeometry("a", lineB);
+
+      useMyMapsStore.getState().clearAllItems();
+
+      expect(useMyMapsStore.getState().geometryUndoStack).toEqual([]);
     });
   });
 

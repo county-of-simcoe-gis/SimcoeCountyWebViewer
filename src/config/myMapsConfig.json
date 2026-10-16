@@ -27,6 +27,7 @@
       "title": "Draw a line on the map (Hold Shift key for Freehand Drawing)",
       "imageName": "/images/polyline.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "order": 2
     },
     {
@@ -36,6 +37,7 @@
       "title": "Draw a polygon on the map (Hold Shift key for Freehand Drawing)",
       "imageName": "/images/polygon.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "order": 3
     },
     {
@@ -45,6 +47,7 @@
       "title": "Draw a circle on the map",
       "imageName": "/images/circle.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "order": 4
     },
     {
@@ -54,6 +57,7 @@
       "title": "Draw a rectangle on the map",
       "imageName": "/images/rectangle.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "order": 5
     },
     {
@@ -63,6 +67,7 @@
       "title": "Draw an arrow on the map",
       "imageName": "/images/arrow.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "order": 6
     },
     {
@@ -90,6 +95,7 @@
       "title": "Add Bearing Line",
       "imageName": "/images/compass.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "visible": true,
       "order": 9
     },
@@ -100,6 +106,7 @@
       "title": "Add Measure Line",
       "imageName": "/images/measure-tool.png",
       "enabled": true,
+      "supportsTextEntry": true,
       "visible": false,
       "order": 10
     },

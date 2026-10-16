@@ -22,7 +22,7 @@ interface MyMapsAdvancedProps {
 }
 
 const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDeleteAllClick, onMyMapsImport, onAdditionalToolsAction, hasItems }) => {
-  const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi, fetchUserMaps, userMaps, getHistory } = useMyMapsStore();
+  const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi, fetchUserMaps, userMaps, getHistory, geometryUndoStack, undoGeometryEdit } = useMyMapsStore();
   const { data: session } = useSession();
   const { config } = useConfig();
   const toast = useToast();
@@ -129,7 +129,7 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   };
 
   const onEditOption = (evt: React.ChangeEvent<HTMLInputElement>) => {
-    const value = evt.currentTarget.value as "vertices" | "translate";
+    const value = evt.currentTarget.value as "vertices" | "translate" | "rotate";
     setEditOption(value);
     onEditFeatures(editOn, value);
   };
@@ -385,14 +385,29 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
             />
           </label>
 
-          <label style={{ marginRight: "15px", marginLeft: "15px" }} className="!inline text-xs text-base-content cursor-pointer select-none hover:text-primary">
-            <input className="relative top-[2px] mr-1 cursor-pointer" type="radio" name="editOptions" value="vertices" checked={editOption === "vertices"} onChange={onEditOption} />
-            Vertices
-          </label>
-          <label className="!inline text-xs text-base-content cursor-pointer select-none hover:text-primary">
-            <input className="relative top-[2px] mr-1 cursor-pointer" type="radio" name="editOptions" value="translate" checked={editOption === "translate"} onChange={onEditOption} />
-            Move
-          </label>
+          <div className="flex flex-col gap-1 pl-[15px] pt-[5px]">
+            <label className="flex items-center text-xs text-base-content cursor-pointer select-none hover:text-primary">
+              <input className="mr-1 cursor-pointer" type="radio" name="editOptions" value="vertices" checked={editOption === "vertices"} onChange={onEditOption} />
+              Vertices
+            </label>
+            <label className="flex items-center text-xs text-base-content cursor-pointer select-none hover:text-primary">
+              <input className="mr-1 cursor-pointer" type="radio" name="editOptions" value="translate" checked={editOption === "translate"} onChange={onEditOption} />
+              Move
+            </label>
+            <label className="flex items-center text-xs text-base-content cursor-pointer select-none hover:text-primary">
+              <input className="mr-1 cursor-pointer" type="radio" name="editOptions" value="rotate" checked={editOption === "rotate"} onChange={onEditOption} />
+              Rotate
+            </label>
+          </div>
+
+          <button
+            className="mymaps-action-btn mt-[5px] disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => undoGeometryEdit()}
+            disabled={geometryUndoStack.length === 0}
+            title="Undo the last vertex, move, or rotate edit"
+          >
+            Undo Edit
+          </button>
         </div>
 
         <div className="flex gap-1 pt-2.5 border-t border-base-300 mt-2.5 text-center">
