@@ -26,14 +26,44 @@ export interface ArcgisCodedValue {
   name: string;
 }
 
+/** Origin relationship from a layer's `relationships` array (this layer → related table). */
+export interface ArcgisRelationship {
+  id: number;
+  name: string;
+  relatedTableId: number;
+}
+
 export interface ArcgisLayerFieldMetadata {
   /** field name (lowercase) → alias */
   aliases: Record<string, string>;
   /** field name (lowercase) → coded values */
   domains: Record<string, ArcgisCodedValue[]>;
+  /** Origin relationships; set only when fetched from the layer JSON. */
+  relationships?: ArcgisRelationship[];
+  /** Layer URL without query string, used to query related records. */
+  layerUrl?: string;
+  secured?: boolean;
+  /** Layer display field; labels related items. */
+  displayField?: string;
 }
 
 export const EMPTY_FIELD_METADATA: ArcgisLayerFieldMetadata = { aliases: {}, domains: {} };
+
+/** Keeps origin relationships only; destination roles are not supported. */
+export function parseArcgisRelationships(relationships: unknown): ArcgisRelationship[] {
+  if (!Array.isArray(relationships)) return [];
+  const out: ArcgisRelationship[] = [];
+  for (const raw of relationships as Array<Record<string, unknown> | null>) {
+    if (!raw || raw.role !== "esriRelRoleOrigin") continue;
+    if (typeof raw.id !== "number" || typeof raw.relatedTableId !== "number") continue;
+    out.push({
+      id: raw.id,
+      name: typeof raw.name === "string" && raw.name.length > 0 ? raw.name : `Related table ${raw.relatedTableId}`,
+      relatedTableId: raw.relatedTableId,
+    });
+  }
+  return out;
+}
 
 /** Shape of one entry in the ArcGIS layer JSON `fields` array (partial). */
 interface ArcgisFieldJson {
@@ -120,8 +150,14 @@ async function fetchFieldMetadata(layerUrl: string, secured: boolean, token?: st
   try {
     const res = await fetch(url, { method: "GET", mode: "cors" });
     if (!res.ok) return null;
-    const json = (await res.json()) as { fields?: unknown };
-    return parseArcgisFieldsMetadata(json.fields);
+    const json = (await res.json()) as { fields?: unknown; relationships?: unknown; displayField?: unknown };
+    return {
+      ...parseArcgisFieldsMetadata(json.fields),
+      relationships: parseArcgisRelationships(json.relationships),
+      layerUrl,
+      secured,
+      displayField: typeof json.displayField === "string" ? json.displayField : undefined,
+    };
   } catch {
     return null;
   }

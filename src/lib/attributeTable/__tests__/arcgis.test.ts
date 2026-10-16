@@ -1,8 +1,60 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { describeArcgisLayer, fetchArcgisFeatureById } from "@/lib/attributeTable/arcgis";
+import { http, HttpResponse } from "msw";
+import { server } from "@/test/testServer";
+import { describeArcgisLayer, fetchArcgisFeatureById, fetchArcgisRelatedRecords, getArcgisObjectId, getRelatedTableUrl } from "@/lib/attributeTable/arcgis";
 
 const SERVICE_URL = "https://example.com/arcgis/rest/services/Operations/Roads/MapServer";
 const LAYER_URL = `${SERVICE_URL}/588`;
+
+describe("getRelatedTableUrl", () => {
+  it("builds the related table URL on the same service", () => {
+    expect(getRelatedTableUrl(LAYER_URL, 67)).toBe(`${SERVICE_URL}/67`);
+  });
+});
+
+describe("getArcgisObjectId", () => {
+  it("reads OBJECTID case-insensitively", () => {
+    expect(getArcgisObjectId({ objectid: 42 })).toBe("42");
+  });
+
+  it("returns null when OBJECTID is absent", () => {
+    expect(getArcgisObjectId({ NAME: "x" })).toBeNull();
+  });
+});
+
+describe("fetchArcgisRelatedRecords", () => {
+  it("queries related rows for one origin feature", async () => {
+    const seen: string[] = [];
+    server.use(
+      http.get(`${LAYER_URL}/queryRelatedRecords`, ({ request }) => {
+        seen.push(request.url);
+        return HttpResponse.json({
+          relatedRecordGroups: [{ objectId: 12345, relatedRecords: [{ attributes: { OBJECTID: 1, LINK: "https://example.com/v.mp4" } }] }],
+        });
+      }),
+    );
+
+    const rows = await fetchArcgisRelatedRecords({ layerUrl: LAYER_URL, secured: false, objectId: "12345", relationshipId: 5 });
+
+    expect(rows).toEqual([{ OBJECTID: 1, LINK: "https://example.com/v.mp4" }]);
+    const url = new URL(seen[0]);
+    expect(url.searchParams.get("relationshipId")).toBe("5");
+    expect(url.searchParams.get("objectIds")).toBe("12345");
+    expect(url.searchParams.get("token")).toBeNull();
+  });
+
+  it("returns no rows when the response has no group for the object id", async () => {
+    server.use(http.get(`${LAYER_URL}/queryRelatedRecords`, () => HttpResponse.json({ relatedRecordGroups: [] })));
+
+    expect(await fetchArcgisRelatedRecords({ layerUrl: LAYER_URL, secured: false, objectId: "7", relationshipId: 5 })).toEqual([]);
+  });
+
+  it("throws on ArcGIS error bodies", async () => {
+    server.use(http.get(`${LAYER_URL}/queryRelatedRecords`, () => HttpResponse.json({ error: { code: 400, message: "Invalid relationship" } })));
+
+    await expect(fetchArcgisRelatedRecords({ layerUrl: LAYER_URL, secured: false, objectId: "7", relationshipId: 9 })).rejects.toThrow("ArcGIS error 400");
+  });
+});
 
 // Approximate Simcoe County MTM zone 9 square, then reprojected to Web Mercator.
 // We use a simple rectangle in EPSG:32190 and assert the returned GeoJSON

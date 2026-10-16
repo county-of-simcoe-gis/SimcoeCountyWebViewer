@@ -21,7 +21,7 @@ import { create } from "zustand";
 import type { TOCLayer } from "@/stores/tocStore";
 import { ColumnarStore, type ColumnSchema } from "@/lib/attributeTable/columnarStore";
 import type { WfsFieldDescriptor } from "@/lib/attributeTable/wfs";
-import type { ArcgisCodedValue } from "@/utils/arcgisFieldMetadata";
+import type { ArcgisCodedValue, ArcgisRelationship } from "@/utils/arcgisFieldMetadata";
 
 // ---------------------------------------------------------------------------
 // Constants / configuration
@@ -46,6 +46,21 @@ export interface SortSpec {
 
 export type FilterMap = Record<string, string>; // column -> substring (client-side, case-insensitive)
 
+/** Parent feature for a related-records tab (ArcGIS). */
+export interface AttributeRelatedContext {
+  parentLayerUrl: string;
+  relationshipId: number;
+  parentObjectId: string;
+}
+
+export interface OpenRelatedArgs {
+  parentLayerId: string;
+  relationship: ArcgisRelationship;
+  parentObjectId: string;
+  parentLayerUrl: string;
+  relatedWfsUrl: string;
+}
+
 /** Remote data source for a tab. */
 export type AttributeSourceType = "wfs" | "arcgis";
 
@@ -69,6 +84,10 @@ export interface AttributeTableTab {
   fields: WfsFieldDescriptor[] | null;
   /** ArcGIS coded-value domains (field name lowercase → coded values); null for WFS layers. */
   domains: Record<string, ArcgisCodedValue[]> | null;
+  /** ArcGIS origin relationships of the layer; null for WFS layers. */
+  relationships?: ArcgisRelationship[] | null;
+  /** Set on tabs showing one parent feature's related records. */
+  relatedContext?: AttributeRelatedContext | null;
   /** Field used for paging when user has no explicit sort. */
   implicitSortField: string | null;
   store: ColumnarStore | null;
@@ -99,6 +118,7 @@ interface AttributeTableState {
 
   // Actions
   openForLayer: (layer: TOCLayer) => void;
+  openForRelated: (args: OpenRelatedArgs) => void;
   closeTab: (layerId: string) => void;
   closeAll: () => void;
   setActive: (layerId: string) => void;
@@ -125,6 +145,7 @@ interface AttributeTableState {
       capReached: boolean;
       /** ArcGIS coded-value domains; omitted/null for WFS layers. */
       domains?: Record<string, ArcgisCodedValue[]> | null;
+      relationships?: ArcgisRelationship[] | null;
     },
   ) => void;
   /** Append a page to an existing store. */
@@ -177,6 +198,8 @@ function makeTab(layer: TOCLayer): AttributeTableTab {
     schema: null,
     fields: null,
     domains: null,
+    relationships: null,
+    relatedContext: null,
     implicitSortField: null,
     store: null,
     totalCount: null,
@@ -237,6 +260,50 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
     }
     const tab = makeTab(layer);
     set((s) => ({ isOpen: true, minimized: false, activeLayerId: layer.id, tabs: [...s.tabs, tab] }));
+  },
+
+  openForRelated: ({ parentLayerId, relationship, parentObjectId, parentLayerUrl, relatedWfsUrl }) => {
+    const parent = get().tabs.find((t) => t.layerId === parentLayerId);
+    if (!parent) return;
+    const id = `related:${parentLayerId}:${relationship.id}:${parentObjectId}`;
+    if (get().tabs.some((t) => t.layerId === id)) {
+      set({ isOpen: true, minimized: false, activeLayerId: id });
+      return;
+    }
+    const tab: AttributeTableTab = {
+      id,
+      layerId: id,
+      layerName: `${relationship.name} (${parent.layerName} ${parentObjectId})`,
+      typeName: "",
+      wfsUrl: relatedWfsUrl,
+      sourceType: "arcgis",
+      secured: parent.secured,
+      showAllFields: parent.showAllFields,
+      canDownload: false,
+      hasAttachments: false,
+      attachmentUrlTemplate: null,
+      schema: null,
+      fields: null,
+      domains: null,
+      relationships: null,
+      relatedContext: { parentLayerUrl, relationshipId: relationship.id, parentObjectId },
+      implicitSortField: null,
+      store: null,
+      totalCount: null,
+      loadedCount: 0,
+      loading: true,
+      error: null,
+      sort: null,
+      filters: {},
+      columnSizes: {},
+      bboxFilterActive: false,
+      selectionOnly: false,
+      mapSelectActive: false,
+      selection: new Set<string>(),
+      abortController: null,
+      capReached: false,
+    };
+    set((s) => ({ isOpen: true, minimized: false, activeLayerId: id, tabs: [...s.tabs, tab] }));
   },
 
   closeTab: (layerId) => {
@@ -316,6 +383,7 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
               schema: patch.schema,
               fields: patch.fields,
               domains: patch.domains ?? null,
+              relationships: patch.relationships ?? null,
               implicitSortField: patch.implicitSortField,
               store: patch.store,
               totalCount: patch.totalCount,

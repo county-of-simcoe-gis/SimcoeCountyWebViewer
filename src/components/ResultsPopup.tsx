@@ -8,6 +8,8 @@ import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
 import { isExcludedKey } from "@/utils/identifyHelpers";
 import { resolveDomainName, resolveFieldAlias, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
+import { RelatedRecordsList, getRelatedRelationships } from "@/components/common/RelatedRecordsList";
+import { getArcgisObjectId } from "@/lib/attributeTable/arcgis";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 
 // Base interface for common result fields
@@ -246,6 +248,17 @@ export default function ResultsPopup({ results, onClose, onClearParcelLayer, isL
                     const domainName = resolveDomainName(meta, key, value);
                     return <InfoRow key={key} label={key} labelOverride={alias} value={domainName ?? (value != null ? String(value) : "")} styleMode="grid" />;
                   })}
+                {getRelatedRelationships(result.data.fieldMetadata, getArcgisObjectId(result.data.attributes)).map((relationship) => (
+                  <div key={`related-${relationship.id}`} className="col-span-2 flex flex-col gap-1 text-xs">
+                    <div className="font-semibold text-base-content break-words">{relationship.name}:</div>
+                    <RelatedRecordsList
+                      metadata={result.data.fieldMetadata}
+                      relationship={relationship}
+                      objectId={getArcgisObjectId(result.data.attributes)}
+                      showAllFields={result.data.showAllFields}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           </div>

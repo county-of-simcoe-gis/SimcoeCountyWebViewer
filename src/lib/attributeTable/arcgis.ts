@@ -17,7 +17,7 @@
 
 import type { ColumnType } from "./columnarStore";
 import type { WfsFieldDescriptor, WfsPageResult } from "./wfs";
-import { parseArcgisFieldsMetadata, type ArcgisCodedValue } from "@/utils/arcgisFieldMetadata";
+import { parseArcgisFieldsMetadata, parseArcgisRelationships, type ArcgisCodedValue, type ArcgisRelationship } from "@/utils/arcgisFieldMetadata";
 
 // ---------------------------------------------------------------------------
 // Errors
@@ -177,6 +177,7 @@ interface ArcgisServiceInfo {
   advancedQueryCapabilities?: { supportsPagination?: boolean; supportsOrderBy?: boolean };
   extent?: { spatialReference?: { wkid?: number; latestWkid?: number } };
   sourceSpatialReference?: { wkid?: number; latestWkid?: number };
+  relationships?: unknown;
 }
 
 /**
@@ -229,6 +230,7 @@ export async function describeArcgisLayer(
   supportsPagination: boolean;
   /** field name (lowercase) → coded values, for fields with a codedValue domain. */
   domains: Record<string, ArcgisCodedValue[]>;
+  relationships: ArcgisRelationship[];
 }> {
   const token = await resolveToken(endpoint, secured);
   const url = withToken(`${endpoint.layerUrl}?f=json`, token);
@@ -258,6 +260,7 @@ export async function describeArcgisLayer(
     maxRecordCount: info.maxRecordCount ?? 1000,
     supportsPagination,
     domains,
+    relationships: parseArcgisRelationships(info.relationships),
   };
 }
 
@@ -431,6 +434,47 @@ export async function fetchArcgisFeatureById(
   const f = features[0];
   if (!f || !f.geometry) return null;
   return { id: f.id, properties: f.properties ?? null, geometry: f.geometry };
+}
+
+// ---------------------------------------------------------------------------
+// Related records
+// ---------------------------------------------------------------------------
+
+/** Layer URL of a related table on the same service (`${serviceUrl}/${relatedTableId}`). */
+export function getRelatedTableUrl(layerUrl: string, relatedTableId: number): string {
+  return `${layerUrl.replace(/\/\d+$/, "")}/${relatedTableId}`;
+}
+
+/** OBJECTID from a feature's attributes, or null when the response omits it. */
+export function getArcgisObjectId(attributes: Record<string, unknown>): string | null {
+  const key = Object.keys(attributes).find((k) => k.toLowerCase() === "objectid");
+  const value = key ? attributes[key] : undefined;
+  return typeof value === "string" || typeof value === "number" ? String(value) : null;
+}
+
+/** Attribute rows related to one origin feature via `{layerUrl}/queryRelatedRecords`. */
+export async function fetchArcgisRelatedRecords(opts: { layerUrl: string; secured: boolean; objectId: string; relationshipId: number; signal?: AbortSignal }): Promise<Record<string, unknown>[]> {
+  let token: string | null = null;
+  if (opts.secured) {
+    try {
+      token = (await useArcGISTokenStore.getState().getValidToken()) ?? null;
+    } catch {
+      token = null;
+    }
+  }
+  const params = new URLSearchParams({
+    objectIds: opts.objectId,
+    relationshipId: String(opts.relationshipId),
+    outFields: "*",
+    returnGeometry: "false",
+    f: "json",
+  });
+  const url = withToken(`${opts.layerUrl}/queryRelatedRecords?${params.toString()}`, token);
+  const json = await fetchJson<{
+    relatedRecordGroups?: Array<{ objectId?: number | string; relatedRecords?: Array<{ attributes?: Record<string, unknown> }> }>;
+  }>(url, opts.signal);
+  const group = json.relatedRecordGroups?.find((g) => String(g.objectId) === opts.objectId);
+  return (group?.relatedRecords ?? []).map((r) => r.attributes ?? {});
 }
 
 // ---------------------------------------------------------------------------
