@@ -11,7 +11,7 @@ import { fromCircle } from "ol/geom/Polygon";
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape, Icon } from "ol/style";
 import { Feature } from "ol";
 import type { FeatureLike } from "ol/Feature";
-import { Circle, LineString, MultiPolygon, Point } from "ol/geom";
+import { Circle, LineString, MultiPolygon, Point, Polygon } from "ol/geom";
 import { asArray } from "ol/color";
 import type { EventsKey } from "ol/events";
 import { unByKey } from "ol/Observable";
@@ -22,6 +22,7 @@ import { useMapStore } from "@/stores/mapStore";
 import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 import { hexToRgba } from "@/utils/openlayers/ColorHelpers";
 import { getPublicPath } from "@/utils/getPublicPath";
+import { geodesicCircleCoords, rectangleFromCorner, type TextEntryGeometry } from "@/utils/myMapsTextEntry";
 
 export class MyMapsDrawingManager {
   private map: Map;
@@ -38,6 +39,10 @@ export class MyMapsDrawingManager {
   // Highlight layer for hover effects (like old app)
   private highlightLayer: VectorLayer<VectorSource> | null = null;
   private highlightLayerId: string | null = null;
+
+  // Preview layer for keyboard (text) entry
+  private textPreviewLayer: VectorLayer<VectorSource> | null = null;
+  private textPreviewLayerId: string | null = null;
 
   // Callbacks from MyMaps component
   private onFeatureDrawn: (feature: Feature) => void;
@@ -125,21 +130,7 @@ export class MyMapsDrawingManager {
 
     // Handle draw end
     this.drawInteraction.on("drawend", (event) => {
-      const feature = event.feature;
-      const featureId = generateUID();
-
-      // Set feature properties
-      feature.setProperties({
-        id: featureId,
-        drawType,
-        originalDrawType: drawType,
-      });
-
-      // Apply post-processing based on draw type
-      this.postProcessFeature(feature, drawType, drawColor);
-
-      // Notify component
-      this.onFeatureDrawn(feature);
+      this.finalizeDrawnFeature(event.feature, drawType, drawColor);
 
       // Clear drawing after OL finishes dispatching drawend (next microtask).
       // Previously a 100ms setTimeout was used as an arbitrary guard.
@@ -148,6 +139,20 @@ export class MyMapsDrawingManager {
 
     // Register with centralized interaction store (which also adds to map)
     useInteractionManagerStore.getState().registerInteraction("myMaps-draw", this.drawInteraction, "myMaps");
+  }
+
+  private finalizeDrawnFeature(feature: Feature, drawType: string, drawColor: string) {
+    feature.setProperties({
+      id: generateUID(),
+      drawType,
+      originalDrawType: drawType,
+    });
+
+    // Apply post-processing based on draw type
+    this.postProcessFeature(feature, drawType, drawColor);
+
+    // Notify component
+    this.onFeatureDrawn(feature);
   }
 
   private postProcessFeature(feature: Feature, drawType: string, drawColor: string) {
@@ -262,6 +267,7 @@ export class MyMapsDrawingManager {
 
   public clearDrawing() {
     this.clearEraserPreview();
+    this.clearTextPreview();
 
     if (this.drawInteraction) {
       useInteractionManagerStore.getState().unregisterInteraction("myMaps-draw");
@@ -271,6 +277,92 @@ export class MyMapsDrawingManager {
     if (!this.isEditing()) {
       useMapStore.getState().setActiveToolId(null);
     }
+  }
+
+  // Single click picks the start point; the Draw interaction is removed after it ends.
+  public startTextAnchor(drawColor: string, onAnchor: (coordinate: number[]) => void) {
+    this.clearDrawing();
+
+    // Keeps map click handlers suppressed for the whole text-entry session.
+    useMapStore.getState().setActiveToolId("mymaps-draw");
+
+    this.drawInteraction = new Draw({
+      type: "Point",
+      maxPoints: 1,
+      style: this.getDefaultStyle(drawColor),
+    });
+
+    this.drawInteraction.on("drawend", (event) => {
+      const coordinate = (event.feature.getGeometry() as Point).getCoordinates();
+
+      // Unregister after OL finishes dispatching drawend; the active tool flag stays set.
+      queueMicrotask(() => {
+        useInteractionManagerStore.getState().unregisterInteraction("myMaps-draw");
+        this.drawInteraction = null;
+      });
+
+      onAnchor(coordinate);
+    });
+
+    useInteractionManagerStore.getState().registerInteraction("myMaps-draw", this.drawInteraction, "myMaps");
+  }
+
+  public completeTextEntry(geometry: TextEntryGeometry, drawColor: string) {
+    let drawType: string;
+    let olGeometry: LineString | Polygon;
+
+    if (geometry.kind === "circle") {
+      drawType = "Circle";
+      olGeometry = new Polygon([geodesicCircleCoords(geometry.center, geometry.radiusM)]);
+    } else if (geometry.kind === "rectangle") {
+      drawType = "Rectangle";
+      olGeometry = new Polygon([rectangleFromCorner(geometry.corner, geometry.widthM, geometry.heightM)]);
+    } else {
+      drawType = geometry.drawType;
+      olGeometry = geometry.drawType === "Polygon" ? new Polygon([[...geometry.points, geometry.points[0]]]) : new LineString(geometry.points);
+    }
+
+    this.finalizeDrawnFeature(new Feature({ geometry: olGeometry }), drawType, drawColor);
+  }
+
+  public updateTextPreview(points: number[][], drawColor: string) {
+    if (!this.textPreviewLayer) {
+      this.textPreviewLayer = new VectorLayer({ source: new VectorSource() });
+      this.textPreviewLayerId = LayerManager.addLayer(this.textPreviewLayer, "Graphics", "MyMaps Text Entry Preview", {
+        index: 100,
+        metadata: {
+          isMyMapsTextPreview: true,
+        },
+      });
+    }
+
+    this.textPreviewLayer.setStyle(
+      new Style({
+        stroke: new Stroke({ color: drawColor, width: 2, lineDash: [6, 6] }),
+        image: new CircleStyle({
+          radius: 5,
+          fill: new Fill({ color: drawColor }),
+          stroke: new Stroke({ color: "#fff", width: 2 }),
+        }),
+      }),
+    );
+
+    const source = this.textPreviewLayer.getSource()!;
+    source.clear();
+    if (points.length === 0) return;
+
+    source.addFeature(new Feature({ geometry: new Point(points[0]) }));
+    if (points.length > 1) {
+      source.addFeature(new Feature({ geometry: new LineString(points) }));
+    }
+  }
+
+  public clearTextPreview() {
+    if (this.textPreviewLayerId) {
+      LayerManager.removeLayer(this.textPreviewLayerId);
+    }
+    this.textPreviewLayerId = null;
+    this.textPreviewLayer = null;
   }
 
   public startEraserPreview() {

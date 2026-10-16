@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useMyMapsTextEntryStore } from "@/stores/myMapsTextEntryStore";
 import { useMapStore } from "@/stores/mapStore";
 import { useEventStore } from "@/stores/eventStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
@@ -16,6 +17,7 @@ import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { createMyMapsItem } from "@/stores/myMapsStore";
 import { usePopupStore } from "@/stores/popupStore";
 import { userStorageReady } from "@/utils/userStorage";
+import { supportsTextEntry } from "@/utils/myMapsTextEntry";
 
 /**
  * MyMapsService - Background service that manages MyMaps features on the map
@@ -34,6 +36,9 @@ export default function MyMapsService() {
   const isEditing = useMyMapsStore((s) => s.isEditing);
   const editMode = useMyMapsStore((s) => s.editMode);
   const items = useMyMapsStore((s) => s.items);
+  const textEntryEnabled = useMyMapsTextEntryStore((s) => s.enabled);
+  const textEntryPoints = useMyMapsTextEntryStore((s) => s.points);
+  const textEntryCompleted = useMyMapsTextEntryStore((s) => s.completed);
   const setDrawType = useMyMapsStore((s) => s.setDrawType);
   const loadFromStorage = useMyMapsStore((s) => s.loadFromStorage);
   const saveToStorage = useMyMapsStore((s) => s.saveToStorage);
@@ -415,10 +420,16 @@ export default function MyMapsService() {
 
     if (drawType === "Cancel") {
       drawingManagerRef.current.clearDrawing();
+      useMyMapsTextEntryStore.getState().reset();
     } else if (drawType === "Eraser") {
       drawingManagerRef.current.clearDrawing();
       drawingManagerRef.current.startEraserPreview();
       useMapStore.getState().setActiveToolId("mymaps-eraser");
+    } else if (textEntryEnabled && supportsTextEntry(drawType)) {
+      useMyMapsTextEntryStore.getState().startSession(drawType);
+      drawingManagerRef.current.startTextAnchor(drawColor, (coordinate) => {
+        useMyMapsTextEntryStore.getState().setStartPoint(coordinate);
+      });
     } else {
       drawingManagerRef.current.startDrawing(drawType, drawColor, drawStyle || undefined);
     }
@@ -430,7 +441,26 @@ export default function MyMapsService() {
 
     // Notify listeners (GlobalDrawingOptionsPopup closes its overlay on this event).
     emit("mymap-draw-type-changed", { drawType });
-  }, [drawType, drawColor, drawStyle, emit]);
+  }, [drawType, drawColor, drawStyle, emit, textEntryEnabled]);
+
+  // Keep the keyboard entry preview in sync with the typed start point and segments
+  useEffect(() => {
+    if (!drawingManagerRef.current) return;
+
+    if (textEntryPoints.length === 0) {
+      drawingManagerRef.current.clearTextPreview();
+    } else {
+      drawingManagerRef.current.updateTextPreview(textEntryPoints, drawColor);
+    }
+  }, [textEntryPoints, drawColor]);
+
+  // Add the feature once keyboard entry has a complete geometry
+  useEffect(() => {
+    if (!textEntryCompleted || !drawingManagerRef.current) return;
+
+    useMyMapsTextEntryStore.getState().clearCompleted();
+    drawingManagerRef.current.completeTextEntry(textEntryCompleted, drawColor);
+  }, [textEntryCompleted, drawColor]);
 
   // Handle editing mode
   useEffect(() => {

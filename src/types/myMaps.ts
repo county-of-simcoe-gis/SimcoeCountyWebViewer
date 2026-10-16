@@ -26,6 +26,7 @@ export interface DrawingTool {
   imageName: string
   disabled?: boolean
   visible?: boolean
+  supportsTextEntry?: boolean
 }
 
 // Color configuration for drawing
