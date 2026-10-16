@@ -304,7 +304,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
 
   // Handle edit mode toggle from Advanced panel
   const handleEditFeatures = (editing: boolean, mode = "vertices") => {
-    setEditMode(editing, editing ? (mode as "vertices" | "translate") : null);
+    setEditMode(editing, editing ? (mode as "vertices" | "translate" | "rotate") : null);
     if (editing) {
       setDrawType("Cancel"); // Cancel any active drawing
     }

@@ -44,6 +44,7 @@ export default function MyMapsService() {
   const saveToStorage = useMyMapsStore((s) => s.saveToStorage);
   const addItem = useMyMapsStore((s) => s.addItem);
   const updateItem = useMyMapsStore((s) => s.updateItem);
+  const updateItemGeometry = useMyMapsStore((s) => s.updateItemGeometry);
   const removeItem = useMyMapsStore((s) => s.removeItem);
   const getNextDrawingNumber = useMyMapsStore((s) => s.getNextDrawingNumber);
 
@@ -208,11 +209,11 @@ export default function MyMapsService() {
       if (!id) return;
 
       const geoJSON = featureToGeoJSON(feature);
-      updateItem(id, { featureGeoJSON: geoJSON });
+      updateItemGeometry(id, geoJSON);
 
       emit("mymap-item-modified", { id, geoJSON });
     },
-    [updateItem, emit],
+    [updateItemGeometry, emit],
   );
 
   const handleFeatureClicked = React.useCallback(

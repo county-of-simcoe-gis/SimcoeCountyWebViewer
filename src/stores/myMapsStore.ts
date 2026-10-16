@@ -60,7 +60,14 @@ export type DrawType = "Cancel" | "Point" | "LineString" | "Polygon" | "Circle" 
 
 export type GeometryType = "Point" | "LineString" | "Polygon" | "MultiPoint" | "MultiLineString" | "MultiPolygon" | "Circle";
 
-export type EditMode = "vertices" | "translate" | null;
+export type EditMode = "vertices" | "translate" | "rotate" | null;
+
+export interface GeometryUndoEntry {
+  id: string;
+  featureGeoJSON: string;
+}
+
+const GEOMETRY_UNDO_LIMIT = 50;
 
 export interface MyMapsItem {
   id: string;
@@ -109,6 +116,7 @@ export interface MyMapsState {
   // Items management
   items: MyMapsItem[];
   drawingCounter: number; // Counter for auto-naming drawings
+  geometryUndoStack: GeometryUndoEntry[];
 
   // Edit state
   isEditing: boolean;
@@ -136,6 +144,8 @@ export interface MyMapsState {
   addItem: (item: MyMapsItem) => void;
   removeItem: (id: string) => void;
   updateItem: (id: string, updates: Partial<MyMapsItem>) => void;
+  updateItemGeometry: (id: string, featureGeoJSON: string) => void;
+  undoGeometryEdit: () => boolean;
   toggleItemVisibility: (id: string) => void;
   updateItemLabel: (id: string, label: string) => void;
   updateItemLabelVisibility: (id: string, visible: boolean) => void;
@@ -262,6 +272,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
     drawStyle: null,
     items: [],
     drawingCounter: 1,
+    geometryUndoStack: [],
     isEditing: false,
     editMode: null,
     toolTipClass: "sc-hidden",
@@ -308,6 +319,30 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
       get().saveToStorage();
     },
 
+    updateItemGeometry: (id, featureGeoJSON) => {
+      const item = get().items.find((i) => i.id === id);
+      if (!item || item.featureGeoJSON === featureGeoJSON) return;
+
+      set((state) => ({
+        geometryUndoStack: [...state.geometryUndoStack, { id, featureGeoJSON: item.featureGeoJSON }].slice(-GEOMETRY_UNDO_LIMIT),
+      }));
+      get().updateItem(id, { featureGeoJSON });
+    },
+
+    undoGeometryEdit: () => {
+      const { geometryUndoStack, items } = get();
+      for (let index = geometryUndoStack.length - 1; index >= 0; index--) {
+        const entry = geometryUndoStack[index];
+        if (items.some((item) => item.id === entry.id)) {
+          set({ geometryUndoStack: geometryUndoStack.slice(0, index) });
+          get().updateItem(entry.id, { featureGeoJSON: entry.featureGeoJSON });
+          return true;
+        }
+      }
+      set({ geometryUndoStack: [] });
+      return false;
+    },
+
     toggleItemVisibility: (id) => {
       const item = get().getItemById(id);
       if (item) {
@@ -335,7 +370,7 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
     },
 
     clearAllItems: () => {
-      set({ items: [], drawingCounter: 1 });
+      set({ items: [], drawingCounter: 1, geometryUndoStack: [] });
       get().saveToStorage();
     },
 

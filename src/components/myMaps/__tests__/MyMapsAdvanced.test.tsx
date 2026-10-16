@@ -34,6 +34,8 @@ const mockMyMapsStore = {
   fetchUserMaps: vi.fn(),
   userMaps: [],
   getHistory: vi.fn(() => []),
+  geometryUndoStack: [] as { id: string; featureGeoJSON: string }[],
+  undoGeometryEdit: vi.fn(() => true),
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
@@ -129,6 +131,7 @@ describe("MyMapsAdvanced Component", () => {
       expect(screen.getByTestId("switch")).toBeInTheDocument();
       expect(screen.getByDisplayValue("vertices")).toBeInTheDocument();
       expect(screen.getByDisplayValue("translate")).toBeInTheDocument();
+      expect(screen.getByDisplayValue("rotate")).toBeInTheDocument();
     });
 
     it("should show import/save controls when expanded", async () => {
@@ -208,6 +211,36 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(translateRadio);
 
       expect(mockOnEditFeatures).toHaveBeenCalledWith(false, "translate");
+    });
+
+    it("should select rotate option when rotate radio is clicked", async () => {
+      render(<MyMapsAdvanced {...defaultProps} />);
+
+      const trigger = screen.getByText("Advanced Options");
+      await user.click(trigger);
+
+      await user.click(screen.getByDisplayValue("rotate"));
+
+      expect(mockOnEditFeatures).toHaveBeenCalledWith(false, "rotate");
+    });
+
+    it("should disable undo when there are no geometry edits", async () => {
+      render(<MyMapsAdvanced {...defaultProps} />);
+
+      await user.click(screen.getByText("Advanced Options"));
+
+      expect(screen.getByText("Undo Edit")).toBeDisabled();
+    });
+
+    it("should undo the last geometry edit when enabled", async () => {
+      mockMyMapsStore.geometryUndoStack = [{ id: "1", featureGeoJSON: "{}" }];
+      render(<MyMapsAdvanced {...defaultProps} />);
+
+      await user.click(screen.getByText("Advanced Options"));
+      await user.click(screen.getByText("Undo Edit"));
+
+      expect(mockMyMapsStore.undoGeometryEdit).toHaveBeenCalled();
+      mockMyMapsStore.geometryUndoStack = [];
     });
 
     it("should sync edit mode with store", () => {

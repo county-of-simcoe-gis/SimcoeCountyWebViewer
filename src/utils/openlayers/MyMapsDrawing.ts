@@ -18,6 +18,7 @@ import { unByKey } from "ol/Observable";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
+import { RotateFeatureInteraction } from "@/utils/openlayers/RotateFeatureInteraction";
 import { useMapStore } from "@/stores/mapStore";
 import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 import { hexToRgba } from "@/utils/openlayers/ColorHelpers";
@@ -31,6 +32,7 @@ export class MyMapsDrawingManager {
   private drawInteraction: Draw | null = null;
   private modifyInteraction: Modify | null = null;
   private translateInteraction: Translate | null = null;
+  private rotateInteraction: RotateFeatureInteraction | null = null;
   private eraserPreviewFeature: Feature | null = null;
   private eraserPointerMoveEvent: EventsKey | null = null;
   private eraserPointerLeaveHandler: (() => void) | null = null;
@@ -427,7 +429,7 @@ export class MyMapsDrawingManager {
     });
   }
 
-  public startEditing(mode: "vertices" | "translate") {
+  public startEditing(mode: "vertices" | "translate" | "rotate") {
     this.clearEditing();
 
     // Signal other interactions that editing is active
@@ -445,6 +447,13 @@ export class MyMapsDrawingManager {
       });
 
       useInteractionManagerStore.getState().registerInteraction("myMaps-modify", this.modifyInteraction, "myMaps");
+    } else if (mode === "rotate") {
+      this.rotateInteraction = new RotateFeatureInteraction({
+        layer: this.vectorLayer,
+        onRotateEnd: (feature) => this.onFeatureModified(feature),
+      });
+
+      useInteractionManagerStore.getState().registerInteraction("myMaps-rotate", this.rotateInteraction, "myMaps");
     } else {
       // For translate mode, configure to work on individual features from our layer
       this.translateInteraction = new Translate({
@@ -463,6 +472,7 @@ export class MyMapsDrawingManager {
   }
 
   public clearEditing() {
+    const hadEditInteraction = !!(this.modifyInteraction || this.translateInteraction || this.rotateInteraction);
     if (this.modifyInteraction) {
       useInteractionManagerStore.getState().unregisterInteraction("myMaps-modify");
       this.modifyInteraction = null;
@@ -471,6 +481,12 @@ export class MyMapsDrawingManager {
       useInteractionManagerStore.getState().unregisterInteraction("myMaps-translate");
       this.translateInteraction = null;
     }
+    if (this.rotateInteraction) {
+      useInteractionManagerStore.getState().unregisterInteraction("myMaps-rotate");
+      this.rotateInteraction = null;
+    }
+    // OL edit interactions leave their hover cursor on the viewport after removal.
+    if (hadEditInteraction) this.map.getViewport().style.cursor = "";
     // Only clear the flag if we're also not drawing
     if (!this.drawInteraction) {
       useMapStore.getState().setActiveToolId(null);
@@ -478,7 +494,7 @@ export class MyMapsDrawingManager {
   }
 
   public isEditing(): boolean {
-    return !!(this.modifyInteraction || this.translateInteraction);
+    return !!(this.modifyInteraction || this.translateInteraction || this.rotateInteraction);
   }
 
   public addFeature(feature: Feature) {

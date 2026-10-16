@@ -97,6 +97,7 @@ const mockMyMapsStore = {
   saveToStorage: vi.fn(),
   addItem: vi.fn(),
   updateItem: vi.fn(),
+  updateItemGeometry: vi.fn(),
   removeItem: vi.fn(),
   getNextDrawingNumber: vi.fn(() => 1),
 };
@@ -370,9 +371,7 @@ describe("MyMapsService Component", () => {
 
       onFeatureModified(mockFeature as any);
 
-      expect(mockMyMapsStore.updateItem).toHaveBeenCalledWith("feature-1", {
-        featureGeoJSON: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
-      });
+      expect(mockMyMapsStore.updateItemGeometry).toHaveBeenCalledWith("feature-1", '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}');
       expect(mockEventStore.emit).toHaveBeenCalledWith("mymap-item-modified", {
         id: "feature-1",
         geoJSON: '{"type":"Feature","geometry":{"type":"Point","coordinates":[0,0]}}',
