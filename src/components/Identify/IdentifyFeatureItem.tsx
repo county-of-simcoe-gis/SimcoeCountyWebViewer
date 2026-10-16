@@ -12,7 +12,7 @@ import { featureToGeoJSON } from "@/utils/myMapsHelpers";
 import { useToastStore } from "@/hooks/useToast";
 import { activateTab } from "@/utils/helpersUI";
 import Attachments from "@/components/common/Attachments";
-import { RelatedRecordsList, getRelatedRelationships } from "@/components/common/RelatedRecordsList";
+import { RelatedRecordsList, getRelatedRelationships, relationshipLabel } from "@/components/common/RelatedRecordsList";
 import { getArcgisObjectId } from "@/lib/attributeTable/arcgis";
 import Image from "next/image";
 
@@ -102,7 +102,7 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
         )}
         {relatedRelationships.map((relationship) => (
           <div key={`related-${relationship.id}`} className="flex flex-col gap-1 py-[5px] border-b border-base-200 last:border-b-0">
-            <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{relationship.name}:</div>
+            <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{relationshipLabel(relationship.name)}:</div>
             <RelatedRecordsList metadata={fieldMetadata} relationship={relationship} objectId={objectId} showAllFields={showAllFields} />
           </div>
         ))}

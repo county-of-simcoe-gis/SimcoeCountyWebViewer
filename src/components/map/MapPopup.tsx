@@ -11,6 +11,7 @@ import { FaChevronLeft, FaChevronRight, FaExternalLinkAlt, FaTimes } from "react
 import PopupReportContent from "@/components/PopupReportContent";
 import ReportsFeatureList from "@/components/ReportsFeatureList";
 import type { Result } from "@/components/ResultsPopup";
+import { clearResultParcelLayers } from "@/components/common/ResultContent";
 import { isMobile } from "@/utils/helpersBrowser";
 import "./MapPopup.css";
 
@@ -301,7 +302,7 @@ export default function MapPopup() {
       useReportsStore.getState().setReport({
         id: `popup-popout-${Date.now()}`,
         title,
-        content: <ReportsFeatureList results={rawResults} onClose={() => hide()} />,
+        content: <ReportsFeatureList results={rawResults} onClose={() => hide()} onClearParcelLayer={() => clearResultParcelLayers(rawResults)} />,
         createdAt: new Date(),
         source: "popupPopOut",
       });
