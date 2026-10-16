@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { Feature } from "ol";
+import { Point } from "ol/geom";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import type { MyMapsItem, DrawType } from "@/types/myMaps";
 
@@ -566,5 +568,40 @@ describe("createMyMapsItem helper", () => {
 
     expect(item.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(item.label).toBe("Default Label");
+  });
+});
+
+describe("importFeatures", () => {
+  it("appends features as items with generated ids and labels", () => {
+    const named = new Feature({ geometry: new Point([0, 0]), name: "Site A" });
+    const unnamed = new Feature({ geometry: new Point([1, 1]) });
+
+    const result = useMyMapsStore.getState().importFeatures([named, unnamed]);
+
+    expect(result).toEqual({ success: true, message: "Imported 2 features.", count: 2 });
+    const { items } = useMyMapsStore.getState();
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ label: "Site A", drawType: "Point", geometryType: "Point", visible: true });
+    expect(items[1].label).toMatch(/^Drawing \d+$/);
+    expect(new Set(items.map((item) => item.id)).size).toBe(2);
+    expect(JSON.parse(items[0].featureGeoJSON).properties).toMatchObject({ id: items[0].id, label: "Site A" });
+  });
+
+  it("keeps existing items when importing", () => {
+    useMyMapsStore.getState().importFeatures([new Feature({ geometry: new Point([0, 0]) })]);
+    const existingId = useMyMapsStore.getState().items[0].id;
+
+    useMyMapsStore.getState().importFeatures([new Feature({ geometry: new Point([2, 2]) })]);
+
+    const { items } = useMyMapsStore.getState();
+    expect(items).toHaveLength(2);
+    expect(items.map((item) => item.id)).toContain(existingId);
+  });
+
+  it("reports failure when no supported features are given", () => {
+    const result = useMyMapsStore.getState().importFeatures([]);
+
+    expect(result.success).toBe(false);
+    expect(useMyMapsStore.getState().items).toEqual([]);
   });
 });

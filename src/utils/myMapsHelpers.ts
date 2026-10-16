@@ -5,7 +5,9 @@
 import { Style, Fill, Stroke, Circle as CircleStyle, Text, RegularShape } from "ol/style";
 import { Feature } from "ol";
 import type { FeatureLike } from "ol/Feature";
-import { Point, LineString, Polygon, Circle } from "ol/geom";
+import { Point, LineString, Polygon, Circle, MultiPoint, MultiLineString, MultiPolygon } from "ol/geom";
+import type Geometry from "ol/geom/Geometry";
+import type FeatureFormat from "ol/format/Feature";
 import { asArray } from "ol/color";
 import { fromCircle } from "ol/geom/Polygon";
 import { getLength, getArea } from "ol/sphere";
@@ -512,6 +514,60 @@ export const exportFeatures = (items: MyMapsItem[], format: string): void => {
       downloadFile(content, `features.${dataType.toLowerCase()}`, "text/plain");
     }
   }
+};
+
+export type ImportFormat = "KML" | "EsriJSON" | "GeoJSON";
+
+const IMPORT_FORMAT_MAP: Record<ImportFormat, OLDataType> = {
+  KML: OL_DATA_TYPES.KML,
+  EsriJSON: OL_DATA_TYPES.EsriJSON,
+  GeoJSON: OL_DATA_TYPES.GeoJSON,
+};
+
+// MyMaps DrawType has no Multi variants, so each part becomes its own feature.
+const splitMultiGeometry = (feature: Feature): Feature[] => {
+  const geometry = feature.getGeometry();
+  if (!geometry) return [];
+
+  let parts: Geometry[] = [geometry];
+  if (geometry instanceof MultiPoint) parts = geometry.getPoints();
+  else if (geometry instanceof MultiLineString) parts = geometry.getLineStrings();
+  else if (geometry instanceof MultiPolygon) parts = geometry.getPolygons();
+
+  return parts.map((part) => {
+    const copy = feature.clone();
+    copy.setGeometry(part);
+    return copy;
+  });
+};
+
+// Reads KML, EsriJSON, or GeoJSON text into single-part features in EPSG:3857, the MyMaps projection.
+export const readFeaturesFromText = (text: string, format: ImportFormat): Feature[] => {
+  const parser = FeatureHelpers.getVectorFormat(IMPORT_FORMAT_MAP[format]) as FeatureFormat | undefined;
+  if (!parser) return [];
+
+  const detected = parser.readProjection(text);
+  const fallbackProjection = format === "EsriJSON" ? "EPSG:3857" : "EPSG:4326";
+  const dataProjection = detected ? detected.getCode() : fallbackProjection;
+
+  const features = parser.readFeatures(text, { dataProjection, featureProjection: "EPSG:3857" }) as Feature[];
+  return features.flatMap(splitMultiGeometry);
+};
+
+// Uses the file's own style when it converts to a renderable StyleJSON, otherwise the MyMaps default.
+export const getImportedStyleJSON = (feature: Feature): StyleJSON => {
+  const geometryType = feature.getGeometry()?.getType();
+  const featureStyle = feature.getStyle();
+  const resolved = typeof featureStyle === "function" ? featureStyle(feature, 0) : featureStyle;
+  const first = Array.isArray(resolved) ? resolved[0] : resolved;
+
+  if (first instanceof Style) {
+    const style = styleToJSON(first);
+    delete style.text;
+    if (geometryType !== "Point" || style.image) return style;
+  }
+
+  return styleToJSON(createDefaultDrawStyle({ geometryType }));
 };
 
 // Get geometry center for popup positioning

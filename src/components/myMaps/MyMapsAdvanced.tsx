@@ -10,18 +10,26 @@ import { useConfig } from "@/hooks/useConfig";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import type { UserMyMapsEntry, MyMapsHistoryEntry } from "@/stores/myMapsStore";
 import { useToast } from "@/hooks/useToast";
-import { copyToClipboard } from "@/utils/myMapsHelpers";
+import { copyToClipboard, type ImportFormat } from "@/utils/myMapsHelpers";
+import myMapsConfig from "@/config/myMapsConfig.json";
 import "./MyMapsAdvanced.css";
 
 interface MyMapsAdvancedProps {
   onEditFeatures: (editOn: boolean, option?: string) => void;
   onDeleteAllClick: () => void;
   onMyMapsImport: (result: { id: string; json: string }) => void;
+  onFileImport: (format: ImportFormat, file: File) => void;
   onAdditionalToolsAction: (action: string) => void;
   hasItems: boolean;
 }
 
-const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDeleteAllClick, onMyMapsImport, onAdditionalToolsAction, hasItems }) => {
+const FILE_IMPORT_FORMATS: { format: ImportFormat; label: string; accept: string }[] = [
+  { format: "KML", label: "KML", accept: ".kml" },
+  { format: "EsriJSON", label: "ESRIJson", accept: ".esrijson" },
+  { format: "GeoJSON", label: "GeoJSON", accept: ".geojson" },
+];
+
+const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDeleteAllClick, onMyMapsImport, onFileImport, onAdditionalToolsAction, hasItems }) => {
   const { isEditing, editMode, importText, setImportText, saveToApi, importFromApi, fetchUserMaps, userMaps, getHistory, geometryUndoStack, undoGeometryEdit } = useMyMapsStore();
   const { data: session } = useSession();
   const { config } = useConfig();
@@ -37,10 +45,15 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
   const [showAdditionalMenu, setShowAdditionalMenu] = useState(false);
   const [showExportSubmenu, setShowExportSubmenu] = useState(false);
   const [submenuPosition, setSubmenuPosition] = useState({ x: 0, y: 0 });
+  const [showImportSubmenu, setShowImportSubmenu] = useState(false);
+  const [importSubmenuPosition, setImportSubmenuPosition] = useState({ x: 0, y: 0 });
   const [additionalMenuPosition, setAdditionalMenuPosition] = useState({ x: 0, y: 0 });
   const additionalMenuRef = useRef<HTMLDivElement>(null);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   const exportHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const importMenuRef = useRef<HTMLDivElement>(null);
+  const importHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const importInputRefs = useRef<Partial<Record<ImportFormat, HTMLInputElement | null>>>({});
   const inputId = "mymaps-advanced-import-input";
 
   // Fetch user maps when authenticated and panel opens
@@ -97,6 +110,10 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         clearTimeout(exportHoverTimeoutRef.current);
         exportHoverTimeoutRef.current = null;
       }
+      if (importHoverTimeoutRef.current) {
+        clearTimeout(importHoverTimeoutRef.current);
+        importHoverTimeoutRef.current = null;
+      }
     };
   }, []);
 
@@ -106,22 +123,24 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
       const target = event.target as Node;
       const isClickOutsideAdditionalMenuButton = additionalMenuRef.current && !additionalMenuRef.current.contains(target);
       const isClickOutsideAdditionalMenu = !document.querySelector(".mymaps-additional-menu-portal")?.contains(target);
-      const isClickOutsideSubmenu = !document.querySelector(".mymaps-export-submenu-portal")?.contains(target);
+      const isClickOutsideExportSubmenu = !document.querySelector(".mymaps-export-submenu-portal")?.contains(target);
+      const isClickOutsideImportSubmenu = !document.querySelector(".mymaps-import-submenu-portal")?.contains(target);
 
-      if (isClickOutsideAdditionalMenuButton && isClickOutsideAdditionalMenu && isClickOutsideSubmenu) {
+      if (isClickOutsideAdditionalMenuButton && isClickOutsideAdditionalMenu && isClickOutsideExportSubmenu && isClickOutsideImportSubmenu) {
         setShowAdditionalMenu(false);
         setShowExportSubmenu(false);
+        setShowImportSubmenu(false);
       }
     };
 
-    if (showAdditionalMenu || showExportSubmenu) {
+    if (showAdditionalMenu || showExportSubmenu || showImportSubmenu) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showAdditionalMenu, showExportSubmenu]);
+  }, [showAdditionalMenu, showExportSubmenu, showImportSubmenu]);
 
   const onSwitchChange = (editOn: boolean) => {
     setEditOn(editOn);
@@ -244,6 +263,12 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
       console.error("Error saving MyMaps:", error);
       toast.error("An error occurred while saving. Please try again.");
     }
+  };
+
+  const onImportFileChange = (format: ImportFormat, evt: React.ChangeEvent<HTMLInputElement>) => {
+    const file = evt.target.files?.[0];
+    evt.target.value = "";
+    if (file) onFileImport(format, file);
   };
 
   const onInputChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
@@ -456,6 +481,19 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
         </span>
       </button>
 
+      {FILE_IMPORT_FORMATS.map(({ format, accept }) => (
+        <input
+          key={format}
+          ref={(el) => {
+            importInputRefs.current[format] = el;
+          }}
+          type="file"
+          accept={accept}
+          className="hidden"
+          onChange={(evt) => onImportFileChange(format, evt)}
+        />
+      ))}
+
       {/* Export submenu rendered as portal */}
       {showExportSubmenu &&
         typeof window !== "undefined" &&
@@ -516,6 +554,49 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               <Image src="/images/json.png" alt="GeoJSON" width={16} height={16} className="mr-2 shrink-0" />
               GeoJSON
             </div>
+          </div>,
+          document.body,
+        )}
+
+      {/* Import submenu rendered as portal */}
+      {showImportSubmenu &&
+        typeof window !== "undefined" &&
+        createPortal(
+          <div
+            className="mymaps-import-submenu-portal fixed bg-base-100 border border-base-300 rounded shadow-[0_4px_12px_rgba(0,0,0,0.15)] min-w-[120px] z-[99999]"
+            style={{
+              left: importSubmenuPosition.x,
+              top: importSubmenuPosition.y,
+            }}
+            onMouseEnter={() => {
+              if (importHoverTimeoutRef.current) {
+                clearTimeout(importHoverTimeoutRef.current);
+                importHoverTimeoutRef.current = null;
+              }
+              setShowImportSubmenu(true);
+            }}
+            onMouseLeave={() => {
+              if (importHoverTimeoutRef.current) {
+                clearTimeout(importHoverTimeoutRef.current);
+                importHoverTimeoutRef.current = null;
+              }
+              setShowImportSubmenu(false);
+            }}
+          >
+            {FILE_IMPORT_FORMATS.map(({ format, label }) => (
+              <div
+                key={format}
+                className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300"
+                onClick={() => {
+                  setShowAdditionalMenu(false);
+                  setShowImportSubmenu(false);
+                  importInputRefs.current[format]?.click();
+                }}
+              >
+                <Image src="/images/json.png" alt={label} width={16} height={16} className="mr-2 shrink-0" />
+                {label}
+              </div>
+            ))}
           </div>,
           document.body,
         )}
@@ -582,6 +663,35 @@ const MyMapsAdvanced: React.FC<MyMapsAdvancedProps> = ({ onEditFeatures, onDelet
               <Image src="/images/polygon.png" alt="Merge Polygons" width={16} height={16} className="mr-2 shrink-0" />
               Merge Polygons
             </div>
+            {myMapsConfig.enableImportExport && (
+              <div
+                ref={importMenuRef}
+                className="flex items-center py-2 px-3 text-xs text-base-content cursor-pointer transition-colors border-b border-base-200 last:border-b-0 hover:bg-base-200 hover:text-primary active:bg-base-300 relative"
+                onMouseEnter={(e) => {
+                  if (importHoverTimeoutRef.current) {
+                    clearTimeout(importHoverTimeoutRef.current);
+                    importHoverTimeoutRef.current = null;
+                  }
+
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setImportSubmenuPosition({
+                    x: rect.right + 4,
+                    y: rect.top,
+                  });
+                  setShowImportSubmenu(true);
+                }}
+                onMouseLeave={() => {
+                  importHoverTimeoutRef.current = setTimeout(() => {
+                    setShowImportSubmenu(false);
+                    importHoverTimeoutRef.current = null;
+                  }, 300);
+                }}
+              >
+                <Image src="/images/json.png" alt="Import" width={16} height={16} className="mr-2 shrink-0" />
+                Import from ...
+                <span className="ml-auto text-[10px] text-base-content/60">{"\u25B6"}</span>
+              </div>
+            )}
             <div>
               <div
                 ref={exportMenuRef}
