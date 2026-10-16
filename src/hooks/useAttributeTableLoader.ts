@@ -21,9 +21,17 @@ import { useCallback, useEffect, useRef } from "react";
 import { useAttributeTableStore, ATTRIBUTE_TABLE_DEFAULTS, selectActiveTab, type AttributeTableTab } from "@/stores/attributeTableStore";
 import { useMapStore } from "@/stores/mapStore";
 import { describeFeatureType, fetchWfsCount, fetchWfsPage, pickImplicitSortField, WfsPrimaryKeyError, type WfsFieldDescriptor } from "@/lib/attributeTable/wfs";
-import { describeArcgisLayer, fetchArcgisCount, fetchArcgisPage, parseArcgisLayerUrl, pickImplicitSortFieldArcgis, ArcgisPaginationNotSupportedError } from "@/lib/attributeTable/arcgis";
+import {
+  describeArcgisLayer,
+  fetchArcgisCount,
+  fetchArcgisPage,
+  fetchArcgisRelatedRecords,
+  parseArcgisLayerUrl,
+  pickImplicitSortFieldArcgis,
+  ArcgisPaginationNotSupportedError,
+} from "@/lib/attributeTable/arcgis";
 import { ColumnarStore, type ColumnSchema } from "@/lib/attributeTable/columnarStore";
-import type { ArcgisCodedValue } from "@/utils/arcgisFieldMetadata";
+import type { ArcgisCodedValue, ArcgisRelationship } from "@/utils/arcgisFieldMetadata";
 import { cacheGeometries, getCurrentMapExtent } from "@/lib/attributeTable/mapIntegration";
 import { useToastStore } from "@/hooks/useToast";
 
@@ -135,23 +143,28 @@ async function describeAndCount(
   implicitSortField: string | null;
   supportsPagination: boolean;
   domains: Record<string, ArcgisCodedValue[]> | null;
+  relationships: ArcgisRelationship[] | null;
 }> {
   if (tab.sourceType === "arcgis") {
     const endpoint = parseArcgisLayerUrl(tab.wfsUrl);
     if (!endpoint) throw new Error("Could not parse ArcGIS layer URL.");
     const info = await describeArcgisLayer(endpoint, tab.secured, signal);
-    const total = await fetchArcgisCount({
-      endpoint,
-      secured: tab.secured,
-      bbox: tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined,
-      signal,
-    });
+    // Related rows are counted by the single response fetchPage makes.
+    const total = tab.relatedContext
+      ? 0
+      : await fetchArcgisCount({
+          endpoint,
+          secured: tab.secured,
+          bbox: tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined,
+          signal,
+        });
     return {
       fields: info.fields,
       total,
       implicitSortField: pickImplicitSortFieldArcgis(info.objectIdField),
-      supportsPagination: info.supportsPagination,
+      supportsPagination: tab.relatedContext ? false : info.supportsPagination,
       domains: info.domains,
+      relationships: info.relationships,
     };
   }
 
@@ -164,7 +177,7 @@ async function describeAndCount(
       signal,
     }),
   ]);
-  return { fields, total, implicitSortField: pickImplicitSortField(fields), supportsPagination: true, domains: null };
+  return { fields, total, implicitSortField: pickImplicitSortField(fields), supportsPagination: true, domains: null, relationships: null };
 }
 
 /** Unified page fetcher that dispatches by source type. */
@@ -181,6 +194,19 @@ async function fetchPage(args: {
   supportsPagination?: boolean;
   signal: AbortSignal;
 }): Promise<{ features: Array<{ id?: string | number; properties: Record<string, unknown> | null; geometry?: unknown }>; numberMatched: number | null; numberReturned: number }> {
+  if (args.tab.sourceType === "arcgis" && args.tab.relatedContext) {
+    const related = args.tab.relatedContext;
+    const rows = await fetchArcgisRelatedRecords({
+      layerUrl: related.parentLayerUrl,
+      secured: args.tab.secured,
+      objectId: related.parentObjectId,
+      relationshipId: related.relationshipId,
+      signal: args.signal,
+    });
+    const oid = args.objectIdField ?? "OBJECTID";
+    const features = rows.map((row) => ({ id: row[oid] == null ? undefined : String(row[oid]), properties: row, geometry: undefined }));
+    return { features, numberMatched: null, numberReturned: features.length };
+  }
   if (args.tab.sourceType === "arcgis") {
     const endpoint = parseArcgisLayerUrl(args.tab.wfsUrl);
     if (!endpoint) throw new Error("Could not parse ArcGIS layer URL.");
@@ -253,7 +279,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
     const bbox = tab.bboxFilterActive ? (getCurrentMapExtent() ?? undefined) : undefined;
 
     try {
-      const { fields, total, implicitSortField, supportsPagination, domains } = await describeAndCount(tab, ctrl.signal);
+      const { fields, total, implicitSortField, supportsPagination, domains, relationships } = await describeAndCount(tab, ctrl.signal);
 
       const schema = schemaFromFields(fields);
       const effectiveSort = supportsPagination ? resolveSortField(tab.sort, implicitSortField, fields) : null;
@@ -297,6 +323,7 @@ export function useAttributeTableLoader(): { loadMore: () => Promise<void>; relo
         totalCount: effectiveTotal,
         capReached,
         domains,
+        relationships,
       });
 
       if (capReached && effectiveTotal > ATTRIBUTE_TABLE_DEFAULTS.rowCap) {

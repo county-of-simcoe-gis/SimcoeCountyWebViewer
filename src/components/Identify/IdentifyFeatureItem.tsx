@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
 import { useMapStore } from "@/stores/mapStore";
 import { filterFeatureKeys, formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
-import { resolveFieldAlias, resolveDomainName, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
+import { resolveFieldAlias, resolveDomainName, relationshipLabel, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 import { useMyMapsStore, createMyMapsItem, type DrawType } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
@@ -12,6 +12,8 @@ import { featureToGeoJSON } from "@/utils/myMapsHelpers";
 import { useToastStore } from "@/hooks/useToast";
 import { activateTab } from "@/utils/helpersUI";
 import Attachments from "@/components/common/Attachments";
+import { RelatedRecordsList, getRelatedRelationships } from "@/components/common/RelatedRecordsList";
+import { getArcgisObjectId } from "@/lib/attributeTable/arcgis";
 import Image from "next/image";
 
 interface IdentifyFeatureItemProps {
@@ -64,8 +66,10 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
     const props = feature.getProperties();
     const keys = filterFeatureKeys(feature, showAllFields);
     const attachmentUrl = feature.get("attachmentUrl") as string | undefined;
+    const objectId = getArcgisObjectId(props);
+    const relatedRelationships = getRelatedRelationships(fieldMetadata, objectId);
 
-    if (keys.length === 0 && !attachmentUrl) {
+    if (keys.length === 0 && !attachmentUrl && relatedRelationships.length === 0) {
       return <div className="p-2.5 text-center text-base-content/70 italic">No attributes found</div>;
     }
 
@@ -96,6 +100,12 @@ const IdentifyFeatureItemComponent: React.FC<IdentifyFeatureItemProps> = ({ feat
             </div>
           </div>
         )}
+        {relatedRelationships.map((relationship) => (
+          <div key={`related-${relationship.id}`} className="flex flex-col gap-1 py-[5px] border-b border-base-200 last:border-b-0">
+            <div className="font-semibold text-base-content/70 break-words max-[768px]:text-[11px]">{relationshipLabel(relationship.name)}:</div>
+            <RelatedRecordsList metadata={fieldMetadata} relationship={relationship} objectId={objectId} showAllFields={showAllFields} />
+          </div>
+        ))}
       </div>
     );
   };

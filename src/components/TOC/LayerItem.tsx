@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { useMapStore } from "@/stores/mapStore";
 import { getMapScale } from "@/utils/mapHelpers";
-import { FaPaperclip, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical, FaPlay, FaPause } from "react-icons/fa";
+import { FaPaperclip, FaLink, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical, FaPlay, FaPause } from "react-icons/fa";
 import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
 import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
 import { trackLayer } from "@/lib/appStats";
@@ -205,6 +205,10 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
 
         <div className={currentLayerData.hasAttachments ? "inline-flex items-center ml-[5px]" : "hidden"} title="This layer has attachments.">
           <FaPaperclip className="text-[#666] text-xs" />
+        </div>
+
+        <div className={currentLayerData.hasRelatedRecords ? "inline-flex items-center ml-[5px]" : "hidden"} title="This layer has related records.">
+          <FaLink className="text-[#666] text-xs" />
         </div>
 
         <div className={currentLayerData.canDownload ? "inline-flex items-center ml-[5px] cursor-default" : "hidden"} title="This layer can be downloaded.">

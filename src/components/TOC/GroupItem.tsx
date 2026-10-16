@@ -151,9 +151,9 @@ export default function GroupItem({
       >
         <div className="flex items-center shrink-0">
           {panelOpen ? (
-            <FaFolderOpen size={16} className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
+            <FaFolderOpen size={16} title="Collapse group" className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
           ) : (
-            <FaFolder size={16} className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
+            <FaFolder size={16} title="Expand group" className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
           )}
         </div>
         <input

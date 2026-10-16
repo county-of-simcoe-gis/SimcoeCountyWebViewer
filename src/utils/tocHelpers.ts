@@ -7,6 +7,7 @@ import type { Layer as OpenLayersLayer } from "ol/layer";
 import { buildAuthFetchOptions, getAccessToken } from "@/utils/auth";
 import { apiUrl } from "@/lib/axiosInstance";
 import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
+import { parseArcgisRelationships } from "@/utils/arcgisFieldMetadata";
 import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
 import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
@@ -578,6 +579,7 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
           displayName: item.name,
         },
         hasAttachments: item.hasAttachments ?? false,
+        hasRelatedRecords: parseArcgisRelationships(item.relationships).length > 0,
         visible,
         queryable: true,
         opaque: false,
@@ -1143,6 +1145,7 @@ export interface BuildESRILayerOptions {
       disclaimerWarning?: string;
     };
     hasAttachments?: boolean;
+    hasRelatedRecords?: boolean;
     visible?: boolean;
     queryable?: boolean;
     opaque?: boolean;
@@ -1198,6 +1201,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   const tocDisplayName = layerTitle.trim();
   // HAS ATTACHMENTS
   const hasAttachments = layer.hasAttachments || false;
+  const hasRelatedRecords = layer.hasRelatedRecords || false;
   // OPACITY
   const opacity = layer.options.opacity || 1;
 
@@ -1396,6 +1400,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         displayName: displayName,
         tocDisplayName: tocDisplayName,
         hasAttachments: hasAttachments,
+        hasRelatedRecords: hasRelatedRecords,
         disclaimer,
         extendedProperties: {
           keywords: {

@@ -20,12 +20,13 @@
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { flexRender, getCoreRowModel, useReactTable, type ColumnDef, type ColumnSizingState, type OnChangeFn } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { FaSortUp, FaSortDown, FaSort, FaSearchPlus, FaTimes, FaPaperclip } from "react-icons/fa";
+import { FaSortUp, FaSortDown, FaSort, FaSearchPlus, FaTimes, FaPaperclip, FaLink } from "react-icons/fa";
 import { useAttributeTableStore, type AttributeTableTab } from "@/stores/attributeTableStore";
 import type { ColumnType } from "@/lib/attributeTable/columnarStore";
 import { formatFieldValue, formatFieldName } from "@/utils/identifyHelpers";
 import { isExcludedKey } from "@/utils/identifyHelpers";
-import { resolveDomainValue } from "@/utils/arcgisFieldMetadata";
+import { relationshipLabel, resolveDomainValue } from "@/utils/arcgisFieldMetadata";
+import { getRelatedTableUrl, parseArcgisLayerUrl } from "@/lib/attributeTable/arcgis";
 import { matchesColumnFilter } from "@/lib/attributeTable/filtering";
 import { syncHighlight, zoomToFeature, setHoverFeature, clearHover } from "@/lib/attributeTable/mapIntegration";
 import AttributeTableAttachmentsDialog from "./AttributeTableAttachmentsDialog";
@@ -56,6 +57,8 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
   const setSort = useAttributeTableStore((s) => s.setSort);
   const setFilter = useAttributeTableStore((s) => s.setFilter);
   const setColumnSizes = useAttributeTableStore((s) => s.setColumnSizes);
+  const openForRelated = useAttributeTableStore((s) => s.openForRelated);
+  const arcgisEndpoint = useMemo(() => parseArcgisLayerUrl(tab.wfsUrl), [tab.wfsUrl]);
 
   const parentRef = useRef<HTMLDivElement | null>(null);
 
@@ -89,6 +92,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
 
   const columns = useMemo<ColumnDef<RowRef>[]>(() => {
     if (!tab.schema || !tab.store) return [];
+    const relationships = tab.relatedContext ? [] : (tab.relationships ?? []);
     const out: ColumnDef<RowRef>[] = [
       {
         id: "__select__",
@@ -143,7 +147,7 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
       {
         id: "__actions__",
         header: () => null,
-        size: tab.hasAttachments ? 76 : 44,
+        size: 44 + (tab.hasAttachments ? 32 : 0) + relationships.length * 28,
         enableResizing: false,
         cell: ({ row }) => {
           const fid = tab.store!.fids[row.original.index];
@@ -175,6 +179,28 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
                   <FaPaperclip size={12} />
                 </button>
               ) : null}
+              {relationships.map((rel) => (
+                <button
+                  key={rel.id}
+                  type="button"
+                  className="btn btn-xs btn-square btn-ghost"
+                  title={`Open related: ${relationshipLabel(rel.name)}`}
+                  aria-label={`Open related ${relationshipLabel(rel.name)}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!arcgisEndpoint) return;
+                    openForRelated({
+                      parentLayerId: tab.layerId,
+                      relationship: rel,
+                      parentObjectId: fid,
+                      parentLayerUrl: arcgisEndpoint.layerUrl,
+                      relatedWfsUrl: getRelatedTableUrl(arcgisEndpoint.layerUrl, rel.relatedTableId),
+                    });
+                  }}
+                >
+                  <FaLink size={12} />
+                </button>
+              ))}
             </div>
           );
         },
@@ -214,7 +240,11 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
     tab.secured,
     tab.showAllFields,
     tab.hasAttachments,
+    tab.relationships,
+    tab.relatedContext,
     tab.columnSizes,
+    arcgisEndpoint,
+    openForRelated,
     toggleSelection,
     setSelection,
     clearSelection,

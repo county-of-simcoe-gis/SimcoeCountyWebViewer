@@ -81,6 +81,7 @@ export interface TOCLayer {
   secured?: boolean;
   canDownload?: boolean;
   hasAttachments?: boolean;
+  hasRelatedRecords?: boolean; // ArcGIS layer has origin relationships to related tables
   disclaimer?: LayerDisclaimer;
   infoFormat?: string; // INFO_FORMAT for WMS GetFeatureInfo requests (e.g., text/plain, text/html)
   xslTemplate?: string; // XSL template URL for transforming identify results

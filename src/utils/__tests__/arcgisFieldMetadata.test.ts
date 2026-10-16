@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { http, HttpResponse } from "msw";
 import { server } from "@/test/testServer";
-import { parseArcgisFieldsMetadata, getArcgisFieldMetadata, resolveFieldAlias, resolveDomainName, clearArcgisFieldMetadataCache } from "@/utils/arcgisFieldMetadata";
+import { parseArcgisFieldsMetadata, parseArcgisRelationships, getArcgisFieldMetadata, resolveFieldAlias, resolveDomainName, clearArcgisFieldMetadataCache } from "@/utils/arcgisFieldMetadata";
 
 const LAYER_URL = "https://gis.example.com/arcgis/rest/services/TestService/MapServer/7";
 
@@ -202,5 +202,40 @@ describe("getArcgisFieldMetadata", () => {
     const a = await getArcgisFieldMetadata(`${LAYER_URL}?f=json`);
     const b = await getArcgisFieldMetadata(LAYER_URL);
     expect(a).toBe(b);
+  });
+
+  it("includes origin relationships and layer url", async () => {
+    server.use(
+      http.get(LAYER_URL, () =>
+        HttpResponse.json({
+          fields: sampleFields,
+          relationships: [{ id: 5, name: "Has Videos", relatedTableId: 67, role: "esriRelRoleOrigin" }],
+        }),
+      ),
+    );
+
+    const result = await getArcgisFieldMetadata(LAYER_URL);
+    expect(result!.layerUrl).toBe(LAYER_URL);
+    expect(result!.secured).toBe(false);
+    expect(result!.relationships).toEqual([{ id: 5, name: "Has Videos", relatedTableId: 67 }]);
+  });
+});
+
+describe("parseArcgisRelationships", () => {
+  it("keeps origin relationships only", () => {
+    expect(
+      parseArcgisRelationships([
+        { id: 5, name: "Has Videos", relatedTableId: 67, role: "esriRelRoleOrigin" },
+        { id: 1, name: "Is Video For", relatedTableId: 19, role: "esriRelRoleDestination" },
+        { id: 2, relatedTableId: 30, role: "esriRelRoleOrigin" },
+      ]),
+    ).toEqual([
+      { id: 5, name: "Has Videos", relatedTableId: 67 },
+      { id: 2, name: "Related table 30", relatedTableId: 30 },
+    ]);
+  });
+
+  it("returns an empty list for missing input", () => {
+    expect(parseArcgisRelationships(undefined)).toEqual([]);
   });
 });
