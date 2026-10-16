@@ -143,6 +143,7 @@ export interface MyMapsState {
   // Actions - Items
   addItem: (item: MyMapsItem) => void;
   removeItem: (id: string) => void;
+  moveItem: (fromIndex: number, toIndex: number) => void;
   updateItem: (id: string, updates: Partial<MyMapsItem>) => void;
   updateItemGeometry: (id: string, featureGeoJSON: string) => void;
   undoGeometryEdit: () => boolean;
@@ -316,6 +317,18 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
       set((state) => ({
         items: state.items.filter((item) => item.id !== id),
       }));
+      get().saveToStorage();
+    },
+
+    moveItem: (fromIndex, toIndex) => {
+      const { items } = get();
+      const inRange = (i: number) => Number.isInteger(i) && i >= 0 && i < items.length;
+      if (!inRange(fromIndex) || !inRange(toIndex) || fromIndex === toIndex) return;
+
+      const next = [...items];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      set({ items: next });
       get().saveToStorage();
     },
 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import { FaGripVertical } from "react-icons/fa";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 
@@ -13,9 +14,10 @@ interface MyMapsItemProps {
   onHoverStart?: (item: MyMapsItemType) => void;
   onHoverEnd?: (item: MyMapsItemType) => void;
   isEditing?: boolean;
+  onGripMouseDown?: () => void;
 }
 
-const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, onShowOptions, onHoverStart, onHoverEnd, isEditing = false }) => {
+const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, onShowOptions, onHoverStart, onHoverEnd, isEditing = false, onGripMouseDown }) => {
   const { toggleItemVisibility } = useMyMapsStore();
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [tempLabel, setTempLabel] = useState(item.label);
@@ -104,6 +106,16 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Drag handle */}
+      <div
+        className="shrink-0 flex items-center text-base-content/50 hover:text-base-content cursor-grab active:cursor-grabbing"
+        title="Drag to reorder"
+        onMouseDown={onGripMouseDown}
+        data-testid="mymaps-item-drag-handle"
+      >
+        <FaGripVertical className="w-3 h-3" aria-hidden="true" />
+      </div>
+
       {/* Visibility checkbox */}
       <div className="shrink-0">
         <input type="checkbox" checked={item.visible} onChange={handleVisibilityToggle} title={item.visible ? "Hide item" : "Show item"} className="w-3.5 h-3.5 cursor-pointer" />

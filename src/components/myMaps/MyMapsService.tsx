@@ -392,24 +392,28 @@ export default function MyMapsService() {
   useEffect(() => {
     if (!drawingManagerRef.current) return;
 
-    // Check if this is a structural change (add/remove/visibility) vs just label change
+    // Membership/visibility/geometry changes rebuild features; pure reorders only update stacking.
     const currentItems = items;
     const previousItems = lastItemsRef.current;
+    const previousById = new Map(previousItems.map((item) => [item.id, item]));
 
-    const structuralChange =
+    const membershipChange =
       currentItems.length !== previousItems.length ||
-      currentItems.some((item, index) => {
-        const prevItem = previousItems[index];
-        return !prevItem || item.id !== prevItem.id || item.visible !== prevItem.visible || item.featureGeoJSON !== prevItem.featureGeoJSON;
+      currentItems.some((item) => {
+        const prevItem = previousById.get(item.id);
+        return !prevItem || item.visible !== prevItem.visible || item.featureGeoJSON !== prevItem.featureGeoJSON;
       });
+    const orderChange = !membershipChange && currentItems.some((item, index) => item.id !== previousItems[index].id);
 
-    if (structuralChange) {
+    if (membershipChange) {
       drawingManagerRef.current.loadFeatures(items);
 
       // Save to storage when items change structurally
       if (items.length > 0) {
         saveToStorage();
       }
+    } else if (orderChange) {
+      drawingManagerRef.current.setItemOrder(items);
     }
 
     lastItemsRef.current = [...items];

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { Feature } from "ol";
 import { Point } from "ol/geom";
@@ -48,6 +48,47 @@ beforeEach(() => {
 });
 
 describe("myMapsStore", () => {
+  describe("moveItem", () => {
+    const originalSave = useMyMapsStore.getState().saveToStorage;
+    const makeItem = (id: string) =>
+      ({ id, label: id, labelVisible: false, labelRotation: 0, featureGeoJSON: "{}", style: {}, visible: true, drawType: "Point", geometryType: "Point" }) as unknown as MyMapsItem;
+    const ids = () => useMyMapsStore.getState().items.map((item) => item.id);
+    let saveSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      saveSpy = vi.fn();
+      useMyMapsStore.setState({ items: [makeItem("a"), makeItem("b"), makeItem("c")], saveToStorage: saveSpy as unknown as () => void });
+    });
+
+    afterEach(() => {
+      useMyMapsStore.setState({ saveToStorage: originalSave });
+    });
+
+    it("moves an item down", () => {
+      useMyMapsStore.getState().moveItem(0, 2);
+      expect(ids()).toEqual(["b", "c", "a"]);
+    });
+
+    it("moves an item up", () => {
+      useMyMapsStore.getState().moveItem(2, 0);
+      expect(ids()).toEqual(["c", "a", "b"]);
+    });
+
+    it("saves after a move", () => {
+      useMyMapsStore.getState().moveItem(0, 1);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores same, out-of-range, and non-integer indices", () => {
+      useMyMapsStore.getState().moveItem(1, 1);
+      useMyMapsStore.getState().moveItem(-1, 1);
+      useMyMapsStore.getState().moveItem(0, 3);
+      useMyMapsStore.getState().moveItem(0.5, 1);
+      expect(ids()).toEqual(["a", "b", "c"]);
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe("Initial State", () => {
     it("should have correct initial state", () => {
       const { result } = renderHook(() => useMyMapsStore());

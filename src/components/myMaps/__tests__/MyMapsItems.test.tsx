@@ -1,5 +1,5 @@
 ﻿import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import MyMapsItems from "@/components/myMaps/MyMapsItems";
 import type { MyMapsItem } from "@/types/myMaps";
@@ -11,9 +11,12 @@ vi.mock("next/image", () => ({
 
 // Mock MyMapsItem component
 vi.mock("@/components/myMaps/MyMapsItem", () => ({
-  default: ({ item, onLabelChange, onDelete, onShowOptions, onHoverStart, onHoverEnd, isEditing }: any) => (
+  default: ({ item, onLabelChange, onDelete, onShowOptions, onHoverStart, onHoverEnd, isEditing, onGripMouseDown }: any) => (
     <div data-testid={`mymaps-item-${item.id}`} data-editing={isEditing}>
       <span>{item.label}</span>
+      <button data-testid={`grip-${item.id}`} onMouseDown={() => onGripMouseDown?.()}>
+        Grip
+      </button>
       <button data-testid={`label-change-${item.id}`} onClick={() => onLabelChange(item.id, "Changed Label")}>
         Change Label
       </button>
@@ -36,6 +39,7 @@ vi.mock("@/components/myMaps/MyMapsItem", () => ({
 // Mock store
 const mockMyMapsStore = {
   items: [] as MyMapsItem[],
+  moveItem: vi.fn(),
 };
 
 vi.mock("@/stores/myMapsStore", () => ({
@@ -373,6 +377,70 @@ describe("MyMapsItems Component", () => {
     });
   });
 
+  describe("Drag to reorder", () => {
+    const makeDataTransfer = () => ({ setData: vi.fn(), getData: vi.fn(), effectAllowed: "", dropEffect: "" });
+    const getWrappers = () => screen.getAllByTestId("mymaps-item-wrapper");
+
+    beforeEach(() => {
+      mockMyMapsStore.items = mockItems;
+      mockMyMapsStore.moveItem.mockClear();
+    });
+
+    it("keeps rows non-draggable until the grip is pressed", () => {
+      render(<MyMapsItems {...defaultProps} />);
+
+      getWrappers().forEach((wrapper) => expect(wrapper).toHaveAttribute("draggable", "false"));
+
+      fireEvent.mouseDown(screen.getByTestId("grip-item-1"));
+
+      expect(getWrappers()[0]).toHaveAttribute("draggable", "true");
+      expect(getWrappers()[1]).toHaveAttribute("draggable", "false");
+    });
+
+    it("disarms the row when the grip is released without dragging", () => {
+      render(<MyMapsItems {...defaultProps} />);
+
+      fireEvent.mouseDown(screen.getByTestId("grip-item-1"));
+      fireEvent.mouseUp(window);
+
+      expect(getWrappers()[0]).toHaveAttribute("draggable", "false");
+    });
+
+    it("moves the dragged item to the drop row", () => {
+      render(<MyMapsItems {...defaultProps} />);
+      const dataTransfer = makeDataTransfer();
+
+      fireEvent.mouseDown(screen.getByTestId("grip-item-1"));
+      fireEvent.dragStart(getWrappers()[0], { dataTransfer });
+      fireEvent.dragOver(getWrappers()[1], { dataTransfer });
+      fireEvent.drop(getWrappers()[1], { dataTransfer });
+
+      expect(mockMyMapsStore.moveItem).toHaveBeenCalledWith(0, 1);
+    });
+
+    it("does nothing when dropped on its own row", () => {
+      render(<MyMapsItems {...defaultProps} />);
+      const dataTransfer = makeDataTransfer();
+
+      fireEvent.mouseDown(screen.getByTestId("grip-item-1"));
+      fireEvent.dragStart(getWrappers()[0], { dataTransfer });
+      fireEvent.drop(getWrappers()[0], { dataTransfer });
+
+      expect(mockMyMapsStore.moveItem).not.toHaveBeenCalled();
+    });
+
+    it("resets the armed row after a drop", () => {
+      render(<MyMapsItems {...defaultProps} />);
+      const dataTransfer = makeDataTransfer();
+
+      fireEvent.mouseDown(screen.getByTestId("grip-item-1"));
+      fireEvent.dragStart(getWrappers()[0], { dataTransfer });
+      fireEvent.drop(getWrappers()[1], { dataTransfer });
+
+      expect(getWrappers()[0]).toHaveAttribute("draggable", "false");
+    });
+  });
+
   describe("Accessibility", () => {
     it("should have proper container structure", () => {
       render(<MyMapsItems {...defaultProps} />);
@@ -425,4 +493,3 @@ describe("MyMapsItems Component", () => {
     });
   });
 });
-
