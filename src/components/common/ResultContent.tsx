@@ -4,10 +4,10 @@ import type { ReactNode } from "react";
 import PropertyPopup from "@/components/PropertyPopup";
 import type { Result } from "@/components/ResultsPopup";
 import { InfoRow } from "@/components/common/InfoRow";
-import { RelatedRecordsList, getRelatedRelationships, relationshipLabel } from "@/components/common/RelatedRecordsList";
+import { RelatedRecordsList, getRelatedRelationships } from "@/components/common/RelatedRecordsList";
 import { getArcgisObjectId } from "@/lib/attributeTable/arcgis";
 import { isExcludedKey } from "@/utils/identifyHelpers";
-import { resolveDomainName, resolveFieldAlias } from "@/utils/arcgisFieldMetadata";
+import { resolveDomainName, resolveFieldAlias, relationshipLabel } from "@/utils/arcgisFieldMetadata";
 
 interface ResultContentOptions {
   onClose?: () => void;

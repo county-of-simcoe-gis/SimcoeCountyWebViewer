@@ -49,6 +49,11 @@ export interface ArcgisLayerFieldMetadata {
 
 export const EMPTY_FIELD_METADATA: ArcgisLayerFieldMetadata = { aliases: {}, domains: {} };
 
+/** Display label for a relationship; drops the service's "Has " prefix. */
+export function relationshipLabel(name: string): string {
+  return name.replace(/^Has\s+/i, "");
+}
+
 /** Keeps origin relationships only; destination roles are not supported. */
 export function parseArcgisRelationships(relationships: unknown): ArcgisRelationship[] {
   if (!Array.isArray(relationships)) return [];

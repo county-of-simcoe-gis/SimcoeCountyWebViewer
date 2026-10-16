@@ -21,7 +21,7 @@ import { create } from "zustand";
 import type { TOCLayer } from "@/stores/tocStore";
 import { ColumnarStore, type ColumnSchema } from "@/lib/attributeTable/columnarStore";
 import type { WfsFieldDescriptor } from "@/lib/attributeTable/wfs";
-import type { ArcgisCodedValue, ArcgisRelationship } from "@/utils/arcgisFieldMetadata";
+import { relationshipLabel, type ArcgisCodedValue, type ArcgisRelationship } from "@/utils/arcgisFieldMetadata";
 
 // ---------------------------------------------------------------------------
 // Constants / configuration
@@ -273,7 +273,7 @@ export const useAttributeTableStore = create<AttributeTableState>((set, get) => 
     const tab: AttributeTableTab = {
       id,
       layerId: id,
-      layerName: `${relationship.name} (${parent.layerName} ${parentObjectId})`,
+      layerName: `${relationshipLabel(relationship.name)} (${parent.layerName} ${parentObjectId})`,
       typeName: "",
       wfsUrl: relatedWfsUrl,
       sourceType: "arcgis",

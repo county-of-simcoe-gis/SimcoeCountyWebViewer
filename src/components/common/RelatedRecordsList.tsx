@@ -5,11 +5,6 @@ import { fetchArcgisRelatedRecords, getRelatedTableUrl } from "@/lib/attributeTa
 import { filterPropertyKeys, formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
 import { getArcgisFieldMetadata, resolveDomainName, resolveFieldAlias, type ArcgisLayerFieldMetadata, type ArcgisRelationship } from "@/utils/arcgisFieldMetadata";
 
-/** Display label for a relationship; drops the service's "Has " prefix. */
-export function relationshipLabel(name: string): string {
-  return name.replace(/^Has\s+/i, "");
-}
-
 /** Origin relationships to show for one feature; empty when the layer or feature has no OBJECTID. */
 export function getRelatedRelationships(metadata: ArcgisLayerFieldMetadata | null | undefined, objectId: string | null): ArcgisRelationship[] {
   if (!metadata?.layerUrl || objectId === null) return [];

@@ -7,8 +7,8 @@ import RecordSelectorPopup, { RecordItem } from "@/components/RecordSelectorPopu
 import PropertyPopup, { type PropertyInfo } from "@/components/PropertyPopup";
 import { InfoRow } from "@/components/common/InfoRow";
 import { isExcludedKey } from "@/utils/identifyHelpers";
-import { resolveDomainName, resolveFieldAlias, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
-import { RelatedRecordsList, getRelatedRelationships, relationshipLabel } from "@/components/common/RelatedRecordsList";
+import { resolveDomainName, resolveFieldAlias, relationshipLabel, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
+import { RelatedRecordsList, getRelatedRelationships } from "@/components/common/RelatedRecordsList";
 import { getArcgisObjectId } from "@/lib/attributeTable/arcgis";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 

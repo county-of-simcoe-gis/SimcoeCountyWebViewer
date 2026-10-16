@@ -4,7 +4,7 @@ import React, { useState, useCallback } from "react";
 import { IdentifyFeature } from "./Identify";
 import { useMapStore } from "@/stores/mapStore";
 import { filterFeatureKeys, formatFieldName, formatFieldValue } from "@/utils/identifyHelpers";
-import { resolveFieldAlias, resolveDomainName, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
+import { resolveFieldAlias, resolveDomainName, relationshipLabel, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
 import { useFeatureHighlight } from "@/hooks/useFeatureHighlight";
 import { useMyMapsStore, createMyMapsItem, type DrawType } from "@/stores/myMapsStore";
 import { useEventStore } from "@/stores/eventStore";
@@ -12,7 +12,7 @@ import { featureToGeoJSON } from "@/utils/myMapsHelpers";
 import { useToastStore } from "@/hooks/useToast";
 import { activateTab } from "@/utils/helpersUI";
 import Attachments from "@/components/common/Attachments";
-import { RelatedRecordsList, getRelatedRelationships, relationshipLabel } from "@/components/common/RelatedRecordsList";
+import { RelatedRecordsList, getRelatedRelationships } from "@/components/common/RelatedRecordsList";
 import { getArcgisObjectId } from "@/lib/attributeTable/arcgis";
 import Image from "next/image";
 

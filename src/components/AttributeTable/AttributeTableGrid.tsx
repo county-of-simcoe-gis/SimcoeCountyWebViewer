@@ -25,7 +25,7 @@ import { useAttributeTableStore, type AttributeTableTab } from "@/stores/attribu
 import type { ColumnType } from "@/lib/attributeTable/columnarStore";
 import { formatFieldValue, formatFieldName } from "@/utils/identifyHelpers";
 import { isExcludedKey } from "@/utils/identifyHelpers";
-import { resolveDomainValue } from "@/utils/arcgisFieldMetadata";
+import { relationshipLabel, resolveDomainValue } from "@/utils/arcgisFieldMetadata";
 import { getRelatedTableUrl, parseArcgisLayerUrl } from "@/lib/attributeTable/arcgis";
 import { matchesColumnFilter } from "@/lib/attributeTable/filtering";
 import { syncHighlight, zoomToFeature, setHoverFeature, clearHover } from "@/lib/attributeTable/mapIntegration";
@@ -184,8 +184,8 @@ export default memo(function AttributeTableGrid({ tab, onLoadMore }: Props) {
                   key={rel.id}
                   type="button"
                   className="btn btn-xs btn-square btn-ghost"
-                  title={`Open related: ${rel.name}`}
-                  aria-label={`Open related ${rel.name}`}
+                  title={`Open related: ${relationshipLabel(rel.name)}`}
+                  aria-label={`Open related ${relationshipLabel(rel.name)}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!arcgisEndpoint) return;
