@@ -90,4 +90,26 @@ describe("JSONTranslation", () => {
       expect((Object.prototype as Record<string, unknown>).polluted).toBeUndefined();
     });
   });
+
+  describe("splash logo mapping", () => {
+    it("maps splashLogoImageName separately from headerLogoImageName", () => {
+      const rawJson = {
+        headerLogoImageName: "header.png",
+        splashLogoImageName: "splash.png",
+      };
+
+      const result = JSONToSettings(rawJson);
+      expect(result.General?.headerLogoImageName).toBe("header.png");
+      expect(result.General?.splashLogoImageName).toBe("splash.png");
+    });
+
+    it("leaves splashLogoImageName undefined when not provided", () => {
+      const rawJson = {
+        headerLogoImageName: "header.png",
+      };
+
+      const result = JSONToSettings(rawJson);
+      expect(result.General?.splashLogoImageName).toBeUndefined();
+    });
+  });
 });
