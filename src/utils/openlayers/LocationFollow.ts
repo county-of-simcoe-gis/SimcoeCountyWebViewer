@@ -1,0 +1,152 @@
+import type Map from "ol/Map";
+import { Feature } from "ol";
+import { Circle, LineString, Point } from "ol/geom";
+import PointerInteraction from "ol/interaction/Pointer";
+import { Vector as VectorLayer } from "ol/layer";
+import { Vector as VectorSource } from "ol/source";
+import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
+import { useMapStore } from "@/stores/mapStore";
+import { LayerManager } from "@/utils/openlayers/LayerManager";
+
+export const RECENTER_INTERVAL_MS = 3000;
+const FOLLOW_LAYER_ID = "locationFollow::graphics";
+const FOLLOW_ZOOM = 16;
+const INITIAL_ANIMATION_MS = 1000;
+const RECENTER_ANIMATION_MS = 800;
+const GEOLOCATION_TIMEOUT_MS = 5000;
+
+export interface LocationFix {
+  lonLat: [number, number];
+  accuracy: number;
+}
+
+interface FollowUpdate {
+  fix: LocationFix;
+  coordinate: number[];
+  trackCoords: number[][] | null;
+  now: number;
+}
+
+const accuracyFeature = new Feature();
+accuracyFeature.setStyle(
+  new Style({
+    fill: new Fill({ color: "rgba(51, 153, 255, 0.15)" }),
+    stroke: new Stroke({ color: "rgba(51, 153, 255, 0.6)", width: 1 }),
+  }),
+);
+
+const positionFeature = new Feature();
+positionFeature.setStyle(
+  new Style({
+    image: new CircleStyle({
+      radius: 7,
+      fill: new Fill({ color: "#3399ff" }),
+      stroke: new Stroke({ color: "#ffffff", width: 2 }),
+    }),
+  }),
+);
+
+const trackFeature = new Feature();
+trackFeature.setStyle(new Style({ stroke: new Stroke({ color: "#e809e5", width: 3 }) }));
+
+let watchId: number | null = null;
+let wakeLock: WakeLockSentinel | null = null;
+let lastRecenterAt = 0;
+let followLayerId: string | null = null;
+
+const toFix = (position: GeolocationPosition): LocationFix => ({
+  lonLat: [position.coords.longitude, position.coords.latitude],
+  accuracy: position.coords.accuracy,
+});
+
+const ensureFollowLayer = (): void => {
+  if (followLayerId) return;
+  const layer = new VectorLayer({
+    source: new VectorSource({ features: [accuracyFeature, positionFeature, trackFeature] }),
+  });
+  followLayerId = LayerManager.addLayer(layer, "Graphics", "Location Follow", { id: FOLLOW_LAYER_ID });
+};
+
+const removeFollowLayer = (): void => {
+  if (followLayerId) LayerManager.removeLayer(followLayerId);
+  followLayerId = null;
+};
+
+const requestWakeLock = (): void => {
+  navigator.wakeLock
+    ?.request("screen")
+    .then((sentinel) => {
+      if (watchId === null) void sentinel.release();
+      else wakeLock = sentinel;
+    })
+    .catch(() => undefined);
+};
+
+const handleVisibilityChange = (): void => {
+  if (document.visibilityState === "visible" && watchId !== null && (!wakeLock || wakeLock.released)) requestWakeLock();
+};
+
+const recenter = (map: Map, coordinate: number[], isInitial: boolean): void => {
+  const view = map.getView();
+  const zoomOptions = isInitial && (view.getZoom() ?? 0) < FOLLOW_ZOOM ? { zoom: FOLLOW_ZOOM } : {};
+  view.animate({
+    center: coordinate,
+    duration: isInitial ? INITIAL_ANIMATION_MS : RECENTER_ANIMATION_MS,
+    ...zoomOptions,
+  });
+};
+
+export function startUserWatch(onFix: (fix: LocationFix) => void, onError: (error: GeolocationPositionError) => void): boolean {
+  if (!navigator.geolocation) return false;
+
+  watchId = navigator.geolocation.watchPosition((position) => onFix(toFix(position)), onError, { enableHighAccuracy: true });
+  document.addEventListener("visibilitychange", handleVisibilityChange);
+  requestWakeLock();
+  return true;
+}
+
+export function stopUserWatch(): void {
+  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+  watchId = null;
+  document.removeEventListener("visibilitychange", handleVisibilityChange);
+  void wakeLock?.release();
+  wakeLock = null;
+  lastRecenterAt = 0;
+  removeFollowLayer();
+}
+
+export function updateFollowView({ fix, coordinate, trackCoords, now }: FollowUpdate): void {
+  const map = useMapStore.getState().map;
+  if (!map) return;
+
+  ensureFollowLayer();
+  positionFeature.setGeometry(new Point(coordinate));
+  const latitudeRadians = (fix.lonLat[1] * Math.PI) / 180;
+  accuracyFeature.setGeometry(fix.accuracy > 0 ? new Circle(coordinate, fix.accuracy / Math.cos(latitudeRadians)) : undefined);
+  trackFeature.setGeometry(trackCoords && trackCoords.length > 1 ? new LineString(trackCoords) : undefined);
+
+  const isInitial = lastRecenterAt === 0;
+  if (isInitial || now - lastRecenterAt >= RECENTER_INTERVAL_MS) {
+    recenter(map, coordinate, isInitial);
+    lastRecenterAt = now;
+  }
+}
+
+export function getCurrentFix(): Promise<LocationFix> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation unavailable"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition((position) => resolve(toFix(position)), reject, { timeout: GEOLOCATION_TIMEOUT_MS });
+  });
+}
+
+// Drags and pinches are reported without consuming the event, so map panning still works.
+export function createUserMoveInteraction(onUserMove: () => void): PointerInteraction {
+  return new PointerInteraction({
+    handleDownEvent: () => true,
+    handleDragEvent: () => onUserMove(),
+    stopDown: () => false,
+  });
+}

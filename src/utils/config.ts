@@ -72,6 +72,7 @@ export interface AppConfig {
     fullScreen: boolean;
     zoomInOut: boolean;
     currentLocation: boolean;
+    followLocation?: boolean;
     zoomExtent: boolean;
     scale: boolean;
     scaleLine: boolean;

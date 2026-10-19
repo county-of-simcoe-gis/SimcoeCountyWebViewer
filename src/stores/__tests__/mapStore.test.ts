@@ -7,6 +7,7 @@ const DEFAULT_CONTROL_VISIBILITY = {
   fullScreen: true,
   zoomInOut: true,
   currentLocation: true,
+  followLocation: true,
   zoomExtent: true,
   scale: true,
   scaleLine: true,

@@ -11,6 +11,7 @@ import type { InteractionResult } from "@/stores/interactionManagerStore";
 import { MyMapsDrawingManager } from "@/utils/openlayers/MyMapsDrawing";
 import { Feature } from "ol";
 import { getCenter } from "ol/extent";
+import { LineString, Point } from "ol/geom";
 import { Style, Text } from "ol/style";
 import { featureToGeoJSON, styleToJSON } from "@/utils/myMapsHelpers";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
@@ -657,6 +658,20 @@ export default function MyMapsService() {
     // Style event handler
     const styleUpdateId = addListener("mymap-style-updated", handleStyleUpdate);
 
+    // Location follow results (point at my location, saved track) become MyMaps items
+    const handleLocationItem = (data?: { [key: string]: unknown }) => {
+      const drawingManager = drawingManagerRef.current;
+      if (!drawingManager || !data) return;
+
+      const featureDrawType = data.type === "LineString" ? "LineString" : "Point";
+      const geometry = featureDrawType === "LineString" ? new LineString(data.coordinates as number[][]) : new Point(data.coordinates as number[]);
+      const feature = new Feature({ geometry });
+      feature.set("drawType", featureDrawType);
+      feature.setStyle(drawingManager.getStyleForFeature(featureDrawType, useMyMapsStore.getState().drawColor));
+      handleFeatureDrawnRef.current(feature);
+    };
+    const locationItemId = addListener("mymap-location-item", handleLocationItem);
+
     return () => {
       removeListener(hoverStartId);
       removeListener(hoverEndId);
@@ -666,6 +681,7 @@ export default function MyMapsService() {
       removeListener(labelRotationId);
       removeListener(labelStyleId);
       removeListener(styleUpdateId);
+      removeListener(locationItemId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [map, addItem, emit]);

@@ -86,6 +86,7 @@ const _hmrRegistry: HmrMapRegistry =
 // Define dynamic imports for control components
 const dynamicControlImports = {
   CurrentLocationButton: () => import("@/components/map/controls/CurrentLocation").then((m) => ({ default: m.CurrentLocationButton })),
+  FollowLocationButton: () => import("@/components/map/controls/FollowLocation").then((m) => ({ default: m.FollowLocationButton })),
   ExtentHistoryButtons: () => import("@/components/map/controls/ExtentHistory").then((m) => ({ default: m.ExtentHistoryButtons })),
   ZoomToExtentButton: () => import("@/components/map/controls/ZoomToExtent").then((m) => ({ default: m.ZoomToExtentButton })),
   GridButton: () => import("@/components/map/controls/Grid"),
@@ -103,6 +104,7 @@ const dynamicControlImports = {
 
 // Create lazy components
 const LazyCurrentLocationButton = lazy(dynamicControlImports.CurrentLocationButton);
+const LazyFollowLocationButton = lazy(dynamicControlImports.FollowLocationButton);
 const LazyExtentHistoryButtons = lazy(dynamicControlImports.ExtentHistoryButtons);
 const LazyZoomToExtentButton = lazy(dynamicControlImports.ZoomToExtentButton);
 const LazyGridButton = lazy(dynamicControlImports.GridButton);
@@ -529,6 +531,7 @@ export default function MapContainer() {
       fullScreen: activeConfig.controls?.fullScreen ?? true,
       zoomInOut: activeConfig.controls?.zoomInOut ?? true,
       currentLocation: activeConfig.controls?.currentLocation ?? true,
+      followLocation: activeConfig.controls?.followLocation ?? true,
       zoomExtent: activeConfig.controls?.zoomExtent ?? true,
       scale: activeConfig.controls?.scale ?? true,
       scaleLine: activeConfig.controls?.scaleLine ?? true,
@@ -986,6 +989,14 @@ export default function MapContainer() {
     );
   }, []);
 
+  const FollowLocationWrapper = useCallback(() => {
+    return (
+      <Suspense fallback={<ControlLoadingPlaceholder />}>
+        <LazyFollowLocationButton />
+      </Suspense>
+    );
+  }, []);
+
   const ExtentHistoryWrapper = useCallback(({ map }: { map: Map }) => {
     return (
       <Suspense fallback={<ControlLoadingPlaceholder />}>
@@ -1115,22 +1126,28 @@ export default function MapContainer() {
         order: 6,
         enabled: controlVisibility.currentLocation,
       },
+      followLocation: {
+        component: FollowLocationWrapper,
+        zone: "top-left",
+        order: 7,
+        enabled: controlVisibility.followLocation && isMobile(),
+      },
       grid: {
         component: GridWrapper,
         zone: "top-left",
-        order: 7,
+        order: 8,
         enabled: controlVisibility.grid,
       },
       boxSelectResults: {
         component: BoxSelectResultsWrapper,
         zone: "top-left",
-        order: 8,
+        order: 9,
         enabled: controlVisibility.boxSelectResults,
       },
       shareMap: {
         component: ShareMapWrapper,
         zone: "top-left",
-        order: 9,
+        order: 10,
         enabled: controlVisibility.shareMap,
       },
 
@@ -1184,6 +1201,7 @@ export default function MapContainer() {
       ZoomControlsWrapper,
       MoreMenuButtonWrapper,
       CurrentLocationWrapper,
+      FollowLocationWrapper,
       ExtentHistoryWrapper,
       ZoomToExtentWrapper,
       GridWrapper,
