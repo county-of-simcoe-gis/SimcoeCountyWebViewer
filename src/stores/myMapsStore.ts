@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { Style } from "ol/style";
 import type { Feature } from "ol";
 import type { Geometry } from "ol/geom";
-import { exportFeatures as exportFeaturesToFile, getDefaultLabelStyle } from "@/utils/myMapsHelpers";
+import { exportFeatures as exportFeaturesToFile, featureToGeoJSON, getDefaultLabelStyle, getImportedStyleJSON } from "@/utils/myMapsHelpers";
 import { buildSavePayload } from "@/utils/myMapsFormat";
 import { isOldOLStyleFormat, transformOLStyle } from "@/utils/storageMigration";
 import { v4 as uuidv4 } from "uuid";
@@ -143,6 +143,7 @@ export interface MyMapsState {
   // Actions - Items
   addItem: (item: MyMapsItem) => void;
   removeItem: (id: string) => void;
+  moveItem: (fromIndex: number, toIndex: number) => void;
   updateItem: (id: string, updates: Partial<MyMapsItem>) => void;
   updateItemGeometry: (id: string, featureGeoJSON: string) => void;
   undoGeometryEdit: () => boolean;
@@ -164,6 +165,7 @@ export interface MyMapsState {
   zoomToSelected: () => void;
   mergePolygons: () => { success: boolean; message?: string };
   exportToFile: (format: "KML" | "GeoJSON" | "EsriJSON") => { success: boolean; message?: string; count?: number };
+  importFeatures: (features: Feature[]) => { success: boolean; message?: string; count?: number };
   saveToApi: (options?: { myMapsName?: string; isAuthenticated?: boolean }) => Promise<{ success: boolean; message?: string; id?: string }>;
   importFromApi: (id: string) => Promise<{ success: boolean; message?: string; data?: unknown }>;
 
@@ -252,6 +254,12 @@ function normalizeStoredItem(item: MyMapsItem): MyMapsItem {
   };
 }
 
+const IMPORT_DRAW_TYPES: Partial<Record<string, DrawType>> = {
+  Point: "Point",
+  LineString: "LineString",
+  Polygon: "Polygon",
+};
+
 export const useMyMapsStore = create<MyMapsState>((set, get) => {
   // Debounced save: coalesces rapid color/style changes into a single
   // localStorage write instead of spawning a fresh setTimeout per change.
@@ -309,6 +317,18 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
       set((state) => ({
         items: state.items.filter((item) => item.id !== id),
       }));
+      get().saveToStorage();
+    },
+
+    moveItem: (fromIndex, toIndex) => {
+      const { items } = get();
+      const inRange = (i: number) => Number.isInteger(i) && i >= 0 && i < items.length;
+      if (!inRange(fromIndex) || !inRange(toIndex) || fromIndex === toIndex) return;
+
+      const next = [...items];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      set({ items: next });
       get().saveToStorage();
     },
 
@@ -529,6 +549,33 @@ export const useMyMapsStore = create<MyMapsState>((set, get) => {
           count: 0,
         };
       }
+    },
+
+    importFeatures: (features) => {
+      const newItems: MyMapsItem[] = [];
+
+      features.forEach((feature) => {
+        const geometry = feature.getGeometry();
+        const drawType = geometry ? IMPORT_DRAW_TYPES[geometry.getType()] : undefined;
+        if (!drawType) return;
+
+        const name = feature.get("name") || feature.get("label");
+        const label = name ? String(name) : `Drawing ${get().getNextDrawingNumber()}`;
+        const item = createMyMapsItem(feature, drawType, label, getImportedStyleJSON(feature));
+
+        feature.setProperties({ id: item.id, label: item.label, labelVisible: item.labelVisible, drawType, isParcel: false }, true);
+        item.featureGeoJSON = featureToGeoJSON(feature);
+        newItems.push(item);
+      });
+
+      if (newItems.length === 0) {
+        return { success: false, message: "No supported features found in file.", count: 0 };
+      }
+
+      set((state) => ({ items: [...newItems, ...state.items] }));
+      get().saveToStorage();
+
+      return { success: true, message: `Imported ${newItems.length} features.`, count: newItems.length };
     },
 
     saveToApi: async (options?: { myMapsName?: string; isAuthenticated?: boolean }) => {

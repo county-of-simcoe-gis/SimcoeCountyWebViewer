@@ -46,6 +46,7 @@ const mockDrawingManager = {
   getVectorLayer: vi.fn(() => mockVectorLayer),
   getVectorSource: vi.fn(() => mockVectorSource),
   loadFeatures: vi.fn(),
+  setItemOrder: vi.fn(),
   startDrawing: vi.fn(),
   clearDrawing: vi.fn(),
   startTextAnchor: vi.fn(),
@@ -391,6 +392,22 @@ describe("MyMapsService Component", () => {
   });
 
   describe("Store State Management", () => {
+    it("updates stacking without reloading features when only the order changes", () => {
+      const first = { id: "1", label: "Item 1", visible: true, featureGeoJSON: "{}" };
+      const second = { id: "2", label: "Item 2", visible: true, featureGeoJSON: "{}" };
+      (mockMyMapsStore as any).items = [first, second];
+
+      const { rerender } = render(<MyMapsService />);
+      mockDrawingManager.loadFeatures.mockClear();
+      mockDrawingManager.setItemOrder.mockClear();
+
+      (mockMyMapsStore as any).items = [second, first];
+      rerender(<MyMapsService />);
+
+      expect(mockDrawingManager.setItemOrder).toHaveBeenCalledWith([second, first]);
+      expect(mockDrawingManager.loadFeatures).not.toHaveBeenCalled();
+    });
+
     it("should load features when items change structurally", () => {
       const items = [
         { id: "1", label: "Item 1", visible: true, featureGeoJSON: "{}" },
