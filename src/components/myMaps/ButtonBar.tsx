@@ -6,7 +6,7 @@ import { useLocationFollowStore } from "@/stores/locationFollowStore";
 import { DrawType } from "@/types/myMaps";
 import myMapsConfig from "@/config/myMapsConfig.json";
 import DrawButton from "@/components/myMaps/DrawButton";
-import { isMobile } from "@/utils/helpersBrowser";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ButtonBarProps {
   isEditing?: boolean;
@@ -19,6 +19,7 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ isEditing = false }) => {
   const locationMode = useLocationFollowStore((s) => s.mode);
   const toggleTrack = useLocationFollowStore((s) => s.toggleTrack);
   const requestPointAtLocation = useLocationFollowStore((s) => s.requestPointAtLocation);
+  const isMobileViewport = useIsMobile();
 
   const handleButtonClick = (tool: DrawingTool) => {
     if (tool.action === "track") {
@@ -46,7 +47,7 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ isEditing = false }) => {
           onClick={() => handleButtonClick(tool)}
           isActive={tool.action === "track" ? locationMode === "track" : drawType === tool.drawType}
           disabled={!tool.enabled || isEditing}
-          visible={tool.visible !== false && (!tool.action || isMobile())}
+          visible={tool.visible !== false && (!tool.action || isMobileViewport)}
         />
       ))}
     </div>

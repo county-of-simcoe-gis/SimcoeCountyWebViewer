@@ -15,6 +15,7 @@ import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { getStorageItem } from "@/utils/storage";
 import { isMobile } from "@/utils/helpersBrowser";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -1086,6 +1087,8 @@ export default function MapContainer() {
     );
   }, []);
 
+  const isMobileViewport = useIsMobile();
+
   // Define control configuration - memoized to prevent recreation on every render
   const controlsConfig: Record<string, ControlConfig> = useMemo(
     () => ({
@@ -1130,7 +1133,7 @@ export default function MapContainer() {
         component: FollowLocationWrapper,
         zone: "top-left",
         order: 7,
-        enabled: controlVisibility.followLocation && isMobile(),
+        enabled: controlVisibility.followLocation && isMobileViewport,
       },
       grid: {
         component: GridWrapper,
@@ -1198,6 +1201,7 @@ export default function MapContainer() {
     }),
     [
       controlVisibility,
+      isMobileViewport,
       ZoomControlsWrapper,
       MoreMenuButtonWrapper,
       CurrentLocationWrapper,
