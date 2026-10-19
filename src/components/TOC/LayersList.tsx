@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import { TOCLayerGroup, TOCLayer, useTOCStore, MY_FAVOURITES_VALUE } from "@/stores/tocStore";
 import LayerItem from "@/components/TOC/LayerItem";
 
 interface LayersListProps {
@@ -20,7 +20,8 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   const dragCounter = useRef(0);
 
   const moveLayer = useTOCStore((s) => s.moveLayer);
-  const sortAlpha = useTOCStore((s) => s.sortAlpha);
+  // Favourites keep add order, so reordering is disabled there the same way as alpha sort.
+  const sortAlpha = useTOCStore((s) => s.sortAlpha) || group.value === MY_FAVOURITES_VALUE;
 
   // Update layers when group or search text changes
   useEffect(() => {
@@ -126,7 +127,7 @@ export default function LayersList({ group, searchText, onLayerChange, onLegendT
   if (!group.layers || group.layers.length === 0) {
     return (
       <div className="p-5 text-center text-base-content/60 italic">
-        <p className="m-0 text-[9pt] font-[Verdana,Arial,sans-serif]">No layers available in this group.</p>
+        <p className="m-0 text-[9pt] font-[Verdana,Arial,sans-serif]">{group.value === MY_FAVOURITES_VALUE ? "Click the star beside a layer to add it here." : "No layers available in this group."}</p>
       </div>
     );
   }

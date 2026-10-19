@@ -55,6 +55,8 @@ vi.mock("react-icons/fa", () => ({
   FaChevronRight: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "chevron-right-icon" }, "ChevronRight"),
   FaFolder: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "folder-icon" }, "Folder"),
   FaFolderOpen: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "folder-open-icon" }, "FolderOpen"),
+  FaRegStar: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "reg-star-icon" }, "RegStar"),
+  FaLink: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "link-icon" }, "Link"),
 
   // LayerOptionsMenu specific icons
   FaSearchPlus: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "search-plus-icon" }, "SearchPlus"),

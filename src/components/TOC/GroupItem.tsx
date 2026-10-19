@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import { TOCLayerGroup, TOCLayer, useTOCStore, MY_FAVOURITES_VALUE } from "@/stores/tocStore";
 import { FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
 import GroupRefreshButton from "@/components/TOC/GroupRefreshButton";
@@ -138,8 +138,9 @@ export default function GroupItem({
     return layers;
   }, [filteredLayers, sortAlpha]);
 
-  // Don't render if group is not visible or has no visible layers
-  if (!group || !visible || !isGroupVisible()) {
+  // Don't render if group is not visible or has no visible layers (favourites always renders so its empty hint shows)
+  const isFavouritesGroup = group.value === MY_FAVOURITES_VALUE;
+  if (!group || !visible || (!isFavouritesGroup && !isGroupVisible())) {
     return null;
   }
 
@@ -183,6 +184,9 @@ export default function GroupItem({
             onLayerOptionsClick={onLayerOptionsClick}
           />
         ))}
+        {isFavouritesGroup && group.layers.length === 0 && (
+          <p className="m-0 py-2 text-[9pt] italic text-base-content/60 font-[Verdana,Arial,sans-serif]">Click the star beside a layer to add it here.</p>
+        )}
       </div>
     </div>
   );

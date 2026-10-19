@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback, useRef } from "react";
-import { useTOCStore, TOCLayer, TOCLayerGroup } from "@/stores/tocStore";
+import { useTOCStore, TOCLayer, TOCLayerGroup, MY_FAVOURITES_VALUE } from "@/stores/tocStore";
 import { useAppStore } from "@/stores/appStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { useMapStore } from "@/stores/mapStore";
@@ -11,7 +11,7 @@ import TOCListView from "@/components/TOC/TOCListView";
 import TOCFolderView from "@/components/TOC/TOCFolderView";
 import LayerOptionsMenu from "@/components/TOC/LayerOptionsMenu";
 import { saveSharedItem, getSharedItem, setStorageItem, getStorageItem, removeStorageItem } from "@/utils/storage";
-import { flushUserStorage } from "@/utils/userStorage";
+import { flushUserStorage, userStorageReady } from "@/utils/userStorage";
 import { showMessage } from "@/utils/helpersUI";
 import { sortLayers, sortGroupsLayers } from "@/utils/tocHelpers";
 import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
@@ -154,7 +154,7 @@ export default function TOC({ visible = true }: TOCProps) {
       // not push its (independent) visibility onto the shared map layers.
       const isActiveView = type === activeType;
 
-      let layerGroups = type === "LIST" ? [...layerListGroups] : [...layerFolderGroups];
+      let layerGroups = (type === "LIST" ? [...layerListGroups] : [...layerFolderGroups]).filter((group) => group.value !== MY_FAVOURITES_VALUE);
 
       // Map through groups and apply saved settings
       layerGroups = layerGroups.map((group) => {
@@ -343,6 +343,10 @@ export default function TOC({ visible = true }: TOCProps) {
         // so their z-indices may be stale. This pass ensures all layers —
         // ArcGIS and WMS — share a consistent, TOC-driven draw order.
         useTOCStore.getState().updateLayerManagerZIndices();
+
+        // Favourites load after the server->local restore so they read the synced value.
+        await userStorageReady;
+        useTOCStore.getState().loadFavourites();
 
         // Apply saved layer options for BOTH views so each view's
         // order/visibility is independent and fully restored.
@@ -542,7 +546,7 @@ export default function TOC({ visible = true }: TOCProps) {
       const groups: Record<string, unknown> = {};
 
       sourceGroups.forEach((group) => {
-        if (group.value === "all_layers") return;
+        if (group.value === "all_layers" || group.value === MY_FAVOURITES_VALUE) return;
 
         const savedLayers: Record<string, unknown> = {};
         group.layers.forEach((layer) => {

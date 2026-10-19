@@ -11,6 +11,7 @@ import LayerOrderConfig from "@/utils/openlayers/LayerOrderConfig.json";
 import { fetchWithAuth, isSecuredUrl } from "@/utils/auth";
 import { useToastStore } from "@/hooks/useToast";
 import { getTimeValueAt, type TimeDimension } from "@/utils/timeDimension";
+import { getStorageItem, setStorageItem } from "@/utils/storage";
 
 // Helper function to calculate z-index for a layer based on category and position
 // Layers at the beginning of the array (index 0) should have HIGHER z-index (drawn on top)
@@ -143,6 +144,16 @@ export interface TOCSource {
   appToken?: boolean; // When true, use server-side ArcGIS app token for REST requests
 }
 
+export const MY_FAVOURITES_VALUE = "my_favourites";
+export const MY_FAVOURITES_LABEL = "My Favourites";
+const FAVOURITES_STORAGE_KEY = "Layers_Favourites";
+
+// Keyed by layer name because TOCLayer ids are regenerated on every load.
+export interface FavouriteLayer {
+  name: string;
+  visible: boolean;
+}
+
 interface TOCState {
   // TOC Type (LIST or FOLDER)
   tocType: "LIST" | "FOLDER";
@@ -183,6 +194,9 @@ interface TOCState {
   helpLink: string;
   sources: TOCSource[];
 
+  // My Favourites (ordered by add time; each entry's visibility is independent)
+  favouriteLayers: FavouriteLayer[];
+
   // Actions
   setTocType: (type: "LIST" | "FOLDER") => void;
   setLayerGroups: (type: "LIST" | "FOLDER", groups: TOCLayerGroup[], options?: { preserveLayerOrder?: boolean }) => void;
@@ -202,6 +216,10 @@ interface TOCState {
   switchToGroup: (group: TOCLayerGroup) => void;
   saveGroupLayerStates: (group: TOCLayerGroup) => void;
   restoreGroupLayerStates: (group: TOCLayerGroup) => void;
+
+  // My Favourites
+  toggleFavourite: (layerName: string) => void;
+  loadFavourites: () => void;
 
   // Layer manipulation
   updateLayerVisibility: (layerName: string, groupName: string, visible: boolean) => void;
@@ -300,6 +318,146 @@ function updateLayerInAllViews(draft: TOCState, layerId: string, updater: (layer
   });
 }
 
+const isFavouriteEntry = (layer: TOCLayer): boolean => layer.group === MY_FAVOURITES_VALUE;
+
+function readFavouritesStorage(): FavouriteLayer[] {
+  const raw = getStorageItem(FAVOURITES_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((item): item is FavouriteLayer => {
+      const record = item as Partial<FavouriteLayer> | null;
+      return !!record && typeof record.name === "string" && typeof record.visible === "boolean";
+    });
+  } catch {
+    return [];
+  }
+}
+
+function persistFavourites(favourites: FavouriteLayer[]): void {
+  const json = JSON.stringify(favourites);
+  if (getStorageItem(FAVOURITES_STORAGE_KEY) !== json) setStorageItem(FAVOURITES_STORAGE_KEY, json);
+}
+
+// Builds the favourites folder from the best source entry per favourited name (secured wins).
+function buildFavouritesGroup(sources: TOCLayer[], favourites: FavouriteLayer[]): TOCLayerGroup {
+  const layers: TOCLayer[] = [];
+  favourites.forEach((favourite) => {
+    let template: TOCLayer | undefined;
+    for (const source of sources) {
+      if (source.name !== favourite.name || source.userLayer) continue;
+      if (!template || (source.secured && !template.secured)) template = source;
+    }
+    if (!template) return;
+    layers.push({ ...template, id: `fav_${template.id}`, group: MY_FAVOURITES_VALUE, groupName: MY_FAVOURITES_LABEL, visible: favourite.visible });
+  });
+
+  return {
+    value: MY_FAVOURITES_VALUE,
+    label: MY_FAVOURITES_LABEL,
+    defaultGroup: false,
+    url: "",
+    prefix: "",
+    visibleLayers: [],
+    wmsGroupUrl: "",
+    customRestUrl: "",
+    layers,
+    sourceOpen: true,
+  };
+}
+
+// Rebuilds the favourites folder in both views from the persisted record.
+// Each container gets its own copies so immer drafts never share objects.
+function applyFavouritesGroup(state: TOCState): void {
+  const sources = state.allLayers.filter((layer) => !isFavouriteEntry(layer));
+  const template = buildFavouritesGroup(sources, state.favouriteLayers);
+  const cloneGroup = (): TOCLayerGroup => ({ ...template, layers: template.layers.map((layer) => ({ ...layer })) });
+  const withFavourites = (groups: TOCLayerGroup[]) => [cloneGroup(), ...groups.filter((group) => group.value !== MY_FAVOURITES_VALUE)];
+
+  state.layerListGroups = withFavourites(state.layerListGroups);
+  state.layerFolderGroups = withFavourites(state.layerFolderGroups);
+  state.allLayers = [...sources, ...template.layers.map((layer) => ({ ...layer }))];
+}
+
+// Copies the favourites entries' visibility back into the persisted record.
+function reconcileFavouriteRecords(state: TOCState): void {
+  const favouritesGroup = state.layerListGroups.find((group) => group.value === MY_FAVOURITES_VALUE) ?? state.layerFolderGroups.find((group) => group.value === MY_FAVOURITES_VALUE);
+  if (!favouritesGroup) return;
+
+  const next = state.favouriteLayers.map((favourite) => {
+    const entry = favouritesGroup.layers.find((layer) => layer.name === favourite.name);
+    return entry ? { name: favourite.name, visible: entry.visible } : favourite;
+  });
+  if (JSON.stringify(next) !== JSON.stringify(state.favouriteLayers)) state.favouriteLayers = next;
+}
+
+function commitFavouriteRecords(): void {
+  useTOCStore.setState((state) => {
+    reconcileFavouriteRecords(state);
+  });
+  persistFavourites(useTOCStore.getState().favouriteLayers);
+}
+
+interface MapTarget {
+  managedLayerId?: string;
+  olLayer?: OpenLayersLayer;
+  visible: boolean;
+}
+
+// Resolves the map state of every OpenLayers layer in the active view.
+function resolveMapTargets(state: TOCState, followSelection: boolean): MapTarget[] {
+  const viewGroups = state.tocType === "LIST" ? state.layerListGroups : state.layerFolderGroups;
+
+  const sourceByName = new Map<string, TOCLayer>();
+  state.allLayers.forEach((layer) => {
+    if (!isFavouriteEntry(layer) && !sourceByName.has(layer.name)) sourceByName.set(layer.name, layer);
+  });
+  const sourceOf = (layer: TOCLayer): TOCLayer | undefined => (isFavouriteEntry(layer) ? sourceByName.get(layer.name) : layer);
+  const keyOf = (layer: TOCLayer): string => {
+    const source = sourceOf(layer);
+    if (!source) return `fav:${layer.name}`;
+    return source.managedLayerId ?? `id:${source.id}`;
+  };
+
+  // LIST limits the map to one group's members (All Layers when none is selected); FOLDER shows every group.
+  let members: TOCLayer[] | undefined;
+  if (state.tocType === "LIST") {
+    const selectedValue = followSelection ? state.selectedGroup?.value : undefined;
+    members = viewGroups.find((group) => group.value === (selectedValue ?? "all_layers"))?.layers;
+  }
+  const memberByKey = new Map<string, TOCLayer>();
+  members?.forEach((member) => memberByKey.set(keyOf(member), member));
+
+  const entriesByKey = new Map<string, TOCLayer[]>();
+  [...state.allLayers, ...(members ?? [])].forEach((layer) => {
+    const key = keyOf(layer);
+    const bucket = entriesByKey.get(key);
+    if (bucket) bucket.push(layer);
+    else entriesByKey.set(key, [layer]);
+  });
+
+  const targets: MapTarget[] = [];
+  entriesByKey.forEach((entries, key) => {
+    const source = sourceOf(entries[0]);
+    // FOLDER duplicates share one map layer, so it stays on while any of its entries is on.
+    const visible = members ? (memberByKey.get(key)?.visible ?? false) : entries.some((entry) => entry.visible);
+    targets.push({
+      managedLayerId: source?.managedLayerId,
+      olLayer: source?.managedLayerId ? undefined : (source?.layer as OpenLayersLayer | undefined),
+      visible,
+    });
+  });
+  return targets;
+}
+
+function applyMapTargets(targets: MapTarget[]): void {
+  targets.forEach(({ managedLayerId, olLayer, visible }) => {
+    if (managedLayerId) LayerManager.setLayerVisibility(managedLayerId, visible);
+    else olLayer?.setVisible(visible);
+  });
+}
+
 export const useTOCStore = create<TOCState>()(
   immer((set, get) => ({
     // Initial state
@@ -320,6 +478,7 @@ export const useTOCStore = create<TOCState>()(
     layerCount: 0,
     helpLink: "",
     sources: [],
+    favouriteLayers: [],
 
     // Actions
     setTocType: (type) => {
@@ -415,6 +574,10 @@ export const useTOCStore = create<TOCState>()(
         }
       });
 
+      useTOCStore.setState((state) => {
+        applyFavouritesGroup(state);
+      });
+
       // Update OpenLayers layer visibility to match restored/defaulted state.
       // The map reflects a SINGLE (active) view, so only push visibility onto the
       // shared OL layers when this call is for the active view. Setting the
@@ -424,32 +587,7 @@ export const useTOCStore = create<TOCState>()(
       // leaving an on-by-default layer invisible until toggled).
       const currentState = get();
       if (type === currentState.tocType) {
-        const updatedOL = new Set<string>();
-
-        // Build a set of winner layer ids from the virtual "all_layers" group (LIST only).
-        // In LIST view, force suppressed duplicates OFF (only the deduped winner
-        // shown in the virtual "all_layers" group should render).
-        let winnerIds: Set<string> | undefined;
-        if (currentState.tocType === "LIST") {
-          const allLayersGroup = currentState.layerListGroups.find((g) => g.value === "all_layers");
-          if (allLayersGroup) {
-            winnerIds = new Set(allLayersGroup.layers.map((l) => l.id));
-          }
-        }
-
-        currentState.allLayers.forEach((layer) => {
-          if (layer.managedLayerId) {
-            if (!updatedOL.has(layer.managedLayerId)) {
-              updatedOL.add(layer.managedLayerId);
-              // In LIST, only winners (present in all_layers) render; force suppressed duplicates off
-              const shouldBeVisible = winnerIds ? (winnerIds.has(layer.id) ? layer.visible : false) : layer.visible;
-              LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
-            }
-          } else if (layer.layer) {
-            const shouldBeVisible = winnerIds ? (winnerIds.has(layer.id) ? layer.visible : false) : layer.visible;
-            (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
-          }
-        });
+        currentState.syncActiveViewVisibilityToMap();
       }
 
       // Update LayerManager z-indices to match the new view's group ordering
@@ -583,6 +721,8 @@ export const useTOCStore = create<TOCState>()(
         });
         state.allLayers = allLayers;
         state.layerCount = allLayers.length;
+
+        applyFavouritesGroup(state);
 
         // Keep selectedGroup in sync — it may reference a stale object from
         // the previous layerListGroups/layerFolderGroups array.
@@ -798,77 +938,13 @@ export const useTOCStore = create<TOCState>()(
     },
 
     syncActiveViewVisibilityToMap: () => {
-      // The OpenLayers map reflects a SINGLE (active) view. Push the active
-      // view's COMMITTED group visibility onto the shared OL layers, keyed by
-      // unique managedLayerId so duplicate names never collide.
-      //
-      // LIST dedup: only the deduped winner (present in the virtual
-      // "all_layers" group) should render; suppressed duplicates are forced
-      // OFF. We resolve each managed layer with WINNER-WINS semantics so the
-      // winner's intended visibility is applied regardless of iteration order
-      // (a loser must never downgrade a winner's ON state).
-      const state = get();
-
-      let winnerIds: Set<string> | undefined;
-      if (state.tocType === "LIST") {
-        const allLayersGroup = state.layerListGroups.find((g) => g.value === "all_layers");
-        if (allLayersGroup) {
-          winnerIds = new Set(allLayersGroup.layers.map((l) => l.id));
-        }
-      }
-
-      // Resolve desired visibility per managedLayerId (winner-wins).
-      const desiredByManaged = new Map<string, { visible: boolean; isWinner: boolean }>();
-      state.allLayers.forEach((layer) => {
-        if (!layer.managedLayerId) return;
-        const isWinner = winnerIds ? winnerIds.has(layer.id) : true;
-        const shouldBeVisible = isWinner ? layer.visible : false;
-        const existing = desiredByManaged.get(layer.managedLayerId);
-        if (!existing || (isWinner && !existing.isWinner)) {
-          desiredByManaged.set(layer.managedLayerId, { visible: shouldBeVisible, isWinner });
-        }
-      });
-      desiredByManaged.forEach((d, managedLayerId) => {
-        LayerManager.setLayerVisibility(managedLayerId, d.visible);
-      });
-
-      // Fallback for any layers tracked by raw OL reference (no managedLayerId).
-      state.allLayers.forEach((layer) => {
-        if (layer.managedLayerId || !layer.layer) return;
-        const isWinner = winnerIds ? winnerIds.has(layer.id) : true;
-        (layer.layer as OpenLayersLayer).setVisible(isWinner ? layer.visible : false);
-      });
+      // Active view (LIST: All Layers winners; FOLDER: every group) pushed onto the map.
+      applyMapTargets(resolveMapTargets(get(), false));
     },
 
     syncSelectedGroupToMap: () => {
-      // Push the currently selected group's committed visibility onto the map
-      // so individual toggles are reflected immediately without a group switch.
-      const state = get();
-      const selectedGroup = state.selectedGroup;
-
-      if (!selectedGroup || state.tocType !== "LIST" || selectedGroup.value === "all_layers") {
-        // No selected group, FOLDER view, or "All Layers" selected: use the
-        // existing active-view sync (winner-wins for LIST All Layers, all
-        // layers for FOLDER).
-        get().syncActiveViewVisibilityToMap();
-        return;
-      }
-
-      // Specific LIST group: hide layers that are not members of the selected
-      // group; show/hide group members per their stored visible state.
-      const groupLayerIds = new Set(selectedGroup.layers.map((l) => l.id));
-      const updated = new Set<string>();
-      state.allLayers.forEach((layer) => {
-        if (layer.managedLayerId && !updated.has(layer.managedLayerId)) {
-          updated.add(layer.managedLayerId);
-          const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
-          LayerManager.setLayerVisibility(layer.managedLayerId, shouldBeVisible);
-        } else if (layer.layer && !updated.has(layer.id)) {
-          updated.add(layer.id);
-          const shouldBeVisible = groupLayerIds.has(layer.id) ? layer.visible : false;
-          (layer.layer as OpenLayersLayer).setVisible(shouldBeVisible);
-        }
-      });
+      // Selected LIST group drives the map; other groups' layers are hidden.
+      applyMapTargets(resolveMapTargets(get(), true));
     },
 
     setIsLoading: (loading) => {
@@ -986,6 +1062,9 @@ export const useTOCStore = create<TOCState>()(
       });
 
       // Sync the newly selected group's visibility onto the map.
+      useTOCStore.setState((state) => {
+        applyFavouritesGroup(state);
+      });
       get().syncSelectedGroupToMap();
 
       // Update map z-indices to match the new group's layer ordering
@@ -1145,6 +1224,36 @@ export const useTOCStore = create<TOCState>()(
       }
     },
 
+    // My Favourites
+    toggleFavourite: (layerName) => {
+      const { favouriteLayers, allLayers } = get();
+      let next: FavouriteLayer[];
+
+      if (favouriteLayers.some((favourite) => favourite.name === layerName)) {
+        next = favouriteLayers.filter((favourite) => favourite.name !== layerName);
+      } else {
+        const source = allLayers.find((layer) => !isFavouriteEntry(layer) && !layer.userLayer && layer.name === layerName);
+        if (!source) return;
+        next = [...favouriteLayers, { name: layerName, visible: source.visible }];
+      }
+
+      set((state) => {
+        state.favouriteLayers = next;
+        applyFavouritesGroup(state);
+      });
+      persistFavourites(next);
+      get().syncSelectedGroupToMap();
+    },
+
+    loadFavourites: () => {
+      const stored = readFavouritesStorage();
+      set((state) => {
+        state.favouriteLayers = stored;
+        applyFavouritesGroup(state);
+      });
+      get().syncSelectedGroupToMap();
+    },
+
     // Layer manipulation
     updateLayerVisibility: (layerName, groupName, visible) => {
       // Track the managed layer ID for the OL layer update AFTER the store commit
@@ -1228,10 +1337,14 @@ export const useTOCStore = create<TOCState>()(
 
       // Update OpenLayers layer visibility AFTER set() completes to avoid
       // cross-store updates inside immer that trigger React 19 commit errors
+      commitFavouriteRecords();
+      // A favourited layer's favourites entry owns the map state
+      const favouriteOwner = get().favouriteLayers.find((favourite) => favourite.name === layerName);
+      const mapVisible = favouriteOwner ? favouriteOwner.visible : visible;
       if (managedLayerIdForOL) {
-        LayerManager.setLayerVisibility(managedLayerIdForOL, visible);
+        LayerManager.setLayerVisibility(managedLayerIdForOL, mapVisible);
       } else if (olLayerDirect) {
-        olLayerDirect.setVisible(visible);
+        olLayerDirect.setVisible(mapVisible);
       }
     },
 
@@ -1295,6 +1408,7 @@ export const useTOCStore = create<TOCState>()(
 
       // Push the selected group's visibility onto the map immediately so the
       // toggle is reflected without requiring a group switch.
+      commitFavouriteRecords();
       get().syncSelectedGroupToMap();
     },
 
@@ -1338,6 +1452,7 @@ export const useTOCStore = create<TOCState>()(
       });
 
       // Push the selected group's visibility onto the map immediately.
+      commitFavouriteRecords();
       get().syncSelectedGroupToMap();
     },
 
@@ -1392,6 +1507,9 @@ export const useTOCStore = create<TOCState>()(
           layer.setVisible(visible);
         }
       });
+
+      commitFavouriteRecords();
+      get().syncActiveViewVisibilityToMap();
     },
 
     // Set visibility for all layers in a specific group (single Immer set call)
@@ -1452,6 +1570,9 @@ export const useTOCStore = create<TOCState>()(
           layer.setVisible(visible);
         }
       });
+
+      commitFavouriteRecords();
+      get().syncSelectedGroupToMap();
     },
 
     // Update layer opacity by unique ID
