@@ -147,6 +147,8 @@ export interface TOCSource {
 export const MY_FAVOURITES_VALUE = "my_favourites";
 export const MY_FAVOURITES_LABEL = "My Favourites";
 const FAVOURITES_STORAGE_KEY = "Layers_Favourites";
+const RECENT_LAYERS_STORAGE_KEY = "Layers_Recent";
+export const MAX_RECENT_LAYERS = 10;
 
 // Keyed by layer name because TOCLayer ids are regenerated on every load.
 export interface FavouriteLayer {
@@ -197,6 +199,9 @@ interface TOCState {
   // My Favourites (ordered by add time; each entry's visibility is independent)
   favouriteLayers: FavouriteLayer[];
 
+  // Layer names the user manually turned on, most recent first
+  recentLayers: string[];
+
   // Actions
   setTocType: (type: "LIST" | "FOLDER") => void;
   setLayerGroups: (type: "LIST" | "FOLDER", groups: TOCLayerGroup[], options?: { preserveLayerOrder?: boolean }) => void;
@@ -220,6 +225,10 @@ interface TOCState {
   // My Favourites
   toggleFavourite: (layerName: string) => void;
   loadFavourites: () => void;
+
+  // Recent layers
+  recordRecentLayer: (layerName: string) => void;
+  loadRecentLayers: () => void;
 
   // Layer manipulation
   updateLayerVisibility: (layerName: string, groupName: string, visible: boolean) => void;
@@ -338,6 +347,23 @@ function readFavouritesStorage(): FavouriteLayer[] {
 function persistFavourites(favourites: FavouriteLayer[]): void {
   const json = JSON.stringify(favourites);
   if (getStorageItem(FAVOURITES_STORAGE_KEY) !== json) setStorageItem(FAVOURITES_STORAGE_KEY, json);
+}
+
+function readRecentLayersStorage(): string[] {
+  const raw = getStorageItem(RECENT_LAYERS_STORAGE_KEY);
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((name): name is string => typeof name === "string").slice(0, MAX_RECENT_LAYERS);
+  } catch {
+    return [];
+  }
+}
+
+function persistRecentLayers(recent: string[]): void {
+  const json = JSON.stringify(recent);
+  if (getStorageItem(RECENT_LAYERS_STORAGE_KEY) !== json) setStorageItem(RECENT_LAYERS_STORAGE_KEY, json);
 }
 
 // Builds the favourites folder from the best source entry per favourited name (secured wins).
@@ -479,6 +505,7 @@ export const useTOCStore = create<TOCState>()(
     helpLink: "",
     sources: [],
     favouriteLayers: [],
+    recentLayers: [],
 
     // Actions
     setTocType: (type) => {
@@ -1252,6 +1279,21 @@ export const useTOCStore = create<TOCState>()(
         applyFavouritesGroup(state);
       });
       get().syncSelectedGroupToMap();
+    },
+
+    recordRecentLayer: (layerName) => {
+      const next = [layerName, ...get().recentLayers.filter((name) => name !== layerName)].slice(0, MAX_RECENT_LAYERS);
+      set((state) => {
+        state.recentLayers = next;
+      });
+      persistRecentLayers(next);
+    },
+
+    loadRecentLayers: () => {
+      const stored = readRecentLayersStorage();
+      set((state) => {
+        state.recentLayers = stored;
+      });
     },
 
     // Layer manipulation

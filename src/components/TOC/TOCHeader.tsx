@@ -1,8 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { FaQuestionCircle, FaTimes } from "react-icons/fa";
 import TOCSettingsControl from "@/components/TOC/TOCSettingsControl";
+import RecentLayersDropdown, { RecentLayerOption, useRecentLayerOptions } from "@/components/TOC/RecentLayersDropdown";
 import { showURLWindow } from "@/utils/helpersUI";
 
 interface TOCHeaderProps {
@@ -42,8 +43,47 @@ export default function TOCHeader({
   onClearSavedLayers,
   onOpenLegend,
 }: TOCHeaderProps) {
+  const recentOptions = useRecentLayerOptions();
+  const [isRecentOpen, setIsRecentOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const showRecent = isRecentOpen && searchText === "" && recentOptions.length > 0;
+
   const handleSearchInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     onSearchChange(e.target.value);
+    setHighlightedIndex(-1);
+  };
+
+  const closeRecent = () => {
+    setIsRecentOpen(false);
+    setHighlightedIndex(-1);
+  };
+
+  const handleRecentSelect = (option: RecentLayerOption) => {
+    onSearchChange(option.displayName);
+    closeRecent();
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showRecent) return;
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev < recentOptions.length - 1 ? prev + 1 : prev));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case "Enter":
+        if (highlightedIndex >= 0) {
+          e.preventDefault();
+          handleRecentSelect(recentOptions[highlightedIndex]);
+        }
+        break;
+      case "Escape":
+        closeRecent();
+        break;
+    }
   };
 
   return (
@@ -56,6 +96,9 @@ export default function TOCHeader({
           placeholder={`Search ${layerCount} Layers...`}
           value={searchText}
           onChange={handleSearchInput}
+          onFocus={() => setIsRecentOpen(true)}
+          onBlur={closeRecent}
+          onKeyDown={handleSearchKeyDown}
         />
         {searchText && (
           <button
@@ -66,6 +109,7 @@ export default function TOCHeader({
             <FaTimes />
           </button>
         )}
+        {showRecent && <RecentLayersDropdown options={recentOptions} highlightedIndex={highlightedIndex} onSelect={handleRecentSelect} />}
       </div>
 
       {/* Settings Control */}

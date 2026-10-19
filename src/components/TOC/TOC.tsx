@@ -347,6 +347,7 @@ export default function TOC({ visible = true }: TOCProps) {
         // Favourites load after the server->local restore so they read the synced value.
         await userStorageReady;
         useTOCStore.getState().loadFavourites();
+        useTOCStore.getState().loadRecentLayers();
 
         // Apply saved layer options for BOTH views so each view's
         // order/visibility is independent and fully restored.
