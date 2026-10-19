@@ -223,7 +223,7 @@ export class MyMapsDrawingManager {
     feature.setStyle(style);
   }
 
-  private getStyleForFeature(drawType: string, drawColor: string): Style {
+  public getStyleForFeature(drawType: string, drawColor: string): Style {
     const isText = drawType === "Text";
     const strokeWidth = drawType === "Arrow" ? 6 : 2;
 

@@ -26,6 +26,7 @@ vi.mock("react-icons/fa", () => ({
   FaForward: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "forward-icon" }, "Forward"),
   FaBackward: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "backward-icon" }, "Backward"),
   FaCrosshairs: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "crosshairs-icon" }, "Crosshairs"),
+  FaLocationArrow: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "location-arrow-icon" }, "LocationArrow"),
   FaGithub: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "github-icon" }, "GitHub"),
   FaQuestion: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "question-icon" }, "Question"),
 

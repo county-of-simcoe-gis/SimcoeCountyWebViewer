@@ -8,6 +8,7 @@ export interface ControlVisibility {
   fullScreen: boolean;
   zoomInOut: boolean;
   currentLocation: boolean;
+  followLocation: boolean;
   zoomExtent: boolean;
   scale: boolean;
   scaleLine: boolean;
@@ -104,6 +105,7 @@ const getDefaultControlVisibility = (config?: { controls?: Partial<ControlVisibi
     fullScreen: config?.controls?.fullScreen ?? true,
     zoomInOut: config?.controls?.zoomInOut ?? true,
     currentLocation: config?.controls?.currentLocation ?? true,
+    followLocation: config?.controls?.followLocation ?? true,
     zoomExtent: config?.controls?.zoomExtent ?? true,
     scale: config?.controls?.scale ?? true,
     scaleLine: config?.controls?.scaleLine ?? true,

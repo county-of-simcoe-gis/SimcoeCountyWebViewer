@@ -28,6 +28,7 @@ const controlGroups = {
     { key: "fullScreen" as keyof ControlVisibility, label: "Full Screen", tooltip: "Toggles full-screen mode for the map" },
     { key: "zoomInOut" as keyof ControlVisibility, label: "Zoom In/Out", tooltip: "Shows zoom in (+) and zoom out (-) buttons. You can also zoom with the mouse wheel or +/- keys" },
     { key: "currentLocation" as keyof ControlVisibility, label: "Current Location", tooltip: "Zooms to your current GPS location" },
+    { key: "followLocation" as keyof ControlVisibility, label: "Follow Location", tooltip: "Shows a button that keeps the map centred on your GPS location (mobile only)" },
     { key: "zoomExtent" as keyof ControlVisibility, label: "Zoom to Extent", tooltip: "Zooms to the full extent of the map" },
     { key: "extentHistory" as keyof ControlVisibility, label: "Extent History", tooltip: "Navigate back and forward through previous map extents" },
   ],

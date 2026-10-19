@@ -88,6 +88,7 @@ const translationTable: { [section: string]: Mapping } = {
           fullScreen: { sourceKey: "controls.fullScreen", default: true },
           zoomInOut: { sourceKey: "controls.zoomInOut", default: true },
           currentLocation: { sourceKey: "controls.currentLocation", default: true },
+          followLocation: { sourceKey: "controls.followLocation", default: true },
           zoomExtent: { sourceKey: "controls.zoomExtent", default: true },
           scale: { sourceKey: "controls.scale", default: true },
           scaleLine: { sourceKey: "controls.scaleLine", default: true },

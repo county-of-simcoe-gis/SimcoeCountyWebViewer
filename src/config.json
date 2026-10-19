@@ -61,6 +61,7 @@
     "fullScreen": true,
     "zoomInOut": true,
     "currentLocation": true,
+    "followLocation": true,
     "zoomExtent": true,
     "scale": true,
     "scaleLine": true,

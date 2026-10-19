@@ -111,13 +111,31 @@
       "order": 10
     },
     {
+      "id": "track",
+      "name": "Track",
+      "action": "track",
+      "title": "Track my location (click again to save the track)",
+      "imageName": "/images/location-track.svg",
+      "enabled": true,
+      "order": 11
+    },
+    {
+      "id": "pointAtLocation",
+      "name": "My Location",
+      "action": "pointAtLocation",
+      "title": "Add a point at my current location",
+      "imageName": "/images/location-point.svg",
+      "enabled": true,
+      "order": 12
+    },
+    {
       "id": "eraser",
       "name": "Eraser",
       "drawType": "Eraser",
       "title": "Erase items on the map",
       "imageName": "/images/eraser.png",
       "enabled": true,
-      "order": 11
+      "order": 13
     },
     {
       "id": "cancel",
@@ -126,7 +144,7 @@
       "title": "Cancel current drawing tool",
       "imageName": "/images/none.png",
       "enabled": true,
-      "order": 12
+      "order": 14
     }
   ],
   "colorPalette": ["#e809e5", "#ff0000", "#00ff00", "#0000ff", "#ffff00", "#ff8000", "#800080", "#008080", "#000000", "#ffffff", "#808080", "#ffc0cb"],
