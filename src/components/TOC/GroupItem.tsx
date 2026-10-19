@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { TOCLayerGroup, TOCLayer, useTOCStore, MY_FAVOURITES_VALUE } from "@/stores/tocStore";
+import { TOCLayerGroup, TOCLayer, useTOCStore, MY_FAVOURITES_VALUE, DEFAULT_FOLDER_COLOR } from "@/stores/tocStore";
 import { FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
 import GroupRefreshButton from "@/components/TOC/GroupRefreshButton";
@@ -152,9 +152,9 @@ export default function GroupItem({
       >
         <div className="flex items-center shrink-0">
           {panelOpen ? (
-            <FaFolderOpen size={16} title="Collapse group" className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
+            <FaFolderOpen size={16} title="Collapse group" className="opacity-90 mr-2" style={{ color: group.folderColor ?? DEFAULT_FOLDER_COLOR }} />
           ) : (
-            <FaFolder size={16} title="Expand group" className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
+            <FaFolder size={16} title="Expand group" className="opacity-90 mr-2" style={{ color: group.folderColor ?? DEFAULT_FOLDER_COLOR }} />
           )}
         </div>
         <input

@@ -1,5 +1,5 @@
 import { WMSCapabilities } from "ol/format.js";
-import { TOCLayerGroup, TOCLayer, TOCSource, type LayerDisclaimer } from "@/stores/tocStore";
+import { TOCLayerGroup, TOCLayer, TOCSource, DEFAULT_FOLDER_COLOR, type LayerDisclaimer } from "@/stores/tocStore";
 import { LayerHelpers } from "@/utils/openlayers/LayerHelpers";
 import { OL_DATA_TYPES, LayerOptions } from "@/utils/openlayers/types";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -11,6 +11,17 @@ import { parseArcgisRelationships } from "@/utils/arcgisFieldMetadata";
 import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
 import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
+
+const LEGACY_RED_FOLDER_COLOR = "#cc0000";
+const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
+
+export function resolveFolderColor(source: Pick<TOCSource, "folderColor" | "useRedFolder">): string {
+  if (source.folderColor !== undefined) {
+    if (HEX_COLOR_PATTERN.test(source.folderColor)) return source.folderColor;
+    console.warn(`[TOC] Invalid folderColor "${source.folderColor}", falling back`);
+  }
+  return source.useRedFolder ? LEGACY_RED_FOLDER_COLOR : DEFAULT_FOLDER_COLOR;
+}
 
 // Types for WMS Capabilities parsing
 interface WMSLayer {
@@ -894,7 +905,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
         ...group,
         primary: source.primary,
         secured: source.secure,
-        useRedFolder: source.useRedFolder || false,
+        folderColor: resolveFolderColor(source),
         sourceOpen: source.open !== undefined ? source.open : undefined,
         showAllFields: source.showAllFields ?? false,
         layers: group.layers.map((layer) => ({ ...layer, showAllFields: source.showAllFields ?? false })),
