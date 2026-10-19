@@ -94,3 +94,30 @@ describe("LayerItem - My Favourites star", () => {
     expect(screen.getByRole("checkbox")).toBeEnabled();
   });
 });
+
+describe("LayerItem - recent layers", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useTOCStore.setState({ recentLayers: [] });
+  });
+
+  it("records the layer when the user turns it on", () => {
+    const layer = makeLayer({ id: "parcel_a", name: "Assessment Parcel", visible: false });
+    useTOCStore.setState({ allLayers: [layer] });
+    render(<LayerItem layerInfo={layer} group={makeGroup("parcels", [layer])} searchText="" onLayerChange={vi.fn()} onLegendToggle={vi.fn()} onLayerOptionsClick={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    expect(useTOCStore.getState().recentLayers).toEqual(["Assessment Parcel"]);
+  });
+
+  it("does not record when the user turns the layer off", () => {
+    const layer = makeLayer({ id: "parcel_a", name: "Assessment Parcel", visible: true });
+    useTOCStore.setState({ allLayers: [layer] });
+    render(<LayerItem layerInfo={layer} group={makeGroup("parcels", [layer])} searchText="" onLayerChange={vi.fn()} onLegendToggle={vi.fn()} onLayerOptionsClick={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("checkbox"));
+
+    expect(useTOCStore.getState().recentLayers).toEqual([]);
+  });
+});

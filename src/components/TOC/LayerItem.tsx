@@ -38,6 +38,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
 
   const isFavourited = useTOCStore((state) => state.favouriteLayers.some((favourite) => favourite.name === layerInfo.name));
   const toggleFavourite = useTOCStore((state) => state.toggleFavourite);
+  const recordRecentLayer = useTOCStore((state) => state.recordRecentLayer);
 
   // Memoize the legend data to prevent unnecessary recalculations
   const legendData = useMemo(
@@ -131,6 +132,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
     // Use the current layer data from the store (which has the OpenLayers layer object)
     const currentLayerFromStore = currentLayerData;
     const updatedLayer = { ...currentLayerFromStore, visible: !currentLayerFromStore.visible };
+    if (!currentLayerFromStore.visible) recordRecentLayer(currentLayerFromStore.name);
     onLayerChange(updatedLayer, group);
   };
 
