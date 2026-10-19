@@ -172,7 +172,7 @@
         "primary": false,
         "type": "arcgis",
         "open": true,
-        "useRedFolder": true
+        "folderColor": "#cc0000"
       }
     ],
     "helpLink": "/help",

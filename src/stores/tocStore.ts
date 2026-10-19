@@ -111,7 +111,7 @@ export interface TOCLayerGroup {
   primary?: boolean;
   secured?: boolean;
   panelOpen?: boolean; // Track if the group panel is open in the UI
-  useRedFolder?: boolean; // Use red folder icons instead of default gray
+  folderColor?: string; // Hex color for the group folder icon
   sourceOpen?: boolean; // Whether the source folder should be initially expanded
   showAllFields?: boolean; // Show fields normally hidden by isExcludedKey
 }
@@ -128,7 +128,8 @@ export interface TOCSource {
   primary: boolean;
   urlType: string;
   type: string;
-  useRedFolder?: boolean;
+  folderColor?: string; // Hex color (#RGB or #RRGGBB) for group folder icons
+  useRedFolder?: boolean; // Legacy: true is treated as #cc0000 when folderColor is unset
   open?: boolean;
   showAllFields?: boolean;
   // Fields for type: "layer" (direct layer config, e.g. WMTS)
@@ -146,6 +147,7 @@ export interface TOCSource {
 
 export const MY_FAVOURITES_VALUE = "my_favourites";
 export const MY_FAVOURITES_LABEL = "My Favourites";
+export const DEFAULT_FOLDER_COLOR = "#e3b778";
 const FAVOURITES_STORAGE_KEY = "Layers_Favourites";
 const RECENT_LAYERS_STORAGE_KEY = "Layers_Recent";
 export const MAX_RECENT_LAYERS = 10;
