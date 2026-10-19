@@ -934,12 +934,6 @@ export default function MapContainer() {
 
     const configCenter = Array.isArray(appStoreConfig.centerCoords) && appStoreConfig.centerCoords.length >= 2 ? appStoreConfig.centerCoords : undefined;
     const configZoom = appStoreConfig.defaultZoom;
-    const configMaxZoom = appStoreConfig.maxZoom;
-
-    // Update maxZoom on the view if the API config specifies a different one
-    if (configMaxZoom && configMaxZoom !== map.getView().getMaxZoom()) {
-      map.getView().setMaxZoom(configMaxZoom);
-    }
 
     // Apply center and zoom if they differ from current (i.e., API config overrides static defaults)
     if (configCenter || configZoom) {
@@ -950,6 +944,16 @@ export default function MapContainer() {
       });
     }
   }, [map, appStoreConfig]);
+
+  // Stored extent and URL coords skip the position effect above, so maxZoom is applied separately.
+  const configMaxZoom = appStoreConfig?.maxZoom;
+  useEffect(() => {
+    if (!map || !configMaxZoom) return;
+    const view = map.getView();
+    if (view.getMaxZoom() !== configMaxZoom) view.setMaxZoom(configMaxZoom);
+    const zoom = view.getZoom();
+    if (zoom !== undefined && zoom > configMaxZoom) view.setZoom(configMaxZoom);
+  }, [map, configMaxZoom]);
 
   // Control wrapper components that handle props and lazy loading (memoized to prevent recreation)
   const ZoomToExtentWrapper = useCallback(

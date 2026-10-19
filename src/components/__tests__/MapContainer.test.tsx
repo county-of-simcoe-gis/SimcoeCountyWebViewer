@@ -167,6 +167,8 @@ const mockView = {
   on: vi.fn(),
   getZoom: vi.fn(() => 10),
   getCenter: vi.fn(() => [0, 0]),
+  getMaxZoom: vi.fn(() => 20),
+  setMaxZoom: vi.fn(),
   calculateExtent: vi.fn(() => [0, 0, 100, 100]),
   setCenter: vi.fn(),
   setZoom: vi.fn(),
@@ -186,6 +188,9 @@ const mockMapInstance = {
   getSize: vi.fn(() => [1024, 768]),
   getView: vi.fn(() => mockView),
   getInteractions: vi.fn(() => ({
+    getArray: vi.fn(() => []),
+  })),
+  getControls: vi.fn(() => ({
     getArray: vi.fn(() => []),
   })),
   getLayers: vi.fn(() => ({
@@ -449,5 +454,20 @@ describe("MapContainer", () => {
     // Test passes if component renders without crashing
     expect(container).toBeDefined();
     expect(container.querySelector("#map")).toBeInTheDocument();
+  });
+
+  it("applies API maxZoom even when a stored extent skips the position update", () => {
+    localStorage.setItem("Map Extent", JSON.stringify([0, 0, 100, 100]));
+    const config = { ...mockAppStoreState.config, maxZoom: 15 };
+    vi.mocked(useAppStore).mockImplementation(((selector?: any) => {
+      const state = { setMapLoading: vi.fn(), urlParameters: {}, config };
+      return typeof selector === "function" ? selector(state) : state;
+    }) as any);
+
+    const { rerender } = render(<MapContainer />);
+    rerender(<MapContainer />);
+
+    expect(mockView.setMaxZoom).toHaveBeenCalledWith(15);
+    localStorage.removeItem("Map Extent");
   });
 });
