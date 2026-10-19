@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import { vi } from "vitest";
 import Layout from "@/components/Layout";
+import { useConfig } from "@/hooks/useConfig";
 
 // Mock Header to avoid next-auth dependency in ProfileButton
 vi.mock("@/components/Header", () => ({
@@ -181,5 +182,23 @@ describe("Layout", () => {
       expect(screen.getByRole("button", { name: /toggle sidebar/i })).toBeInTheDocument();
       expect(document.getElementById("map")).toBeInTheDocument();
     });
+  });
+
+  it("shows the header logo on the splash when no splash logo is configured", async () => {
+    const originalImpl = vi.mocked(useConfig).getMockImplementation();
+    vi.mocked(useConfig).mockImplementation(() => ({
+      config: { mapId: "test-map", headerLogoImageName: "countyofsimcoelogo.png", sidebarToolComponents: [], sidebarThemeComponents: [] } as any,
+      loading: false,
+      error: null,
+      reloadConfig: vi.fn(),
+    }));
+    try {
+      render(<Layout />);
+      await waitFor(() => {
+        expect(screen.getByAltText("Logo Image")).toHaveAttribute("src", "/images/countyofsimcoelogo.png");
+      });
+    } finally {
+      vi.mocked(useConfig).mockImplementation(originalImpl!);
+    }
   });
 });

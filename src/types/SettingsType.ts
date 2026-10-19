@@ -25,6 +25,7 @@ export interface SettingsType {
     description?: string;
     allowIdentifyExport?: boolean;
     headerLogoImageName?: string;
+    splashLogoImageName?: string;
     viewerMode?: string;
     showWhatsNewPopupOnStartup?: boolean;
     whatsNewUrl?: string;

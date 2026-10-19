@@ -49,6 +49,7 @@ const translationTable: { [section: string]: Mapping } = {
       },
       allowIdentifyExport: { sourceKey: "allowIdentifyExport" },
       headerLogoImageName: { sourceKey: "headerLogoImageName" },
+      splashLogoImageName: { sourceKey: "splashLogoImageName" },
       viewerMode: { sourceKey: "viewerMode" },
       showWhatsNewPopupOnStartup: { sourceKey: "showWhatsNewPopupOnStartup" },
       whatsNewUrl: { sourceKey: "whatsNewUrl" },

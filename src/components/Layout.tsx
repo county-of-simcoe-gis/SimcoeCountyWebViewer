@@ -215,7 +215,7 @@ export default function Layout({ children }: LayoutProps) {
       <div id="portal-root" />
 
       {/* Loading Screen */}
-      <LoadingScreen visible={isLoading} headerLogoImageName={config?.headerLogoImageName} />
+      <LoadingScreen visible={isLoading} splashLogoImageName={config?.splashLogoImageName || config?.headerLogoImageName} />
 
       {/* Error Display */}
       {configError && (
