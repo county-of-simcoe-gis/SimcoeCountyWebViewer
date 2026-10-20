@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, FaHome, FaMapMarkedAlt, FaClock, FaBuilding, FaRoad } from "react-icons/fa";
+import { FaSearch, FaMapMarkerAlt, FaTools, FaPalette, FaLayerGroup, FaMapPin, FaHome, FaMapMarkedAlt, FaClock, FaBuilding, FaRoad, FaDatabase } from "react-icons/fa";
 import { useConfig } from "@/hooks/useConfig";
 import axiosInstance from "@/lib/axiosInstance";
 import { appendSharedArrayItem, getSharedItem, removeSharedArrayItem } from "@/utils/storage";
@@ -9,30 +9,13 @@ import { useSidebarStore } from "@/stores/sidebarStore";
 import { useTOCStore } from "@/stores/tocStore";
 import { useSearchStore } from "@/stores/searchStore";
 import { useAppStore } from "@/stores/appStore";
+import { useLayerManagerStore } from "@/stores/layerManagerStore";
+import { searchActiveLayerFeatures } from "@/utils/featureSearch";
+import type { SearchResult } from "@/types/searchResult";
 
 interface SearchType {
   label: string;
   value: string;
-}
-
-interface SearchResult {
-  name: string;
-  type: string;
-  municipality?: string;
-  location_id?: string;
-  place_id?: string;
-  x?: number;
-  y?: number;
-  imageName?: string;
-  fullName?: string;
-  layerGroupName?: string;
-  layerGroup?: string;
-  layerName?: string;
-  index?: number;
-  geojson?: string;
-  geojson_point?: string;
-  alias?: string;
-  is_open_data?: boolean;
 }
 
 interface SearchProps {
@@ -61,6 +44,10 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
   const [showHistory, setShowHistory] = useState(false);
   const [justCleared, setJustCleared] = useState(false);
   const [selectWidth, setSelectWidth] = useState<number | undefined>(undefined);
+  const [featureResults, setFeatureResults] = useState<SearchResult[]>([]);
+  const [isFeatureLoading, setIsFeatureLoading] = useState(false);
+  const featureRequestRef = useRef<AbortController | null>(null);
+  const displayedResults = showHistory && searchValue.length === 0 ? searchResults : [...searchResults, ...featureResults];
 
   const inputRef = useRef<HTMLInputElement>(null);
   const measureSpanRef = useRef<HTMLSpanElement>(null);
@@ -207,11 +194,45 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     return [...localResults, ...dedupedApi];
   }, []);
 
+  // Feature results are kept apart from searchResults so they never replace the other results
+  const cancelFeatureSearch = useCallback(() => {
+    featureRequestRef.current?.abort();
+    featureRequestRef.current = null;
+    setFeatureResults([]);
+    setIsFeatureLoading(false);
+  }, []);
+
+  const runFeatureSearch = useCallback(
+    async (searchText: string, type: string) => {
+      cancelFeatureSearch();
+      if (type !== "All") return;
+
+      const controller = new AbortController();
+      featureRequestRef.current = controller;
+      setIsFeatureLoading(true);
+      try {
+        const hits = await searchActiveLayerFeatures(searchText, useLayerManagerStore.getState().getAllLayers(), controller.signal);
+        if (!controller.signal.aborted) setFeatureResults(hits);
+      } catch (error) {
+        console.error("Layer feature search failed:", error);
+      } finally {
+        if (featureRequestRef.current === controller) {
+          featureRequestRef.current = null;
+          setIsFeatureLoading(false);
+        }
+      }
+    },
+    [cancelFeatureSearch],
+  );
+
+  useEffect(() => cancelFeatureSearch, [cancelFeatureSearch]);
+
   // Perform search — shows local results instantly, then merges API results
   const performSearch = useCallback(
     async (searchText: string, type: string, fromUrl: boolean = false) => {
       if (searchText.length < 2) {
         setSearchResults([]);
+        cancelFeatureSearch();
         return;
       }
 
@@ -270,9 +291,10 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       } finally {
         setIsLoading(false);
         isUrlSearchRef.current = false; // Reset URL search flag
+        if (!fromUrl) runFeatureSearch(searchText, type);
       }
     },
-    [municipality, getLocalResults, mergeResults],
+    [municipality, getLocalResults, mergeResults, cancelFeatureSearch, runFeatureSearch],
   );
 
   // Handle initial search from URL parameters
@@ -331,6 +353,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       }, 300);
     } else {
       setSearchResults([]);
+      cancelFeatureSearch();
     }
 
     return () => {
@@ -338,7 +361,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchValue, selectedType, performSearch]);
+  }, [searchValue, selectedType, performSearch, cancelFeatureSearch]);
 
   // Handle showing history after clear
   useEffect(() => {
@@ -382,12 +405,14 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     setIsOpen(value.length >= 2);
     setHighlightedIndex(-1);
     setShowHistory(false); // Clear history state when typing
+    cancelFeatureSearch();
   };
 
   // Handle type change
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newType = searchTypes.find((type) => type.value === e.target.value) || searchTypes[0];
     setSelectedType(newType);
+    cancelFeatureSearch();
 
     if (searchValue.length >= 2) {
       performSearch(searchValue, newType.value);
@@ -400,8 +425,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     setIsOpen(false);
     setHighlightedIndex(-1);
 
-    // Save to search history
-    if (config?.storageKeys?.SearchHistory) {
+    // Feature results carry geometry, so they are kept out of history
+    if (config?.storageKeys?.SearchHistory && result.type !== "Feature") {
       appendSharedArrayItem(config.storageKeys.SearchHistory, result, 25);
     }
 
@@ -440,6 +465,13 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
         // Activate the layer after the group switch so it isn't overwritten
         useTOCStore.getState().updateLayerVisibility(result.layerName || result.name, groupName, true);
       }
+    } else if (result.type === "Feature") {
+      const searchZoomHandlers = (window as unknown as Record<string, unknown>).searchZoomHandlers as Record<string, (result: SearchResult) => void>;
+      if (searchZoomHandlers?.handleLocationResult) {
+        await searchZoomHandlers.handleLocationResult(result);
+      } else {
+        console.error("Search: handleLocationResult not available");
+      }
     } else if (result.location_id) {
       // Handle location-based result
       try {
@@ -475,12 +507,12 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isOpen || searchResults.length === 0) return;
+    if (!isOpen || displayedResults.length === 0) return;
 
     switch (e.key) {
       case "ArrowDown":
         e.preventDefault();
-        setHighlightedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : prev));
+        setHighlightedIndex((prev) => (prev < displayedResults.length - 1 ? prev + 1 : prev));
         break;
       case "ArrowUp":
         e.preventDefault();
@@ -489,7 +521,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
       case "Enter":
         e.preventDefault();
         if (highlightedIndex >= 0) {
-          handleResultSelect(searchResults[highlightedIndex]);
+          handleResultSelect(displayedResults[highlightedIndex]);
         }
         break;
       case "Delete":
@@ -528,6 +560,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     setSearchValue("");
     setHighlightedIndex(-1);
     setJustCleared(true);
+    cancelFeatureSearch();
 
     // Clear the search layers from the map
     const searchZoomHandlers = (window as unknown as Record<string, unknown>).searchZoomHandlers as Record<string, () => void>;
@@ -569,6 +602,8 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     let type = "Unknown";
     if (result.type === "Map Layer") {
       type = result.layerGroupName || "";
+    } else if (result.type === "Feature") {
+      type = result.layerName || "";
     } else if (result.type === "Tool" || result.type === "Theme") {
       type = "";
     } else {
@@ -588,6 +623,11 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
     // Map Layer
     if (result.type === "Map Layer") {
       return <FaLayerGroup {...iconProps} />;
+    }
+
+    // Layer feature
+    if (result.type === "Feature") {
+      return <FaDatabase {...iconProps} className="text-teal-600" />;
     }
 
     // Tool
@@ -675,7 +715,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
                 setShowHistory(true);
                 setIsOpen(history.length > 0);
               } else if (searchValue.length >= 2) {
-                setIsOpen(searchResults.length > 0);
+                setIsOpen(displayedResults.length > 0);
               }
             }}
             placeholder={resolvedPlaceholder}
@@ -711,12 +751,12 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
           className="absolute top-full left-0 right-0 z-[99999999] mt-0.5 bg-base-100 shadow-2xl border border-base-300 border-t-0 rounded-b-md overflow-hidden max-[770px]:fixed max-[770px]:left-0 max-[770px]:right-0 max-[770px]:top-[52px] max-[770px]:mt-0 max-[770px]:rounded-none max-[770px]:border-t"
         >
           <div className="h-[400px] max-[770px]:h-[calc(100vh-52px)] flex flex-col">
-            {isLoading ? (
+            {isLoading || (isFeatureLoading && displayedResults.length === 0) ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-3 text-base-content/70">
                 <span className="loading loading-spinner loading-lg text-blue-600"></span>
                 <p className="text-sm font-medium">Searching...</p>
               </div>
-            ) : searchResults.length === 0 && searchValue.length >= 2 ? (
+            ) : displayedResults.length === 0 && searchValue.length >= 2 ? (
               <div className="flex-1 flex flex-col items-center justify-center gap-2 text-base-content/70">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -724,7 +764,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
                 <p className="text-sm font-medium">No results found</p>
                 <p className="text-xs text-base-content/70">Try adjusting your search terms</p>
               </div>
-            ) : searchResults.length > 0 ? (
+            ) : displayedResults.length > 0 ? (
               <>
                 {/* Header for search history or results */}
                 {showHistory && searchValue.length === 0 ? (
@@ -741,7 +781,7 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
                   </div>
                 ) : (
                   <div className="px-3 py-2.5 bg-base-200 border-b border-base-300 flex items-center justify-between">
-                    <span className="text-sm font-semibold text-base-content">{searchResults.length} Results</span>
+                    <span className="text-sm font-semibold text-base-content">{displayedResults.length} Results</span>
                     <button onClick={handleDismissDropdown} className="btn btn-ghost btn-xs btn-circle text-base-content/70 hover:text-base-content hover:bg-base-300" aria-label="Close dropdown">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -752,66 +792,78 @@ const Search: React.FC<SearchProps> = ({ onResultSelect, className = "", placeho
 
                 {/* Scrollable results area */}
                 <div ref={listRef} className="flex-1 overflow-y-auto">
-                  {searchResults.map((result, index) => {
+                  {displayedResults.map((result, index) => {
                     const displayInfo = getResultDisplayInfo(result);
                     const isHistoryItem = showHistory && searchValue.length === 0;
+                    const startsFeatureGroup = result.type === "Feature" && displayedResults[index - 1]?.type !== "Feature";
                     return (
-                      <div
-                        key={`${result.location_id || result.name}-${index}`}
-                        className={`
+                      <React.Fragment key={`${result.location_id || result.name}-${index}`}>
+                        {startsFeatureGroup && (
+                          <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-base-content/60 bg-base-200/60 border-b border-base-200">Layer features</div>
+                        )}
+                        <div
+                          key={`${result.location_id || result.name}-${index}`}
+                          className={`
                           group flex items-center gap-3 px-3 py-2.5 border-b border-base-200 cursor-pointer 
                           transition-all duration-150
                           hover:bg-primary/10
                           ${index === highlightedIndex ? "bg-primary/15" : ""}
                           last:border-b-0
                         `}
-                        onClick={() => handleResultSelect(result)}
-                      >
-                        {/* Icon */}
-                        <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-base-200 group-hover:bg-primary/10 transition-colors duration-150">
-                          {getResultIcon(result)}
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-base-content truncate leading-tight text-sm">
-                            {isHistoryItem
-                              ? result.name
-                              : result.name.split(new RegExp(`(${searchValue})`, "gi")).map((part, i) => (
-                                  <span key={i} className={part.toLowerCase() === searchValue.toLowerCase() ? "bg-yellow-200 dark:bg-yellow-700/50 px-0.5 rounded" : ""}>
-                                    {part}
-                                  </span>
-                                ))}
+                          onClick={() => handleResultSelect(result)}
+                        >
+                          {/* Icon */}
+                          <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-base-200 group-hover:bg-primary/10 transition-colors duration-150">
+                            {getResultIcon(result)}
                           </div>
-                          {displayInfo.subtitle && (
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className="text-xs text-base-content/60 truncate max-w-full">{displayInfo.subtitle}</span>
+
+                          {/* Content */}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-base-content truncate leading-tight text-sm">
+                              {isHistoryItem
+                                ? result.name
+                                : result.name.split(new RegExp(`(${searchValue})`, "gi")).map((part, i) => (
+                                    <span key={i} className={part.toLowerCase() === searchValue.toLowerCase() ? "bg-yellow-200 dark:bg-yellow-700/50 px-0.5 rounded" : ""}>
+                                      {part}
+                                    </span>
+                                  ))}
+                            </div>
+                            {displayInfo.subtitle && (
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className="text-xs text-base-content/60 truncate max-w-full">{displayInfo.subtitle}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Remove button for history items or arrow for search results */}
+                          {isHistoryItem ? (
+                            <button
+                              onClick={(e) => handleRemoveFromHistory(e, result)}
+                              className="flex-shrink-0 opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs btn-circle text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
+                              aria-label="Remove from history"
+                              title="Remove from history (or press Delete)"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          ) : (
+                            <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                              </svg>
                             </div>
                           )}
                         </div>
-
-                        {/* Remove button for history items or arrow for search results */}
-                        {isHistoryItem ? (
-                          <button
-                            onClick={(e) => handleRemoveFromHistory(e, result)}
-                            className="flex-shrink-0 opacity-0 group-hover:opacity-100 btn btn-ghost btn-xs btn-circle text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all duration-150"
-                            aria-label="Remove from history"
-                            title="Remove from history (or press Delete)"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        ) : (
-                          <div className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </div>
-                        )}
-                      </div>
+                      </React.Fragment>
                     );
                   })}
+                  {isFeatureLoading && displayedResults.length > 0 && (
+                    <div className="px-3 py-2 text-xs text-base-content/60 flex items-center gap-2">
+                      <span className="loading loading-spinner loading-xs"></span>
+                      Searching layer features...
+                    </div>
+                  )}
                 </div>
               </>
             ) : null}
