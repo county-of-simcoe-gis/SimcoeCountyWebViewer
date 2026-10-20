@@ -465,6 +465,17 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.8 (2026-10-20)
+
+- **MyMaps Import** — Import KML, EsriJSON, and GeoJSON files into MyMaps.
+- **MyMaps Reordering** — Drag and drop MyMaps items to change their order.
+- **Follow Location** — Follow your location on the map, with a point marker and a track line.
+- **Favourites and Recent Layers** — Mark layers as favourites in the Table of Contents, and reopen recently used layers from a dropdown in the TOC header.
+- **Feature Search** — Search returns features from WFS and ArcGIS layers, not only places.
+- **Table of Contents Grouping** — Folder headers can be given a custom colour, and untagged ArcGIS layers group under their parent Group Layer name.
+- **Splash Logo** — The loading screen can show a splash logo from configuration, with a fallback when none is set.
+- **General Maintenance** — Responsive mobile layout for the map and MyMaps button bar, and map max zoom can be set from the API configuration.
+
 ### v2.0.7 (2026-10-16)
 
 - **MyMaps Keyboard Entry** — Draw MyMaps geometries by typing bearings and distances, with segment tracking and submission handling.
