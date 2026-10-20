@@ -254,7 +254,13 @@ export async function fetchWfsPage(opts: WfsPageOptions): Promise<WfsPageResult>
   }));
 
   const numberMatched =
-    typeof json.numberMatched === "number" ? json.numberMatched : typeof json.numberMatched === "string" ? Number(json.numberMatched) : typeof json.totalFeatures === "number" ? json.totalFeatures : Number(json.totalFeatures ?? NaN);
+    typeof json.numberMatched === "number"
+      ? json.numberMatched
+      : typeof json.numberMatched === "string"
+        ? Number(json.numberMatched)
+        : typeof json.totalFeatures === "number"
+          ? json.totalFeatures
+          : Number(json.totalFeatures ?? NaN);
 
   return {
     features,
@@ -308,7 +314,12 @@ export async function fetchWfsCount(opts: WfsCountOptions): Promise<number> {
  *   2. WFS 2.0 `resourceID=<fid>`
  *   3. WFS 1.x-style `featureID=<fid>` (legacy fallback)
  */
-export async function fetchFeatureById(wfsUrl: string, layerName: string, fid: string, signal?: AbortSignal): Promise<{ id?: string | number; properties: Record<string, unknown> | null; geometry: unknown } | null> {
+export async function fetchFeatureById(
+  wfsUrl: string,
+  layerName: string,
+  fid: string,
+  signal?: AbortSignal,
+): Promise<{ id?: string | number; properties: Record<string, unknown> | null; geometry: unknown } | null> {
   const base = extractWfsBase(wfsUrl);
 
   const common = {
@@ -423,8 +434,8 @@ export function parseFeatureTypeSchema(xml: string): WfsFieldDescriptor[] {
       const name = el.getAttribute("name");
       const rawType = el.getAttribute("type") ?? "";
       if (!name || !rawType) continue;
-      // Skip top-level feature element (it doesn't have a primitive type)
-      if (/^gml:AbstractFeatureType$/i.test(rawType)) continue;
+      // Top-level feature element (substitutionGroup) is not a field
+      if (el.hasAttribute("substitutionGroup") || /^gml:AbstractFeatureType$/i.test(rawType)) continue;
       fields.push(xsdTypeToField(name, rawType, el.getAttribute("nillable")));
     }
   } else {
@@ -436,7 +447,7 @@ export function parseFeatureTypeSchema(xml: string): WfsFieldDescriptor[] {
       const type = /\btype\s*=\s*"([^"]+)"/i.exec(attrs)?.[1];
       const nillable = /\bnillable\s*=\s*"([^"]+)"/i.exec(attrs)?.[1];
       if (!name || !type) continue;
-      if (/^gml:AbstractFeatureType$/i.test(type)) continue;
+      if (/\bsubstitutionGroup\s*=/i.test(attrs) || /^gml:AbstractFeatureType$/i.test(type)) continue;
       fields.push(xsdTypeToField(name, type, nillable ?? null));
     }
   }

@@ -40,6 +40,7 @@ vi.mock("react-icons/fa", () => ({
   FaSearch: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "search-icon" }, "Search"),
   FaQuestionCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "question-circle-icon" }, "QuestionCircle"),
   FaEnvelope: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "envelope-icon" }, "Envelope"),
+  FaDatabase: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "database-icon" }, "Database"),
 
   // TOC related icons
   FaGripVertical: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "grip-vertical-icon" }, "GripVertical"),

@@ -31,6 +31,13 @@ describe("parseFeatureTypeSchema", () => {
     expect(byName.CREATED).toMatchObject({ type: "date", nillable: true });
     expect(byName.ACTIVE).toMatchObject({ type: "boolean", nillable: true });
   });
+
+  it("ignores the top-level feature element", () => {
+    const xml = SAMPLE_XSD.replace("</xsd:schema>", '<xsd:element name="parcels" substitutionGroup="gml:AbstractFeature" type="tns:parcelsType"/>\n</xsd:schema>');
+    const names = parseFeatureTypeSchema(xml).map((f) => f.name);
+    expect(names).not.toContain("parcels");
+    expect(names).toContain("ARN");
+  });
 });
 
 describe("pickImplicitSortField", () => {
