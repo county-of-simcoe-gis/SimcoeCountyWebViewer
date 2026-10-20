@@ -374,13 +374,13 @@ Keyword names are case-sensitive. Set each keyword on the level shown in the **S
 
 Keyword names are not case-sensitive. Values cannot contain `#` or `=`.
 
-| Keyword       | Value                           | Effect                                                                                                                                    |
-| ------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `CATEGORY`    | Group names separated by commas | Places the layer in each named Table of Contents group. Underscores display as spaces. Layers without a category go to **Uncategorized**. |
-| `VISIBLE`     | `TRUE` or `FALSE`               | Turns the layer on or off when the map loads. Overrides the service default.                                                              |
-| `LIVELAYER`   | `TRUE` or `FALSE`               | Shows the info icon and makes the layer interactive for identify.                                                                         |
-| `DESCRIPTION` | Text                            | Sets the abstract shown in Layer Info.                                                                                                    |
-| `REFRESH`     | Seconds                         | Sets the timed refresh interval, with the same rules as `REFRESH_INTERVAL`.                                                               |
+| Keyword       | Value                           | Effect                                                                                                                                                                                                 |
+| ------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CATEGORY`    | Group names separated by commas | Places the layer in each named Table of Contents group. Underscores display as spaces. For ArcGIS services, untagged layers use their parent Group Layer name; otherwise they go to **Uncategorized**. |
+| `VISIBLE`     | `TRUE` or `FALSE`               | Turns the layer on or off when the map loads. Overrides the service default.                                                                                                                           |
+| `LIVELAYER`   | `TRUE` or `FALSE`               | Shows the info icon and makes the layer interactive for identify.                                                                                                                                      |
+| `DESCRIPTION` | Text                            | Sets the abstract shown in Layer Info.                                                                                                                                                                 |
+| `REFRESH`     | Seconds                         | Sets the timed refresh interval, with the same rules as `REFRESH_INTERVAL`.                                                                                                                            |
 
 ---
 
@@ -464,6 +464,17 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 ---
 
 ## Revision History
+
+### v2.0.8 (2026-10-20)
+
+- **MyMaps Import** — Import KML, EsriJSON, and GeoJSON files into MyMaps.
+- **MyMaps Reordering** — Drag and drop MyMaps items to change their order.
+- **Follow Location** — Follow your location on the map, with a point marker and a track line.
+- **Favourites and Recent Layers** — Mark layers as favourites in the Table of Contents, and reopen recently used layers from a dropdown in the TOC header.
+- **Feature Search** — Search returns features from WFS and ArcGIS layers, not only places.
+- **Table of Contents Grouping** — Folder headers can be given a custom colour, and untagged ArcGIS layers group under their parent Group Layer name.
+- **Splash Logo** — The loading screen can show a splash logo from configuration, with a fallback when none is set.
+- **General Maintenance** — Responsive mobile layout for the map and MyMaps button bar, and map max zoom can be set from the API configuration.
 
 ### v2.0.7 (2026-10-16)
 

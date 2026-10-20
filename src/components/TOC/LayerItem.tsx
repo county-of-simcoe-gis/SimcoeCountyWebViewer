@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
 import { useMapStore } from "@/stores/mapStore";
 import { getMapScale } from "@/utils/mapHelpers";
-import { FaPaperclip, FaLink, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical, FaPlay, FaPause } from "react-icons/fa";
+import { FaPaperclip, FaLink, FaInfoCircle, FaDownload, FaLock, FaUser, FaEllipsisV, FaGripVertical, FaPlay, FaPause, FaStar, FaRegStar } from "react-icons/fa";
 import LayerLegend, { LegendToggleButton, useLegendDisplayMode } from "@/components/TOC/LayerLegend";
 import { acceptDisclaimer } from "@/utils/disclaimerHelpers";
 import { trackLayer } from "@/lib/appStats";
@@ -35,6 +35,10 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
   const currentLayerData = useTOCStore((state) => state.allLayers.find((l) => (layerInfo.id ? l.id === layerInfo.id : l.name === layerInfo.name)) || layerInfo);
   const isRefreshPlaying = useLayerRefreshStore((state) => !!state.playing[currentLayerData.id]);
   const hasRefreshControl = canRefreshLayer(currentLayerData);
+
+  const isFavourited = useTOCStore((state) => state.favouriteLayers.some((favourite) => favourite.name === layerInfo.name));
+  const toggleFavourite = useTOCStore((state) => state.toggleFavourite);
+  const recordRecentLayer = useTOCStore((state) => state.recordRecentLayer);
 
   // Memoize the legend data to prevent unnecessary recalculations
   const legendData = useMemo(
@@ -128,6 +132,7 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
     // Use the current layer data from the store (which has the OpenLayers layer object)
     const currentLayerFromStore = currentLayerData;
     const updatedLayer = { ...currentLayerFromStore, visible: !currentLayerFromStore.visible };
+    if (!currentLayerFromStore.visible) recordRecentLayer(currentLayerFromStore.name);
     onLayerChange(updatedLayer, group);
   };
 
@@ -197,6 +202,20 @@ export default function LayerItem({ layerInfo, group, searchText, showDragHandle
             {highlightText(displayName, searchText)}
           </span>
         </label>
+
+        {/* Favourite toggle - adds or removes this layer from My Favourites */}
+        {!currentLayerData.userLayer && (
+          <button
+            type="button"
+            className="btn btn-ghost btn-xs btn-square min-h-0 h-6 w-6 shrink-0 ml-[5px]"
+            title={isFavourited ? "Remove from My Favourites" : "Add to My Favourites"}
+            aria-label={isFavourited ? "Remove from My Favourites" : "Add to My Favourites"}
+            aria-pressed={isFavourited}
+            onClick={() => toggleFavourite(layerInfo.name)}
+          >
+            {isFavourited ? <FaStar size={12} className="text-[#e3b778]" /> : <FaRegStar size={12} className="opacity-70 text-[#666]" />}
+          </button>
+        )}
 
         {/* Layer indicators */}
         <div className={currentLayerData.liveLayer ? "inline-flex items-center ml-[5px] cursor-default" : "hidden"} title="This layer is Interactable in the map.">

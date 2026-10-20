@@ -15,6 +15,7 @@ import { Circle, LineString, MultiPolygon, Point, Polygon } from "ol/geom";
 import { asArray } from "ol/color";
 import type { EventsKey } from "ol/events";
 import { unByKey } from "ol/Observable";
+import { defaultOrder } from "ol/renderer/vector";
 import { generateUID, convertLineToArrow, getBearing, getCalloutStyle, getDefaultLabelStyle, type LabelStyle } from "@/utils/myMapsHelpers";
 import type { MyMapsItem, StyleJSON } from "@/types/myMaps";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -24,6 +25,11 @@ import { useInteractionManagerStore } from "@/stores/interactionManagerStore";
 import { hexToRgba } from "@/utils/openlayers/ColorHelpers";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { geodesicCircleCoords, rectangleFromCorner, type TextEntryGeometry } from "@/utils/myMapsTextEntry";
+
+const zRankOf = (feature: FeatureLike): number => {
+  const rank = feature.get("zRank");
+  return typeof rank === "number" ? rank : Infinity;
+};
 
 export class MyMapsDrawingManager {
   private map: Map;
@@ -78,6 +84,11 @@ export class MyMapsDrawingManager {
       this.vectorSource = new VectorSource();
       this.vectorLayer = new VectorLayer({
         source: this.vectorSource,
+        // Features without zRank (eraser preview) sort last so they stay on top.
+        renderOrder: (a: FeatureLike, b: FeatureLike) => {
+          const diff = zRankOf(a) - zRankOf(b);
+          return diff !== 0 && !Number.isNaN(diff) ? diff : defaultOrder(a, b);
+        },
       });
 
       this.vectorLayer.setProperties({
@@ -212,7 +223,7 @@ export class MyMapsDrawingManager {
     feature.setStyle(style);
   }
 
-  private getStyleForFeature(drawType: string, drawColor: string): Style {
+  public getStyleForFeature(drawType: string, drawColor: string): Style {
     const isText = drawType === "Text";
     const strokeWidth = drawType === "Arrow" ? 6 : 2;
 
@@ -621,7 +632,7 @@ export class MyMapsDrawingManager {
       featureProjection: "EPSG:3857",
     });
 
-    items.forEach((item) => {
+    items.forEach((item, index) => {
       if (item.featureGeoJSON && item.visible) {
         try {
           // console.log("📍 Loading individual feature", {
@@ -639,6 +650,7 @@ export class MyMapsDrawingManager {
             labelRotation: item.labelRotation,
             drawType: item.drawType,
             originalDrawType: item.drawType,
+            zRank: items.length - index,
           });
 
           // Apply item's style - handle both new OpenLayers Style objects and legacy StyleJSON
@@ -684,6 +696,20 @@ export class MyMapsDrawingManager {
     });
 
     // console.log("🏁 All features loaded", { totalInSource: this.vectorSource.getFeatures().length });
+  }
+
+  // Updates stacking without rebuilding features so active edit interactions keep their references.
+  public setItemOrder(items: MyMapsItem[]) {
+    const rankById: Record<string, number> = {};
+    items.forEach((item, index) => {
+      rankById[item.id] = items.length - index;
+    });
+
+    this.vectorSource.getFeatures().forEach((feature) => {
+      const rank = rankById[String(feature.get("id"))];
+      if (rank !== undefined) feature.set("zRank", rank);
+    });
+    this.vectorLayer.changed();
   }
 
   private styleFromJSON(styleJson: StyleJSON, pointType?: string): Style {

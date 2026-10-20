@@ -57,12 +57,14 @@ describe("MyMapsAdvanced Component", () => {
   const mockOnEditFeatures = vi.fn();
   const mockOnDeleteAllClick = vi.fn();
   const mockOnMyMapsImport = vi.fn();
+  const mockOnFileImport = vi.fn();
   const mockOnAdditionalToolsAction = vi.fn();
 
   const defaultProps = {
     onEditFeatures: mockOnEditFeatures,
     onDeleteAllClick: mockOnDeleteAllClick,
     onMyMapsImport: mockOnMyMapsImport,
+    onFileImport: mockOnFileImport,
     onAdditionalToolsAction: mockOnAdditionalToolsAction,
     hasItems: false,
   };
@@ -399,6 +401,47 @@ describe("MyMapsAdvanced Component", () => {
       await user.click(shareButton);
 
       expect(useToastStore.getState().toasts).toContainEqual(expect.objectContaining({ message: "Please save your MyMaps first to get an ID to share.", type: "warning" }));
+    });
+  });
+
+  describe("File Import Operations", () => {
+    it("should show import submenu with file types on hover", async () => {
+      render(<MyMapsAdvanced {...defaultProps} />);
+
+      await user.click(screen.getByText("Advanced Options"));
+      await user.click(screen.getByText("Additional Tools"));
+
+      await user.hover(screen.getByText("Import from ..."));
+
+      expect(screen.getByText("KML")).toBeInTheDocument();
+      expect(screen.getByText("ESRIJson")).toBeInTheDocument();
+      expect(screen.getByText("GeoJSON")).toBeInTheDocument();
+    });
+
+    it("should open the picker for the chosen type and pass format and file to onFileImport", async () => {
+      const { container } = render(<MyMapsAdvanced {...defaultProps} />);
+
+      await user.click(screen.getByText("Advanced Options"));
+      await user.click(screen.getByText("Additional Tools"));
+      await user.hover(screen.getByText("Import from ..."));
+
+      const kmlInput = container.querySelector('input[type="file"][accept=".kml"]') as HTMLInputElement;
+      const clickSpy = vi.spyOn(kmlInput, "click");
+      await user.click(screen.getByText("KML"));
+      expect(clickSpy).toHaveBeenCalled();
+
+      const file = new File(["<kml/>"], "site.kml", { type: "application/vnd.google-earth.kml+xml" });
+      fireEvent.change(kmlInput, { target: { files: [file] } });
+
+      expect(mockOnFileImport).toHaveBeenCalledWith("KML", file);
+    });
+
+    it("should not render the old Import/Save file import button", async () => {
+      render(<MyMapsAdvanced {...defaultProps} />);
+
+      await user.click(screen.getByText("Advanced Options"));
+
+      expect(screen.queryByRole("button", { name: "Import from file" })).not.toBeInTheDocument();
     });
   });
 

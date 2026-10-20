@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useMyMapsStore } from "@/stores/myMapsStore";
 import MyMapsItem from "@/components/myMaps/MyMapsItem";
@@ -16,7 +16,46 @@ interface MyMapsItemsProps {
 }
 
 const MyMapsItems: React.FC<MyMapsItemsProps> = ({ onLabelChange, onItemDelete, onShowItemOptions, onHoverStart, onHoverEnd, isEditing = false }) => {
-  const { items } = useMyMapsStore();
+  const { items, moveItem } = useMyMapsStore();
+  // Row is draggable only while its grip is pressed so label inputs keep normal text selection.
+  const [armedIndex, setArmedIndex] = useState<number | null>(null);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropIndex, setDropIndex] = useState<number | null>(null);
+
+  // A grip press with no drag ends on mouseup; once a drag starts, dragend resets state instead.
+  useEffect(() => {
+    if (armedIndex === null) return;
+    const disarm = () => setArmedIndex(null);
+    window.addEventListener("mouseup", disarm);
+    return () => window.removeEventListener("mouseup", disarm);
+  }, [armedIndex]);
+
+  const resetDrag = () => {
+    setArmedIndex(null);
+    setDraggedIndex(null);
+    setDropIndex(null);
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", items[index].id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    if (draggedIndex === null) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (dropIndex !== index) setDropIndex(index);
+  };
+
+  const handleDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedIndex !== null && draggedIndex !== index) {
+      moveItem(draggedIndex, index);
+    }
+    resetDrag();
+  };
 
   return (
     <div data-testid="mymaps-item-container" className="flex flex-col bg-base-100 rounded mb-2 overflow-hidden h-full">
@@ -36,9 +75,27 @@ const MyMapsItems: React.FC<MyMapsItemsProps> = ({ onLabelChange, onItemDelete, 
 
       {/* Items list */}
       <div data-testid="mymaps-items-list" className="flex-auto min-h-0 overflow-y-auto overflow-x-hidden border-b border-base-300">
-        {items.map((item) => (
-          <div key={item.id} data-testid="mymaps-item-wrapper" className="animate-[fadeIn_0.3s_ease-out]">
-            <MyMapsItem item={item} onLabelChange={onLabelChange} onDelete={onItemDelete} onShowOptions={onShowItemOptions} onHoverStart={onHoverStart} onHoverEnd={onHoverEnd} isEditing={isEditing} />
+        {items.map((item, index) => (
+          <div
+            key={item.id}
+            data-testid="mymaps-item-wrapper"
+            draggable={armedIndex === index}
+            onDragStart={(e) => handleDragStart(e, index)}
+            onDragOver={(e) => handleDragOver(e, index)}
+            onDrop={(e) => handleDrop(e, index)}
+            onDragEnd={resetDrag}
+            className={`animate-[fadeIn_0.3s_ease-out] ${dropIndex === index && draggedIndex !== index ? "border-t-2 border-t-primary" : ""} ${draggedIndex === index ? "opacity-50" : ""}`}
+          >
+            <MyMapsItem
+              item={item}
+              onLabelChange={onLabelChange}
+              onDelete={onItemDelete}
+              onShowOptions={onShowItemOptions}
+              onHoverStart={onHoverStart}
+              onHoverEnd={onHoverEnd}
+              isEditing={isEditing}
+              onGripMouseDown={() => setArmedIndex(index)}
+            />
           </div>
         ))}
       </div>

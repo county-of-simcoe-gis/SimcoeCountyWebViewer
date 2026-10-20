@@ -14,6 +14,8 @@ export interface SearchResult {
   fullName?: string;
   layerGroupName?: string;
   layerGroup?: string;
+  layerName?: string;
+  featureKey?: string;
   index?: number;
   geojson?: string;
   geojson_point?: string;

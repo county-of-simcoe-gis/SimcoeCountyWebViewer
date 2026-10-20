@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { TOCLayerGroup, TOCLayer, useTOCStore } from "@/stores/tocStore";
+import { TOCLayerGroup, TOCLayer, useTOCStore, MY_FAVOURITES_VALUE, DEFAULT_FOLDER_COLOR } from "@/stores/tocStore";
 import { FaFolder, FaFolderOpen } from "react-icons/fa";
 import LayerItem from "@/components/TOC/LayerItem";
 import GroupRefreshButton from "@/components/TOC/GroupRefreshButton";
@@ -138,8 +138,9 @@ export default function GroupItem({
     return layers;
   }, [filteredLayers, sortAlpha]);
 
-  // Don't render if group is not visible or has no visible layers
-  if (!group || !visible || !isGroupVisible()) {
+  // Don't render if group is not visible or has no visible layers (favourites always renders so its empty hint shows)
+  const isFavouritesGroup = group.value === MY_FAVOURITES_VALUE;
+  if (!group || !visible || (!isFavouritesGroup && !isGroupVisible())) {
     return null;
   }
 
@@ -151,9 +152,9 @@ export default function GroupItem({
       >
         <div className="flex items-center shrink-0">
           {panelOpen ? (
-            <FaFolderOpen size={16} title="Collapse group" className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
+            <FaFolderOpen size={16} title="Collapse group" className="opacity-90 mr-2" style={{ color: group.folderColor ?? DEFAULT_FOLDER_COLOR }} />
           ) : (
-            <FaFolder size={16} title="Expand group" className={`opacity-90 mr-2 ${group.useRedFolder ? "text-[#cc0000]" : "text-[#e3b778]"}`} />
+            <FaFolder size={16} title="Expand group" className="opacity-90 mr-2" style={{ color: group.folderColor ?? DEFAULT_FOLDER_COLOR }} />
           )}
         </div>
         <input
@@ -183,6 +184,9 @@ export default function GroupItem({
             onLayerOptionsClick={onLayerOptionsClick}
           />
         ))}
+        {isFavouritesGroup && group.layers.length === 0 && (
+          <p className="m-0 py-2 text-[9pt] italic text-base-content/60 font-[Verdana,Arial,sans-serif]">Click the star beside a layer to add it here.</p>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useTOCStore, type TOCLayer, type TOCLayerGroup } from "@/stores/tocStore";
+import { useTOCStore, MY_FAVOURITES_VALUE, type TOCLayer, type TOCLayerGroup } from "@/stores/tocStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 
 vi.mock("@/utils/openlayers/LayerManager", () => ({
@@ -692,14 +692,15 @@ describe("tocStore - LIST view deduplication", () => {
       useTOCStore.getState().setLayerGroups("FOLDER", [group1, group2]);
 
       const state = useTOCStore.getState();
+      const sourceFolderGroups = state.layerFolderGroups.filter((group) => group.value !== MY_FAVOURITES_VALUE);
 
       // FOLDER view should have both groups unchanged with their layers
-      expect(state.layerFolderGroups).toHaveLength(2);
-      expect(state.layerFolderGroups[0].layers).toHaveLength(1);
-      expect(state.layerFolderGroups[1].layers).toHaveLength(1);
+      expect(sourceFolderGroups).toHaveLength(2);
+      expect(sourceFolderGroups[0].layers).toHaveLength(1);
+      expect(sourceFolderGroups[1].layers).toHaveLength(1);
       // sortGroups alphabetizes, so Infrastructure comes before Transportation
-      expect(state.layerFolderGroups[0].layers[0].id).toBe("layer2");
-      expect(state.layerFolderGroups[1].layers[0].id).toBe("layer1");
+      expect(sourceFolderGroups[0].layers[0].id).toBe("layer2");
+      expect(sourceFolderGroups[1].layers[0].id).toBe("layer1");
     });
   });
 

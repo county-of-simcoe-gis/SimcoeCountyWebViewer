@@ -54,6 +54,7 @@ describe("SettingsTool", () => {
         fullScreen: true,
         zoomInOut: true,
         currentLocation: true,
+        followLocation: true,
         zoomExtent: true,
         extentHistory: true,
         scale: true,

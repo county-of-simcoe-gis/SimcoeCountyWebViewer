@@ -15,6 +15,7 @@ import { useUrlParameterContextOptional } from "@/contexts/UrlParameterContext";
 import { getPublicPath } from "@/utils/getPublicPath";
 import { getStorageItem } from "@/utils/storage";
 import { isMobile } from "@/utils/helpersBrowser";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 // OpenLayers imports
 import "ol/ol.css";
@@ -86,6 +87,7 @@ const _hmrRegistry: HmrMapRegistry =
 // Define dynamic imports for control components
 const dynamicControlImports = {
   CurrentLocationButton: () => import("@/components/map/controls/CurrentLocation").then((m) => ({ default: m.CurrentLocationButton })),
+  FollowLocationButton: () => import("@/components/map/controls/FollowLocation").then((m) => ({ default: m.FollowLocationButton })),
   ExtentHistoryButtons: () => import("@/components/map/controls/ExtentHistory").then((m) => ({ default: m.ExtentHistoryButtons })),
   ZoomToExtentButton: () => import("@/components/map/controls/ZoomToExtent").then((m) => ({ default: m.ZoomToExtentButton })),
   GridButton: () => import("@/components/map/controls/Grid"),
@@ -103,6 +105,7 @@ const dynamicControlImports = {
 
 // Create lazy components
 const LazyCurrentLocationButton = lazy(dynamicControlImports.CurrentLocationButton);
+const LazyFollowLocationButton = lazy(dynamicControlImports.FollowLocationButton);
 const LazyExtentHistoryButtons = lazy(dynamicControlImports.ExtentHistoryButtons);
 const LazyZoomToExtentButton = lazy(dynamicControlImports.ZoomToExtentButton);
 const LazyGridButton = lazy(dynamicControlImports.GridButton);
@@ -529,6 +532,7 @@ export default function MapContainer() {
       fullScreen: activeConfig.controls?.fullScreen ?? true,
       zoomInOut: activeConfig.controls?.zoomInOut ?? true,
       currentLocation: activeConfig.controls?.currentLocation ?? true,
+      followLocation: activeConfig.controls?.followLocation ?? true,
       zoomExtent: activeConfig.controls?.zoomExtent ?? true,
       scale: activeConfig.controls?.scale ?? true,
       scaleLine: activeConfig.controls?.scaleLine ?? true,
@@ -934,12 +938,6 @@ export default function MapContainer() {
 
     const configCenter = Array.isArray(appStoreConfig.centerCoords) && appStoreConfig.centerCoords.length >= 2 ? appStoreConfig.centerCoords : undefined;
     const configZoom = appStoreConfig.defaultZoom;
-    const configMaxZoom = appStoreConfig.maxZoom;
-
-    // Update maxZoom on the view if the API config specifies a different one
-    if (configMaxZoom && configMaxZoom !== map.getView().getMaxZoom()) {
-      map.getView().setMaxZoom(configMaxZoom);
-    }
 
     // Apply center and zoom if they differ from current (i.e., API config overrides static defaults)
     if (configCenter || configZoom) {
@@ -950,6 +948,16 @@ export default function MapContainer() {
       });
     }
   }, [map, appStoreConfig]);
+
+  // Stored extent and URL coords skip the position effect above, so maxZoom is applied separately.
+  const configMaxZoom = appStoreConfig?.maxZoom;
+  useEffect(() => {
+    if (!map || !configMaxZoom) return;
+    const view = map.getView();
+    if (view.getMaxZoom() !== configMaxZoom) view.setMaxZoom(configMaxZoom);
+    const zoom = view.getZoom();
+    if (zoom !== undefined && zoom > configMaxZoom) view.setZoom(configMaxZoom);
+  }, [map, configMaxZoom]);
 
   // Control wrapper components that handle props and lazy loading (memoized to prevent recreation)
   const ZoomToExtentWrapper = useCallback(
@@ -978,6 +986,14 @@ export default function MapContainer() {
     return (
       <Suspense fallback={<ControlLoadingPlaceholder />}>
         <LazyCurrentLocationButton map={map} />
+      </Suspense>
+    );
+  }, []);
+
+  const FollowLocationWrapper = useCallback(() => {
+    return (
+      <Suspense fallback={<ControlLoadingPlaceholder />}>
+        <LazyFollowLocationButton />
       </Suspense>
     );
   }, []);
@@ -1071,6 +1087,8 @@ export default function MapContainer() {
     );
   }, []);
 
+  const isMobileViewport = useIsMobile();
+
   // Define control configuration - memoized to prevent recreation on every render
   const controlsConfig: Record<string, ControlConfig> = useMemo(
     () => ({
@@ -1111,22 +1129,28 @@ export default function MapContainer() {
         order: 6,
         enabled: controlVisibility.currentLocation,
       },
+      followLocation: {
+        component: FollowLocationWrapper,
+        zone: "top-left",
+        order: 7,
+        enabled: controlVisibility.followLocation && isMobileViewport,
+      },
       grid: {
         component: GridWrapper,
         zone: "top-left",
-        order: 7,
+        order: 8,
         enabled: controlVisibility.grid,
       },
       boxSelectResults: {
         component: BoxSelectResultsWrapper,
         zone: "top-left",
-        order: 8,
+        order: 9,
         enabled: controlVisibility.boxSelectResults,
       },
       shareMap: {
         component: ShareMapWrapper,
         zone: "top-left",
-        order: 9,
+        order: 10,
         enabled: controlVisibility.shareMap,
       },
 
@@ -1177,9 +1201,11 @@ export default function MapContainer() {
     }),
     [
       controlVisibility,
+      isMobileViewport,
       ZoomControlsWrapper,
       MoreMenuButtonWrapper,
       CurrentLocationWrapper,
+      FollowLocationWrapper,
       ExtentHistoryWrapper,
       ZoomToExtentWrapper,
       GridWrapper,

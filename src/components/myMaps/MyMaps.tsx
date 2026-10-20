@@ -17,12 +17,13 @@ import ShowGeometryModal from "@/components/myMaps/ShowGeometryModal";
 import URLModal from "@/components/common/URLModal";
 import Identify from "@/components/Identify/Identify";
 import { getMapScale, getMapExtent, getMapCenter, buildFeedbackUrl } from "@/utils/mapHelpers";
-import { exportFeatures } from "@/utils/myMapsHelpers";
+import { exportFeatures, readFeaturesFromText, type ImportFormat } from "@/utils/myMapsHelpers";
 import { useToast } from "@/hooks/useToast";
 import type { MyMapsItem as MyMapsItemType } from "@/types/myMaps";
 import { Feature } from "ol";
 import GeoJSON from "ol/format/GeoJSON";
 import Geometry from "ol/geom/Geometry";
+import { createEmpty, extend, isEmpty } from "ol/extent";
 
 interface MyMapsProps {
   visible?: boolean;
@@ -43,7 +44,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
   const [isReportProblemModalOpen, setIsReportProblemModalOpen] = useState(false);
 
   // Store hooks
-  const { drawType, drawColor, isEditing, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, hasItems, saveToApi, importFromApi } = useMyMapsStore();
+  const { drawType, drawColor, isEditing, setDrawType, updateItemLabel, removeItem, setEditMode, toolTipId, toolTipClass, hasItems, saveToApi, importFromApi, importFeatures } = useMyMapsStore();
   const { map } = useMapStore();
   const { config } = useAppStore();
   const urlParameters = useAppStore((state) => state.urlParameters);
@@ -329,6 +330,41 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
     [emit],
   );
 
+  // Handle file import (KML, EsriJSON, GeoJSON) from Additional Tools menu
+  const handleFileImport = useCallback(
+    async (format: ImportFormat, file: File) => {
+      let features: Feature[];
+      try {
+        features = readFeaturesFromText(await file.text(), format);
+      } catch (error) {
+        console.error(`Error reading ${format} file:`, error);
+        toast.error(`Unable to read ${file.name}. Please check that it is a valid ${format} file.`);
+        return;
+      }
+
+      const result = importFeatures(features);
+      if (!result.success) {
+        toast.warning(result.message || "No supported features found in file.");
+        return;
+      }
+
+      toast.success(result.message || "Features imported.");
+      emit("mymap-items-imported", { count: result.count ?? 0 });
+
+      if (map) {
+        const extent = createEmpty();
+        features.forEach((feature) => {
+          const geometry = feature.getGeometry();
+          if (geometry) extend(extent, geometry.getExtent());
+        });
+        if (!isEmpty(extent)) {
+          map.getView().fit(extent, { size: map.getSize(), duration: 1000, padding: [20, 20, 20, 20], maxZoom: 18 });
+        }
+      }
+    },
+    [importFeatures, map, emit, toast],
+  );
+
   // Utility function to create feature from GeoJSON
   const getFeatureFromGeoJSON = useCallback((geoJsonString: string): Feature | null => {
     try {
@@ -529,6 +565,7 @@ const MyMaps: React.FC<MyMapsProps> = ({ visible = true }) => {
         onEditFeatures={handleEditFeatures}
         onDeleteAllClick={handleDeleteAll}
         onMyMapsImport={handleMyMapsImport}
+        onFileImport={handleFileImport}
         onAdditionalToolsAction={handleAdditionalToolsAction}
         hasItems={hasItems()}
       />

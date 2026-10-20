@@ -2,19 +2,36 @@
 
 import React from "react";
 import { useMyMapsStore } from "@/stores/myMapsStore";
+import { useLocationFollowStore } from "@/stores/locationFollowStore";
 import { DrawType } from "@/types/myMaps";
 import myMapsConfig from "@/config/myMapsConfig.json";
 import DrawButton from "@/components/myMaps/DrawButton";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ButtonBarProps {
   isEditing?: boolean;
 }
 
+type DrawingTool = (typeof myMapsConfig.drawingTools)[number];
+
 const ButtonBar: React.FC<ButtonBarProps> = ({ isEditing = false }) => {
   const { drawType, setDrawType } = useMyMapsStore();
+  const locationMode = useLocationFollowStore((s) => s.mode);
+  const toggleTrack = useLocationFollowStore((s) => s.toggleTrack);
+  const requestPointAtLocation = useLocationFollowStore((s) => s.requestPointAtLocation);
+  const isMobileViewport = useIsMobile();
 
-  const handleButtonClick = (buttonDrawType: DrawType) => {
-    setDrawType(buttonDrawType);
+  const handleButtonClick = (tool: DrawingTool) => {
+    if (tool.action === "track") {
+      setDrawType("Cancel");
+      toggleTrack();
+      return;
+    }
+    if (tool.action === "pointAtLocation") {
+      requestPointAtLocation();
+      return;
+    }
+    setDrawType(tool.drawType as DrawType);
   };
 
   return (
@@ -27,10 +44,10 @@ const ButtonBar: React.FC<ButtonBarProps> = ({ isEditing = false }) => {
           key={tool.id}
           title={tool.title}
           imageName={tool.imageName}
-          onClick={() => handleButtonClick(tool.drawType as DrawType)}
-          isActive={drawType === tool.drawType}
+          onClick={() => handleButtonClick(tool)}
+          isActive={tool.action === "track" ? locationMode === "track" : drawType === tool.drawType}
           disabled={!tool.enabled || isEditing}
-          visible={tool.visible !== false}
+          visible={tool.visible !== false && (!tool.action || isMobileViewport)}
         />
       ))}
     </div>

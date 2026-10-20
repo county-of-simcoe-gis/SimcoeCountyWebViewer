@@ -1,5 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { Feature } from "ol";
+import { Point } from "ol/geom";
 import { useMyMapsStore, createMyMapsItem } from "@/stores/myMapsStore";
 import type { MyMapsItem, DrawType } from "@/types/myMaps";
 
@@ -46,6 +48,47 @@ beforeEach(() => {
 });
 
 describe("myMapsStore", () => {
+  describe("moveItem", () => {
+    const originalSave = useMyMapsStore.getState().saveToStorage;
+    const makeItem = (id: string) =>
+      ({ id, label: id, labelVisible: false, labelRotation: 0, featureGeoJSON: "{}", style: {}, visible: true, drawType: "Point", geometryType: "Point" }) as unknown as MyMapsItem;
+    const ids = () => useMyMapsStore.getState().items.map((item) => item.id);
+    let saveSpy: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      saveSpy = vi.fn();
+      useMyMapsStore.setState({ items: [makeItem("a"), makeItem("b"), makeItem("c")], saveToStorage: saveSpy as unknown as () => void });
+    });
+
+    afterEach(() => {
+      useMyMapsStore.setState({ saveToStorage: originalSave });
+    });
+
+    it("moves an item down", () => {
+      useMyMapsStore.getState().moveItem(0, 2);
+      expect(ids()).toEqual(["b", "c", "a"]);
+    });
+
+    it("moves an item up", () => {
+      useMyMapsStore.getState().moveItem(2, 0);
+      expect(ids()).toEqual(["c", "a", "b"]);
+    });
+
+    it("saves after a move", () => {
+      useMyMapsStore.getState().moveItem(0, 1);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("ignores same, out-of-range, and non-integer indices", () => {
+      useMyMapsStore.getState().moveItem(1, 1);
+      useMyMapsStore.getState().moveItem(-1, 1);
+      useMyMapsStore.getState().moveItem(0, 3);
+      useMyMapsStore.getState().moveItem(0.5, 1);
+      expect(ids()).toEqual(["a", "b", "c"]);
+      expect(saveSpy).not.toHaveBeenCalled();
+    });
+  });
+
   describe("Initial State", () => {
     it("should have correct initial state", () => {
       const { result } = renderHook(() => useMyMapsStore());
@@ -566,5 +609,40 @@ describe("createMyMapsItem helper", () => {
 
     expect(item.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     expect(item.label).toBe("Default Label");
+  });
+});
+
+describe("importFeatures", () => {
+  it("appends features as items with generated ids and labels", () => {
+    const named = new Feature({ geometry: new Point([0, 0]), name: "Site A" });
+    const unnamed = new Feature({ geometry: new Point([1, 1]) });
+
+    const result = useMyMapsStore.getState().importFeatures([named, unnamed]);
+
+    expect(result).toEqual({ success: true, message: "Imported 2 features.", count: 2 });
+    const { items } = useMyMapsStore.getState();
+    expect(items).toHaveLength(2);
+    expect(items[0]).toMatchObject({ label: "Site A", drawType: "Point", geometryType: "Point", visible: true });
+    expect(items[1].label).toMatch(/^Drawing \d+$/);
+    expect(new Set(items.map((item) => item.id)).size).toBe(2);
+    expect(JSON.parse(items[0].featureGeoJSON).properties).toMatchObject({ id: items[0].id, label: "Site A" });
+  });
+
+  it("keeps existing items when importing", () => {
+    useMyMapsStore.getState().importFeatures([new Feature({ geometry: new Point([0, 0]) })]);
+    const existingId = useMyMapsStore.getState().items[0].id;
+
+    useMyMapsStore.getState().importFeatures([new Feature({ geometry: new Point([2, 2]) })]);
+
+    const { items } = useMyMapsStore.getState();
+    expect(items).toHaveLength(2);
+    expect(items.map((item) => item.id)).toContain(existingId);
+  });
+
+  it("reports failure when no supported features are given", () => {
+    const result = useMyMapsStore.getState().importFeatures([]);
+
+    expect(result.success).toBe(false);
+    expect(useMyMapsStore.getState().items).toEqual([]);
   });
 });

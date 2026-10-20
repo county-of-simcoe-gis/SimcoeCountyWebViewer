@@ -18,6 +18,7 @@ export interface AppConfig {
   useMapConfigApi: boolean;
   mapId: string;
   headerLogoImageName: string;
+  splashLogoImageName?: string;
   logoOverlayText?: string;
   title: string;
   description?: string;
@@ -71,6 +72,7 @@ export interface AppConfig {
     fullScreen: boolean;
     zoomInOut: boolean;
     currentLocation: boolean;
+    followLocation?: boolean;
     zoomExtent: boolean;
     scale: boolean;
     scaleLine: boolean;
@@ -430,6 +432,7 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (general.favicon) config.favicon = general.favicon;
     if (general.description) config.description = general.description;
     if (general.headerLogoImageName) config.headerLogoImageName = general.headerLogoImageName;
+    if (general.splashLogoImageName) config.splashLogoImageName = general.splashLogoImageName;
     if (general.defaultZoom) config.defaultZoom = general.defaultZoom;
     if (general.maxZoom) config.maxZoom = general.maxZoom;
     if (Array.isArray(general.centerCoords) && general.centerCoords.length >= 2) config.centerCoords = general.centerCoords;
@@ -746,6 +749,7 @@ export async function loadConfig(configSecured: Record<string, unknown> = {}): P
     }
 
     // Store globally for easy access
+    if (!config.splashLogoImageName) config.splashLogoImageName = config.headerLogoImageName;
     globalConfig = config;
 
     return config;

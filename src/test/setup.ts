@@ -26,6 +26,7 @@ vi.mock("react-icons/fa", () => ({
   FaForward: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "forward-icon" }, "Forward"),
   FaBackward: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "backward-icon" }, "Backward"),
   FaCrosshairs: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "crosshairs-icon" }, "Crosshairs"),
+  FaLocationArrow: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "location-arrow-icon" }, "LocationArrow"),
   FaGithub: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "github-icon" }, "GitHub"),
   FaQuestion: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "question-icon" }, "Question"),
 
@@ -39,6 +40,7 @@ vi.mock("react-icons/fa", () => ({
   FaSearch: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "search-icon" }, "Search"),
   FaQuestionCircle: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "question-circle-icon" }, "QuestionCircle"),
   FaEnvelope: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "envelope-icon" }, "Envelope"),
+  FaDatabase: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "database-icon" }, "Database"),
 
   // TOC related icons
   FaGripVertical: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "grip-vertical-icon" }, "GripVertical"),
@@ -55,6 +57,8 @@ vi.mock("react-icons/fa", () => ({
   FaChevronRight: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "chevron-right-icon" }, "ChevronRight"),
   FaFolder: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "folder-icon" }, "Folder"),
   FaFolderOpen: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "folder-open-icon" }, "FolderOpen"),
+  FaRegStar: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "reg-star-icon" }, "RegStar"),
+  FaLink: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "link-icon" }, "Link"),
 
   // LayerOptionsMenu specific icons
   FaSearchPlus: (props: Record<string, unknown>) => React.createElement("div", { ...props, "data-testid": "search-plus-icon" }, "SearchPlus"),
