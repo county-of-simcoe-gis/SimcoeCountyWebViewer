@@ -496,7 +496,7 @@ interface ArcGISLegendEntry {
  *  1. Fetch /layers?f=json for full layer metadata
  *  2. Fetch /legend?f=json for legend images
  *  3. Parse each leaf layer (no subLayerIds) through parseESRIDescription()
- *  4. Group layers by their CATEGORY tag from the description
+ *  4. Group layers by CATEGORY tag, falling back to the parent Group Layer name
  *  5. Build OpenLayers layers via buildESRILayer()
  */
 export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGroup[]> {
@@ -547,6 +547,13 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
 
     // Parse each leaf layer and group by category
     const groupsObj: Record<string, TOCLayerGroup & { rawLayers: BuildESRILayerOptions["layer"][] }> = {};
+    // This endpoint reports membership as child.parentLayer and group.subLayers, not parentLayerId/subLayerIds.
+    const groupNameByChildId = new Map<number, string>();
+    for (const layer of serviceLayers) {
+      if (layer.parentLayer) groupNameByChildId.set(layer.id, layer.parentLayer.name);
+      for (const subLayer of layer.subLayers ?? []) groupNameByChildId.set(subLayer.id, layer.name);
+      for (const subLayerId of layer.subLayerIds ?? []) groupNameByChildId.set(subLayerId, layer.name);
+    }
 
     for (const item of serviceLayers) {
       // Skip group layers — check type, subLayerIds, and subLayers
@@ -557,6 +564,9 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
       // Parse the description for config options (CATEGORY, VISIBLE, LIVELAYER, etc.)
       // Prefer a source-level `descriptionOverride` when provided in config.
       const layerOptions = parseESRIDescription(source.descriptionOverride || item.description || "");
+      // Layer CATEGORY applies only when the map config override has none.
+      const layerTagCategories = parseESRIDescription(item.description || "").categories;
+      const categories = layerOptions.categories.length > 0 ? layerOptions.categories : layerTagCategories;
       // Determine visibility: if visibleLayers is specified in config, use that
       // list. Otherwise fall back to the ArcGIS service's defaultVisibility.
       // A VISIBLE=TRUE flag in the ESRI description can also override.
@@ -581,6 +591,7 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
         id: item.id,
         options: {
           ...layerOptions,
+          categories,
           title: item.name,
           opacity: item.drawingInfo?.transparency != null ? 1 - item.drawingInfo.transparency / 100 : 1,
           minScale,
@@ -608,8 +619,12 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
             : undefined,
       };
 
+      // Untagged layers use their parent Group Layer name, then "Uncategorized".
+      const parentGroupName = groupNameByChildId.get(item.id);
+      const groupNames = categories.length > 0 ? categories : [parentGroupName || "Uncategorized"];
+
       // Group by category
-      for (const category of layerOptions.categories) {
+      for (const category of groupNames) {
         const cleanCategory = category.replaceAll("_", " ");
         const groupValue = cleanCategory === "All Layers" ? "opengis:all_layers" : cleanCategory;
 
@@ -1011,10 +1026,6 @@ export function parseESRIDescription(description: string): ESRILayerOptions {
       }
     }
   });
-
-  if (returnObj.categories.length === 0) {
-    returnObj.categories.push("Uncategorized");
-  }
 
   return returnObj;
 }

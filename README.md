@@ -374,13 +374,13 @@ Keyword names are case-sensitive. Set each keyword on the level shown in the **S
 
 Keyword names are not case-sensitive. Values cannot contain `#` or `=`.
 
-| Keyword       | Value                           | Effect                                                                                                                                    |
-| ------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `CATEGORY`    | Group names separated by commas | Places the layer in each named Table of Contents group. Underscores display as spaces. Layers without a category go to **Uncategorized**. |
-| `VISIBLE`     | `TRUE` or `FALSE`               | Turns the layer on or off when the map loads. Overrides the service default.                                                              |
-| `LIVELAYER`   | `TRUE` or `FALSE`               | Shows the info icon and makes the layer interactive for identify.                                                                         |
-| `DESCRIPTION` | Text                            | Sets the abstract shown in Layer Info.                                                                                                    |
-| `REFRESH`     | Seconds                         | Sets the timed refresh interval, with the same rules as `REFRESH_INTERVAL`.                                                               |
+| Keyword       | Value                           | Effect                                                                                                                                                                                                 |
+| ------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CATEGORY`    | Group names separated by commas | Places the layer in each named Table of Contents group. Underscores display as spaces. For ArcGIS services, untagged layers use their parent Group Layer name; otherwise they go to **Uncategorized**. |
+| `VISIBLE`     | `TRUE` or `FALSE`               | Turns the layer on or off when the map loads. Overrides the service default.                                                                                                                           |
+| `LIVELAYER`   | `TRUE` or `FALSE`               | Shows the info icon and makes the layer interactive for identify.                                                                                                                                      |
+| `DESCRIPTION` | Text                            | Sets the abstract shown in Layer Info.                                                                                                                                                                 |
+| `REFRESH`     | Seconds                         | Sets the timed refresh interval, with the same rules as `REFRESH_INTERVAL`.                                                                                                                            |
 
 ---
 
