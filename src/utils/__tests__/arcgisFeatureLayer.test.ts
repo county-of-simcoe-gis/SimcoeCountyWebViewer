@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { get as getProjection } from "ol/proj";
 import { createArcGISFeatureLayer } from "@/utils/openlayers/arcgisFeatureLayer";
 import type { EsriRenderer } from "@/utils/esriSymbology";
+import { TIME_VALUE_APPLIER_PROPERTY, type TimeValueApplier } from "@/utils/timeDimension";
 
 const LAYER_URL = "https://services.example.com/arcgis/rest/services/Wildfire/FeatureServer/0";
 const EXTENT = [-8900000, 5500000, -8800000, 5600000];
@@ -112,6 +113,41 @@ describe("createArcGISFeatureLayer", () => {
     expect(new URL(String(vi.mocked(fetch).mock.calls[1][0])).searchParams.get("orderByFields")).toBe("FID");
     expect(olLayer.getSource()?.getFeatures()[0].getId()).toBe(7);
     expect(olLayer.getStyleFunction()).toBeDefined();
+  });
+
+  it("filters the query to the initial time value", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ objectIdField: "OBJECTID", timeInfo: { startTimeField: "timestamp" } }) as unknown as Response)
+      .mockResolvedValueOnce(jsonResponse(esriPage([esriFeature(1)])) as unknown as Response);
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false, { timeValue: "2026-10-14T09:00:00.000Z" });
+
+    loadExtent(olLayer, EXTENT);
+
+    await vi.waitFor(() => expect(olLayer.getSource()?.getFeatures()).toHaveLength(1));
+    expect(new URL(String(vi.mocked(fetch).mock.calls[1][0])).searchParams.get("where")).toBe("timestamp = TIMESTAMP '2026-10-14 09:00:00'");
+  });
+
+  it("reloads features for the new time value when the time applier is called", async () => {
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ objectIdField: "OBJECTID", timeInfo: { startTimeField: "timestamp" } }) as unknown as Response)
+      .mockResolvedValueOnce(jsonResponse(esriPage([esriFeature(1)])) as unknown as Response)
+      .mockResolvedValueOnce(jsonResponse(esriPage([esriFeature(2)])) as unknown as Response);
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false);
+    loadExtent(olLayer, EXTENT);
+    await vi.waitFor(() => expect(olLayer.getSource()?.getFeatures()).toHaveLength(1));
+
+    (olLayer.get(TIME_VALUE_APPLIER_PROPERTY) as TimeValueApplier)("2026-10-14T10:00:00.000Z");
+    loadExtent(olLayer, EXTENT);
+
+    await vi.waitFor(() =>
+      expect(
+        olLayer
+          .getSource()
+          ?.getFeatures()
+          .map((feature) => feature.getId()),
+      ).toEqual([2]),
+    );
+    expect(new URL(String(vi.mocked(fetch).mock.calls[2][0])).searchParams.get("where")).toBe("timestamp = TIMESTAMP '2026-10-14 10:00:00'");
   });
 
   it("styles features from a simple renderer", () => {

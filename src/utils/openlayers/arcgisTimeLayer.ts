@@ -5,7 +5,7 @@ import { Fill, Style } from "ol/style";
 import type Feature from "ol/Feature";
 import type { FeatureLike } from "ol/Feature";
 import { TIME_VALUE_APPLIER_PROPERTY, type TimeValueApplier } from "@/utils/timeDimension";
-import { buildQueryUrl, queryJSON, resolveToken } from "@/utils/openlayers/arcgisQuery";
+import { buildQueryUrl, queryJSON, resolveToken, timeWhereClause } from "@/utils/openlayers/arcgisQuery";
 
 export interface ArcGISClassBreakInfo {
   classMaxValue: number;
@@ -37,8 +37,7 @@ export async function fetchArcGISTimeValues(layerUrl: string, timeField: string,
 
 async function fetchFeaturesAt(layerUrl: string, timeInfo: ArcGISVectorTimeInfo, isoValue: string, secured: boolean): Promise<Feature[]> {
   const token = await resolveToken(layerUrl, secured);
-  const sqlTimestamp = isoValue.replace("T", " ").replace(/\.\d+Z$/, "");
-  const where = `${timeInfo.timeField} = TIMESTAMP '${sqlTimestamp}'`;
+  const where = timeWhereClause(timeInfo.timeField, isoValue);
   const features: Feature[] = [];
   let hasMore = true;
 

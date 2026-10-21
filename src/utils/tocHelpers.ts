@@ -11,7 +11,7 @@ import { parseArcgisRelationships } from "@/utils/arcgisFieldMetadata";
 import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
 import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
-import { createArcGISFeatureLayer, type ArcGISFeatureLayerOptions } from "@/utils/openlayers/arcgisFeatureLayer";
+import { createArcGISFeatureLayer, fetchFeatureLayerInfo, type ArcGISFeatureLayerOptions } from "@/utils/openlayers/arcgisFeatureLayer";
 import type { EsriRenderer } from "@/utils/esriSymbology";
 
 const LEGACY_RED_FOLDER_COLOR = "#cc0000";
@@ -870,12 +870,25 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
   }
 }
 
+/** Time slider values for a feature layer; undefined when it has no time field or the lookup fails. */
+async function loadFeatureLayerTimeDimension(layerUrl: string, secured: boolean): Promise<TimeDimension | undefined> {
+  try {
+    const { timeField } = await fetchFeatureLayerInfo(layerUrl, secured);
+    if (!timeField) return undefined;
+    const values = await fetchArcGISTimeValues(layerUrl, timeField, secured);
+    return parseTimeDimension({ values: values.join(","), default: "current" });
+  } catch (error) {
+    console.warn(`[TOC] Could not read time settings for ${layerUrl}:`, error);
+    return undefined;
+  }
+}
+
 /**
  * Build TOC layer groups from a direct layer source config entry (type: "layer").
  * This handles individual layers specified directly in the config (e.g. WMTS, XYZ)
  * rather than being discovered from a WMS/ArcGIS service.
  */
-function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
+async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGroup[]> {
   const layerName = (source.layerName || source.name || "Unnamed Layer").trim();
   const displayName = (source.name || layerName).trim();
   // If the config specifies "All Layers" (the virtual group), place the layer
@@ -894,6 +907,7 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
   };
 
   const groups: TOCLayerGroup[] = [];
+  const timeDimension = isFeatureLayer ? await loadFeatureLayerTimeDimension(layerUrl, source.secure) : undefined;
 
   for (const groupName of groupNames) {
     const layer: TOCLayer = {
@@ -930,6 +944,7 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
       sourceType: source.sourceType || source.source,
       layerUrl,
       projection: source.projection || "EPSG:3857",
+      timeDimension,
     };
 
     groups.push({
@@ -997,7 +1012,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
           groups = await getGroupsFromArcGISFeature(source);
           break;
         case "layer":
-          groups = getGroupsFromDirectLayer(source);
+          groups = await getGroupsFromDirectLayer(source);
           break;
         default:
           console.warn(`Unknown source type: ${source.type}`);

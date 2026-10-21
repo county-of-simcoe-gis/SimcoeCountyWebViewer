@@ -26,3 +26,9 @@ export async function queryJSON(url: string): Promise<EsriQueryResponse> {
   if (data.error) throw new Error(data.error.message ?? "ArcGIS query failed");
   return data;
 }
+
+/** WHERE clause matching features whose time field equals the ISO timestamp (UTC). */
+export function timeWhereClause(timeField: string, isoValue: string): string {
+  const sqlTimestamp = isoValue.replace("T", " ").replace(/\.\d+Z$/, "");
+  return `${timeField} = TIMESTAMP '${sqlTimestamp}'`;
+}

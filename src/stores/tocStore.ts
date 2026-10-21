@@ -2636,7 +2636,8 @@ export const useTOCStore = create<TOCState>()(
                 name: layer.name,
                 projection: layer.projection || "EPSG:3857",
                 secured: !!layer.secured,
-                timeValue: !isDirectLayer && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
+                timeValue:
+                  (!isDirectLayer || layerSourceType === OL_DATA_TYPES.FeatureArcGISRest) && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
               },
               (olLayer: unknown) => {
                 if (olLayer) {

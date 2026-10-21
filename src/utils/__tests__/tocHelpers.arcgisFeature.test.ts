@@ -51,7 +51,12 @@ function sourceFor(layerUrl: string, description?: string): TOCSource {
 }
 
 describe("type layer entries with sourceType FeatureArcGISRest", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it("builds a feature layer from the service root and layerName", async () => {
+    stubMetadata(featureMetadata());
     const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
     const serviceRoot = "https://services.arcgis.com/wjcPoefzjpzCgffS/arcgis/rest/services/Active_Fire_Danger_Map_of_Canada/FeatureServer";
 
@@ -81,6 +86,42 @@ describe("type layer entries with sourceType FeatureArcGISRest", () => {
     expect(layer.layerUrl).toBe(`${serviceRoot}/0`);
     expect(layer.sourceType).toBe("FeatureArcGISRest");
     expect(layer.isQueryable).toBe(true);
+  });
+
+  it("loads the time slider values from the layer's time field", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const body = String(url).includes("/query")
+          ? { features: [{ attributes: { timestamp: 1791968400000 } }, { attributes: { timestamp: 1791972000000 } }] }
+          : featureMetadata({ timeInfo: { startTimeField: "timestamp" } });
+        return { ok: true, status: 200, statusText: "OK", json: async () => body } as Response;
+      }),
+    );
+    const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [
+        {
+          type: "layer",
+          layerUrl: "https://services.arcgis.com/wjcPoefzjpzCgffS/arcgis/rest/services/Wildfire/FeatureServer",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Smoke Forecast",
+          layerName: "0",
+          sourceType: "FeatureArcGISRest",
+          source: "rest",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+      ],
+      config,
+    );
+
+    expect(groups[0].layers[0].timeDimension).toMatchObject({
+      kind: "list",
+      values: ["2026-10-14T09:00:00.000Z", "2026-10-14T10:00:00.000Z"],
+    });
   });
 });
 

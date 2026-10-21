@@ -478,7 +478,7 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.FeatureArcGISRest: {
-        const featureLayer = createArcGISFeatureLayer(finalUrl as string, secured);
+        const featureLayer = createArcGISFeatureLayer(finalUrl as string, secured, { timeValue });
         featureLayer.setProperties({ rebuildParams, name: finalName });
         callback(featureLayer);
         break;
