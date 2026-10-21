@@ -82,8 +82,8 @@ describe("LayerInfo", () => {
 
       render(
         <LayerInfo
-          layerURL="https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json"
-          fallback={{ title: "Daily Severity Rating", projection: "EPSG:3857", sourceUrl: "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=wms&version=1.3.0&request=GetCapabilities" }}
+          layerURL="https://example.com/geoserver/rest/layers/public%3Adsr.json"
+          fallback={{ title: "Daily Severity Rating", projection: "EPSG:3857", sourceUrl: "https://example.com/geoserver/public/dsr/ows?service=wms&version=1.3.0&request=GetCapabilities" }}
         />,
       );
 

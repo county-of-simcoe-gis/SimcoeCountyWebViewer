@@ -96,7 +96,7 @@ describe("layerInfo", () => {
       const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
       const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
 
-      const result = await fetchLayerInfo("https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json");
+      const result = await fetchLayerInfo("https://example.com/geoserver/rest/layers/public%3Adsr.json");
 
       expect(result).toBeNull();
       expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("HTTP 401"));
