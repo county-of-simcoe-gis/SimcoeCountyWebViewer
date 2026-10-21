@@ -203,7 +203,8 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   // Build server URLs
   const geoserverPath = config.geoserverPath || "geoserver";
   const serverUrl = group.wmsGroupUrl?.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}` || "";
-  const metadataUrl = `${serverUrl}/rest/layers/${layerNameOnly.split(" ").join("%20")}.json`;
+  const metadataUrl = `${serverUrl}/rest/layers/${encodeURIComponent(layerNameOnly)}.json`;
+  if (!styleUrl) styleUrl = `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${encodeURIComponent(layerNameOnly)}`;
 
   // Generate unique ID for this layer
   const generateUniqueLayerId = (name: string, groupName: string): string => {
@@ -504,6 +505,7 @@ function buildRendererLegend(renderer: EsriRenderer): ArcGISLegendEntry["legend"
 interface ArcGISLayerMeta {
   id: number;
   name: string;
+  type?: string;
   description?: string;
   defaultVisibility?: boolean;
   minScale?: number;
@@ -901,6 +903,32 @@ async function loadFeatureLayerInfo(layerUrl: string, secured: boolean): Promise
   }
 }
 
+/** Renderer-derived legend entry for one MapServer layer from the /layers listing; null when unavailable. */
+async function loadMapServerRendererLegend(source: TOCSource, layerName: string, tokenParam: string): Promise<ArcGISLegendEntry | null> {
+  try {
+    let layersUrl = `${source.layerUrl}/layers?f=json`;
+    if (tokenParam) layersUrl += `&token=${tokenParam}`;
+    const response = await fetch(layersUrl, { method: "GET", mode: "cors" });
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const item = ((data.layers ?? []) as ArcGISLayerMeta[]).find((layer) => String(layer.id) === layerName || layer.name === layerName);
+    const legend = item?.drawingInfo?.renderer ? buildRendererLegend(item.drawingInfo.renderer) : [];
+    return item && legend.length > 0 ? { layerId: item.id, layerName: item.name, layerType: item.type ?? "", legend } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Server-rendered legend entry for one MapServer layer, falling back to its renderer; null when unavailable. */
+async function loadMapServerLayerLegend(source: TOCSource, layerName: string): Promise<ArcGISLegendEntry | null> {
+  const tokenParam = await resolveArcGISTokenParam(source);
+  const legendMap = await fetchArcGISLegend(source.layerUrl, source.secure, tokenParam);
+  const entry = Object.values(legendMap).find((legend) => String(legend.layerId) === layerName || legend.layerName === layerName);
+  if (entry && entry.legend.length > 0) return entry;
+  return loadMapServerRendererLegend(source, layerName, tokenParam);
+}
+
 /**
  * Build TOC layer groups from a direct layer source config entry (type: "layer").
  * This handles individual layers specified directly in the config (e.g. WMTS, XYZ)
@@ -928,6 +956,17 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
   const featureInfo = isFeatureLayer ? await loadFeatureLayerInfo(layerUrl, source.secure) : undefined;
   const timeDimension = featureInfo?.timeDimension;
   const rendererLegend = featureInfo?.legend ?? [];
+  const isMapServerLayer = (source.sourceType || source.source) === OL_DATA_TYPES.ImageArcGISRest || (source.sourceType || source.source) === OL_DATA_TYPES.TileArcGISRest;
+  const serverLegend = isMapServerLayer && !source.legendUrl ? await loadMapServerLayerLegend(source, layerName) : null;
+  const isWMSLayer = (source.sourceType || source.source) === OL_DATA_TYPES.ImageWMS || (source.sourceType || source.source) === OL_DATA_TYPES.TileWMS;
+  const wmsStyleUrl =
+    isWMSLayer && source.layerUrl.includes("/geoserver/")
+      ? `${source.layerUrl.split("?")[0]}?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=${encodeURIComponent(layerName)}`
+      : "";
+  // Workspace is the first path segment after /geoserver/ in <host>/geoserver/<workspace>/<service>/ows.
+  const geoserverMatch = isWMSLayer ? /^(.*)\/geoserver\/([^/?]+)\//.exec(source.layerUrl) : null;
+  const qualifiedLayerName = geoserverMatch && !layerName.includes(":") ? `${geoserverMatch[2]}:${layerName}` : layerName;
+  const wmsMetadataUrl = wmsStyleUrl && geoserverMatch ? `${geoserverMatch[1]}/geoserver/rest/layers/${encodeURIComponent(qualifiedLayerName)}.json` : null;
 
   for (const groupName of groupNames) {
     const layer: TOCLayer = {
@@ -935,7 +974,7 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       name: layerName,
       displayName,
       tocDisplayName: displayName,
-      styleUrl: source.legendUrl ?? "",
+      styleUrl: source.legendUrl ?? wmsStyleUrl,
       height: 30,
       drawIndex: source.index ?? 0,
       index: source.index ?? 0,
@@ -943,12 +982,12 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       showLegend: false,
       legendHeight: -1,
       legendImage: null,
-      legendObj: !source.legendUrl && rendererLegend.length > 0 ? { legend: rendererLegend } : null,
+      legendObj: source.legendUrl ? null : (serverLegend ?? (rendererLegend.length > 0 ? { legend: rendererLegend } : null)),
       legendFetching: false,
       visible: false,
       defaultVisible: false,
       layer: null,
-      metadataUrl: null,
+      metadataUrl: wmsMetadataUrl,
       opacity: 1,
       minScale: 0,
       maxScale: 100000000000,

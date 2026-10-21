@@ -11,11 +11,12 @@ import { useToast } from "@/hooks/useToast";
  * LayerInfo Component
  * Displays layer metadata and provides download functionality
  */
-export default function LayerInfo({ layerURL, showDownload = false, secure = false, hideNewWindow = false, hidePrint = false, params = {} }: LayerInfoProps) {
+export default function LayerInfo({ layerURL, showDownload = false, secure = false, hideNewWindow = false, hidePrint = false, params = {}, fallback }: LayerInfoProps) {
   const [layerInfo, setLayerInfo] = useState<LayerInfoData | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [usingFallback, setUsingFallback] = useState(false);
   const { config } = useConfig();
   const toast = useToast();
 
@@ -36,6 +37,7 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
       try {
         setLoading(true);
         setError(null);
+        setUsingFallback(false);
 
         const isGeoServerLayer = !!config?.geoserverUrl && layerURL.includes(config.geoserverUrl);
         const useBearerToken = secure && isGeoServerLayer && !layerURL.includes("token=");
@@ -43,14 +45,22 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
         const data = await fetchLayerInfo(layerURL, params, useBearerToken);
 
         if (!data) {
-          setError("Failed to fetch layer information");
+          if (fallback) {
+            setUsingFallback(true);
+          } else {
+            setError("Failed to fetch layer information");
+          }
           return;
         }
 
         setLayerInfo(data);
       } catch (err) {
         console.error("Error fetching layer info:", err);
-        setError("Error loading layer information");
+        if (fallback) {
+          setUsingFallback(true);
+        } else {
+          setError("Error loading layer information");
+        }
       } finally {
         setLoading(false);
       }
@@ -107,6 +117,38 @@ export default function LayerInfo({ layerURL, showDownload = false, secure = fal
     return (
       <div className="max-w-7xl mx-auto p-5">
         <div className="flex justify-center items-center min-h-[300px] text-xl text-gray-600">Loading layer information...</div>
+      </div>
+    );
+  }
+
+  // Metadata unavailable: show the source details known from the TOC layer
+  if (usingFallback && fallback && !layerInfo) {
+    return (
+      <div className="max-w-7xl mx-auto">
+        <div className="bg-gray-700 text-white p-5 rounded-t-lg shadow-md">
+          <h1 className="text-3xl font-semibold">{fallback.title}</h1>
+        </div>
+        <div className="bg-white border border-t-0 border-gray-200 rounded-b-lg shadow-md">
+          <div className="p-5 border-b border-gray-200 text-gray-600">Full layer metadata is not available from this server.</div>
+          <div className="p-5 border-b border-gray-200">
+            <fieldset className="border border-gray-300 rounded-md p-0">
+              <legend className="text-lg font-semibold text-gray-800 px-2.5">Projection</legend>
+              <div className="p-4 text-gray-600">{fallback.projection || "Not available"}</div>
+            </fieldset>
+          </div>
+          {fallback.sourceUrl && (
+            <div className="p-5 border-b border-gray-200">
+              <fieldset className="border border-gray-300 rounded-md p-0">
+                <legend className="text-lg font-semibold text-gray-800 px-2.5">URL Source</legend>
+                <div className="p-4 text-gray-600 break-all">
+                  <a href={fallback.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 no-underline hover:text-blue-800 hover:underline">
+                    {fallback.sourceUrl}
+                  </a>
+                </div>
+              </fieldset>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

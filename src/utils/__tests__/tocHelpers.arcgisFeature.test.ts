@@ -262,4 +262,59 @@ describe("legends for single-layer sources", () => {
 
     expect(groups[0].layers[0].legendObj).toBeNull();
   });
+
+  it("loads a direct MapServer layer legend from the service legend endpoint", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const body = String(url).includes("/legend")
+          ? { layers: [{ layerId: 76, layerName: "Floodplain", layerType: "Feature Layer", legend: [{ label: "", url: "", imageData: "BBBB", contentType: "image/png", height: 20, width: 20 }] }] }
+          : {};
+        return { ok: true, status: 200, statusText: "OK", json: async () => body } as Response;
+      }),
+    );
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [directSource({ layerUrl: "https://maps.example.com/arcgis/rest/services/Floodplain/MapServer", sourceType: "ImageArcGISRest", layerName: "76" })],
+      config,
+    );
+
+    expect(groups[0].layers[0].legendObj).toEqual(expect.objectContaining({ layerName: "Floodplain" }));
+  });
+
+  it("falls back to the MapServer layer renderer when the service legend has no entry", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        let body: unknown = {};
+        if (url.includes("/legend")) body = { layers: [] };
+        if (url.includes("/layers")) body = { layers: [{ id: 76, name: "Floodplain", type: "Feature Layer", drawingInfo: { renderer: pictureRenderer } }] };
+        return { ok: true, status: 200, statusText: "OK", json: async () => body } as Response;
+      }),
+    );
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [directSource({ layerUrl: "https://maps.example.com/arcgis/rest/services/Floodplain/MapServer", sourceType: "ImageArcGISRest", layerName: "76" })],
+      config,
+    );
+
+    expect(groups[0].layers[0].legendObj).toEqual({
+      layerId: 76,
+      layerName: "Floodplain",
+      layerType: "Feature Layer",
+      legend: [expect.objectContaining({ imageData: "AAAA" })],
+    });
+  });
+
+  it("builds a GetLegendGraphic style URL and REST metadata URL for a direct GeoServer WMS layer", async () => {
+    stubMetadata(featureMetadata());
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [directSource({ layerUrl: "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=wms&version=1.3.0&request=GetCapabilities", sourceType: "ImageWMS", source: "WMS", layerName: "dsr" })],
+      config,
+    );
+
+    expect(groups[0].layers[0].styleUrl).toBe("https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=dsr");
+    expect(groups[0].layers[0].metadataUrl).toBe("https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json");
+  });
 });

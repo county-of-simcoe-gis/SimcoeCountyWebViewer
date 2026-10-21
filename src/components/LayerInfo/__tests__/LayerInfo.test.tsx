@@ -77,6 +77,22 @@ describe("LayerInfo", () => {
   });
 
   describe("Loading and Error States", () => {
+    it("shows the TOC layer title, projection and source when metadata is unavailable", async () => {
+      vi.mocked(layerInfoLib.fetchLayerInfo).mockResolvedValue(null);
+
+      render(
+        <LayerInfo
+          layerURL="https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json"
+          fallback={{ title: "Daily Severity Rating", projection: "EPSG:3857", sourceUrl: "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=wms&version=1.3.0&request=GetCapabilities" }}
+        />,
+      );
+
+      expect(await screen.findByText("Daily Severity Rating")).toBeInTheDocument();
+      expect(screen.getByText("EPSG:3857")).toBeInTheDocument();
+      expect(screen.getByText(/Full layer metadata is not available/)).toBeInTheDocument();
+      expect(screen.queryByText("Failed to fetch layer information")).not.toBeInTheDocument();
+    });
+
     it("displays loading state initially", () => {
       vi.mocked(layerInfoLib.fetchLayerInfo).mockImplementation(
         () => new Promise(() => {}), // Never resolves

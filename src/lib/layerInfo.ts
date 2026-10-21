@@ -86,7 +86,12 @@ export async function fetchLayerInfo(url: string, params: Record<string, unknown
     console.error("Response data:", response.data);
     return null;
   } catch (error) {
-    console.error("Error fetching layer info:", error);
+    const status = (error as { response?: { status?: number } }).response?.status;
+    if (status === 401 || status === 403) {
+      console.warn(`Layer metadata requires authentication (HTTP ${status}): ${url}`);
+      return null;
+    }
+    console.error(`Error fetching layer info${status ? ` (HTTP ${status})` : ""}: ${url}`, error);
     return null;
   }
 }

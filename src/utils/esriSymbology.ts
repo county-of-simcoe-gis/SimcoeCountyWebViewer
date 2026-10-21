@@ -35,6 +35,7 @@ export interface EsriSimpleLineSymbol {
 
 export interface EsriSimpleFillSymbol {
   type: "esriSFS";
+  style?: string;
   color: EsriColor;
   outline?: EsriSimpleLineSymbol;
 }
@@ -306,6 +307,45 @@ export interface EsriLegendItem {
   imageDataUrl: string;
 }
 
+/** Draws an ArcGIS hatch or cross fill style as lines (no background), clipped to the swatch inset. */
+function drawFillPattern(ctx: CanvasRenderingContext2D, style: string, color: string, size: number): void {
+  const spacing = 4;
+  const backDiagonal = style === "esriSFSBackwardDiagonal" || style === "esriSFSDiagonalCross";
+  const forwardDiagonal = style === "esriSFSForwardDiagonal" || style === "esriSFSDiagonalCross";
+  const horizontal = style === "esriSFSHorizontal" || style === "esriSFSCross";
+  const vertical = style === "esriSFSVertical" || style === "esriSFSCross";
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(2, 2, size - 4, size - 4);
+  ctx.clip();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let offset = -size; offset <= size; offset += spacing) {
+    if (backDiagonal) {
+      ctx.moveTo(offset, 0);
+      ctx.lineTo(offset + size, size);
+    }
+    if (forwardDiagonal) {
+      ctx.moveTo(offset, size);
+      ctx.lineTo(offset + size, 0);
+    }
+  }
+  for (let pos = 0; pos <= size; pos += spacing) {
+    if (horizontal) {
+      ctx.moveTo(0, pos);
+      ctx.lineTo(size, pos);
+    }
+    if (vertical) {
+      ctx.moveTo(pos, 0);
+      ctx.lineTo(pos, size);
+    }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
 /** Renders a single Esri symbol to a small swatch image. Picture markers already ARE an image
  * (their raw imageData is returned as-is); line/fill/marker symbols are drawn onto a canvas using
  * the exact color/width/dash the map style itself uses (see buildStyleForSymbol above), so the
@@ -332,8 +372,12 @@ function renderEsriSymbolSwatch(symbol: EsriSymbol | undefined, size = 20): stri
     ctx.lineTo(size - 2, size / 2);
     ctx.stroke();
   } else if (symbol.type === "esriSFS") {
-    ctx.fillStyle = esriColorToRgba(symbol.color);
-    ctx.fillRect(2, 2, size - 4, size - 4);
+    if (!symbol.style || symbol.style === "esriSFSSolid") {
+      ctx.fillStyle = esriColorToRgba(symbol.color);
+      ctx.fillRect(2, 2, size - 4, size - 4);
+    } else {
+      drawFillPattern(ctx, symbol.style, esriColorToRgba(symbol.color), size);
+    }
     if (symbol.outline) {
       ctx.strokeStyle = esriColorToRgba(symbol.outline.color);
       ctx.lineWidth = symbol.outline.width || 1;

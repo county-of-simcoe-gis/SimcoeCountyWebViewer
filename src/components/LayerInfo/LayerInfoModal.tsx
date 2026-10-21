@@ -9,13 +9,14 @@ export default function LayerInfoModal() {
   const layerURL = useLayerInfoStore((s) => s.layerURL);
   const showDownload = useLayerInfoStore((s) => s.showDownload);
   const secured = useLayerInfoStore((s) => s.secured);
+  const fallback = useLayerInfoStore((s) => s.fallback);
   const closeLayerInfo = useLayerInfoStore((s) => s.closeLayerInfo);
 
   const title = showDownload ? "Download Layer" : "Layer Info";
 
   return (
     <FloatingWindow isOpen={isOpen && !!layerURL} title={title} onClose={closeLayerInfo}>
-      {layerURL && <LayerInfo layerURL={layerURL} showDownload={showDownload} secure={secured} hideNewWindow={true} />}
+      {layerURL && <LayerInfo layerURL={layerURL} showDownload={showDownload} secure={secured} hideNewWindow={true} fallback={fallback ?? undefined} />}
     </FloatingWindow>
   );
 }

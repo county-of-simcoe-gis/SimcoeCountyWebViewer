@@ -47,6 +47,12 @@ export interface LayerInfoResponse {
   coverage?: LayerInfoData;
 }
 
+export interface LayerInfoFallback {
+  title: string;
+  projection?: string;
+  sourceUrl?: string;
+}
+
 export interface LayerInfoProps {
   layerURL?: string;
   showDownload?: boolean;
@@ -55,6 +61,7 @@ export interface LayerInfoProps {
   hidePrint?: boolean;
   requestHeader?: Record<string, string>;
   params?: Record<string, unknown>;
+  fallback?: LayerInfoFallback;
 }
 
 export interface ArcGISFeatureInfo {

@@ -91,6 +91,18 @@ describe("layerInfo", () => {
       expect(mockedGetAccessToken).not.toHaveBeenCalled();
     });
 
+    it("returns null with a warning, not an error, when metadata requires authentication", async () => {
+      mockedAxiosGet.mockRejectedValue(Object.assign(new Error("Request failed with status code 401"), { response: { status: 401 } }));
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+
+      const result = await fetchLayerInfo("https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json");
+
+      expect(result).toBeNull();
+      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining("HTTP 401"));
+      expect(errorSpy).not.toHaveBeenCalled();
+    });
+
     it("adds bearer token for secure download requests when token exists", async () => {
       mockedGetAccessToken.mockResolvedValue("secure-token");
       mockedAxiosGet.mockResolvedValue({ data: new Uint8Array([1, 2, 3]) });
