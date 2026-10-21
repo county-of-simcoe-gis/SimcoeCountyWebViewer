@@ -335,4 +335,23 @@ describe("legends for single-layer sources", () => {
 
     expect(groups[0].layers[0].legendObj).toEqual({ legend: [expect.objectContaining({ imageData: "AAAA", label: "< 12 km/h" })] });
   });
+
+  it("resolves the MapServer service root when the configured URL ends with a layer id", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const body = url.startsWith("https://gis.lsrca.on.ca/gis/rest/services/OpenData/MapServer/legend")
+          ? { layers: [{ layerId: 76, layerName: "Floodplain", layerType: "Feature Layer", legend: [{ label: "", url: "", imageData: "CCCC", contentType: "image/png", height: 20, width: 20 }] }] }
+          : {};
+        return { ok: true, status: 200, statusText: "OK", json: async () => body } as Response;
+      }),
+    );
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [directSource({ layerUrl: "https://gis.lsrca.on.ca/gis/rest/services/OpenData/MapServer/76", sourceType: "ImageArcGISRest", layerName: "76" })],
+      config,
+    );
+
+    expect(groups[0].layers[0].legendObj).toEqual(expect.objectContaining({ layerName: "Floodplain" }));
+  });
 });

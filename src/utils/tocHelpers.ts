@@ -903,10 +903,15 @@ async function loadFeatureLayerInfo(layerUrl: string, secured: boolean): Promise
   }
 }
 
+/** MapServer service root for a sublayer URL such as `.../MapServer/76`; URLs without a trailing id are returned unchanged. */
+function mapServerRootUrl(layerUrl: string): string {
+  return layerUrl.split("?")[0].replace(/\/\d+$/, "");
+}
+
 /** Renderer-derived legend entry for one MapServer layer from the /layers listing; null when unavailable. */
 async function loadMapServerRendererLegend(source: TOCSource, layerName: string, tokenParam: string): Promise<ArcGISLegendEntry | null> {
   try {
-    let layersUrl = `${source.layerUrl}/layers?f=json`;
+    let layersUrl = `${mapServerRootUrl(source.layerUrl)}/layers?f=json`;
     if (tokenParam) layersUrl += `&token=${tokenParam}`;
     const response = await fetch(layersUrl, { method: "GET", mode: "cors" });
     if (!response.ok) return null;
@@ -923,7 +928,7 @@ async function loadMapServerRendererLegend(source: TOCSource, layerName: string,
 /** Server-rendered legend entry for one MapServer layer, falling back to its renderer; null when unavailable. */
 async function loadMapServerLayerLegend(source: TOCSource, layerName: string): Promise<ArcGISLegendEntry | null> {
   const tokenParam = await resolveArcGISTokenParam(source);
-  const legendMap = await fetchArcGISLegend(source.layerUrl, source.secure, tokenParam);
+  const legendMap = await fetchArcGISLegend(mapServerRootUrl(source.layerUrl), source.secure, tokenParam);
   const entry = Object.values(legendMap).find((legend) => String(legend.layerId) === layerName || legend.layerName === layerName);
   if (entry && entry.legend.length > 0) return entry;
   return loadMapServerRendererLegend(source, layerName, tokenParam);
