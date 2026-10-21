@@ -361,6 +361,8 @@ export function buildEsriLegendItems(renderer: EsriRenderer, size = 20): EsriLeg
   if (renderer.type === "simple") {
     return [{ label: "", imageDataUrl: renderEsriSymbolSwatch(renderer.symbol, size) }];
   }
+  // Service JSON can carry other renderer types (e.g. classBreaks) with no legend support yet.
+  if (renderer.type !== "uniqueValue") return [];
 
   return renderer.uniqueValueInfos.map((info) => ({
     label: info.label || info.value,

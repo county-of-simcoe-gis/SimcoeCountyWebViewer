@@ -239,4 +239,27 @@ describe("legends for single-layer sources", () => {
 
     expect(groups[0].layers[0].legendObj).toEqual({ legend: [expect.objectContaining({ imageData: "AAAA" })] });
   });
+
+  // classBreaks renderers have no legend support; they must load without a legend instead of failing the source.
+  const classBreaksRenderer = {
+    type: "classBreaks",
+    field: "value",
+    classBreakInfos: [{ classMaxValue: 10, label: "1 - 10", symbol: { type: "esriSFS", style: "esriSFSSolid", color: [55, 247, 189, 255] } }],
+  };
+
+  it("loads a classBreaks feature layer without a legend", async () => {
+    stubMetadata(featureMetadata({ drawingInfo: { renderer: classBreaksRenderer } }));
+
+    const groups = await getGroupsFromArcGISFeature(sourceFor(FEATURE_URL));
+
+    expect(groups[0].layers[0].legendObj).toBeNull();
+  });
+
+  it("loads a direct classBreaks feature layer without a legend", async () => {
+    stubMetadata(featureMetadata({ drawingInfo: { renderer: classBreaksRenderer } }));
+
+    const { groups } = await loadLayerGroupsFromSources([directSource({ sourceType: "FeatureArcGISRest" })], config);
+
+    expect(groups[0].layers[0].legendObj).toBeNull();
+  });
 });
