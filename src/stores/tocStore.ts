@@ -137,6 +137,7 @@ export interface TOCSource {
   source?: string;
   name?: string;
   layerName?: string;
+  legendUrl?: string; // Optional legend image URL shown in the TOC for type: "layer" sources
   tiled?: boolean;
   index?: number;
   projection?: string;

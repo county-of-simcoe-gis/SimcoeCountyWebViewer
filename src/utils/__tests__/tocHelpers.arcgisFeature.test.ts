@@ -179,3 +179,64 @@ describe("getGroupsFromArcGISFeature", () => {
     await expect(getGroupsFromArcGISFeature(sourceFor(FEATURE_URL))).rejects.toThrow("Invalid layer");
   });
 });
+
+describe("legends for single-layer sources", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // Picture markers are used because their swatch is the raw imageData, which works without a canvas in jsdom.
+  const pictureRenderer = { type: "simple", symbol: { type: "esriPMS", imageData: "AAAA", contentType: "image/png", width: 20, height: 20 } };
+  const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+  const FEATURE_SERVICE = "https://services.example.com/arcgis/rest/services/Wildfire/FeatureServer";
+
+  function directSource(overrides: Partial<TOCSource>): TOCSource {
+    return {
+      type: "layer",
+      layerUrl: FEATURE_SERVICE,
+      secure: false,
+      primary: false,
+      urlType: "",
+      name: "Perimeters",
+      layerName: "0",
+      source: "rest",
+      groups: ["Hazard Layers"],
+      ...overrides,
+    } as TOCSource;
+  }
+
+  it("builds a legend object from a feature layer's renderer", async () => {
+    stubMetadata(featureMetadata({ drawingInfo: { renderer: pictureRenderer } }));
+
+    const groups = await getGroupsFromArcGISFeature(sourceFor(FEATURE_URL));
+
+    const legendObj = groups[0].layers[0].legendObj as { legend: Array<Record<string, unknown>> };
+    expect(legendObj.legend).toEqual([expect.objectContaining({ imageData: "AAAA", contentType: "image/png" })]);
+  });
+
+  it("leaves the legend empty for a feature layer without a renderer", async () => {
+    stubMetadata(featureMetadata({ drawingInfo: undefined }));
+
+    const groups = await getGroupsFromArcGISFeature(sourceFor(FEATURE_URL));
+
+    expect(groups[0].layers[0].legendObj).toBeNull();
+  });
+
+  it("uses the configured legendUrl as the legend image for a direct layer", async () => {
+    stubMetadata(featureMetadata());
+    const legendUrl = "https://maps.example.com/legend.png";
+
+    const { groups } = await loadLayerGroupsFromSources([directSource({ type: "layer", layerUrl: "https://tiles.example.com/wmts", sourceType: "WMTS", layerName: "basemap", legendUrl })], config);
+
+    expect(groups[0].layers[0].styleUrl).toBe(legendUrl);
+    expect(groups[0].layers[0].legendObj).toBeNull();
+  });
+
+  it("builds a legend object for a direct feature layer from its renderer", async () => {
+    stubMetadata(featureMetadata({ drawingInfo: { renderer: pictureRenderer } }));
+
+    const { groups } = await loadLayerGroupsFromSources([directSource({ sourceType: "FeatureArcGISRest" })], config);
+
+    expect(groups[0].layers[0].legendObj).toEqual({ legend: [expect.objectContaining({ imageData: "AAAA" })] });
+  });
+});

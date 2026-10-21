@@ -12,7 +12,7 @@ import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
 import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
 import { createArcGISFeatureLayer, fetchFeatureLayerInfo, type ArcGISFeatureLayerOptions } from "@/utils/openlayers/arcgisFeatureLayer";
-import type { EsriRenderer } from "@/utils/esriSymbology";
+import { buildEsriLegendItems, type EsriRenderer } from "@/utils/esriSymbology";
 
 const LEGACY_RED_FOLDER_COLOR = "#cc0000";
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -491,6 +491,15 @@ interface ArcGISLegendEntry {
   }>;
 }
 
+/** Legend swatches derived from a feature layer's renderer, in the same shape as the ArcGIS /legend endpoint. */
+function buildRendererLegend(renderer: EsriRenderer): ArcGISLegendEntry["legend"] {
+  const swatchSize = 20;
+  return buildEsriLegendItems(renderer, swatchSize).flatMap((item) => {
+    const match = /^data:([^;]+);base64,(.*)$/.exec(item.imageDataUrl);
+    return match ? [{ label: item.label, url: "", imageData: match[2], contentType: match[1], height: swatchSize, width: swatchSize }] : [];
+  });
+}
+
 /** Subset of an ArcGIS REST layer JSON read when building a TOC layer. */
 interface ArcGISLayerMeta {
   id: number;
@@ -763,7 +772,9 @@ export async function getGroupsFromArcGISFeature(source: TOCSource): Promise<TOC
     }
 
     const featureUrl = layerUrl.toString();
-    const { parsedLayer, categories } = parseArcGISLayerItem(item, source, featureUrl, featureUrl, {});
+    const rendererLegend = item.drawingInfo?.renderer ? buildRendererLegend(item.drawingInfo.renderer) : [];
+    const legendMap: Record<number, ArcGISLegendEntry> = rendererLegend.length > 0 ? { [item.id]: { layerId: item.id, layerName: item.name, layerType: "Feature Layer", legend: rendererLegend } } : {};
+    const { parsedLayer, categories } = parseArcGISLayerItem(item, source, featureUrl, featureUrl, legendMap);
     const featureLayer = { ...parsedLayer, featureLayer: { renderer: item.drawingInfo?.renderer, objectIdField: item.objectIdField || "OBJECTID" } };
 
     const groupsObj: Record<string, ESRIGroupDef> = {};
@@ -870,16 +881,23 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
   }
 }
 
-/** Time slider values for a feature layer; undefined when it has no time field or the lookup fails. */
-async function loadFeatureLayerTimeDimension(layerUrl: string, secured: boolean): Promise<TimeDimension | undefined> {
+/** Time slider values and renderer legend for a feature layer; empty when the metadata lookup fails. */
+async function loadFeatureLayerInfo(layerUrl: string, secured: boolean): Promise<{ timeDimension?: TimeDimension; legend: ArcGISLegendEntry["legend"] }> {
+  const info = await fetchFeatureLayerInfo(layerUrl, secured).catch((error: unknown) => {
+    console.warn(`[TOC] Could not read feature layer info for ${layerUrl}:`, error);
+    return undefined;
+  });
+  if (!info) return { legend: [] };
+
+  const legend = info.renderer ? buildRendererLegend(info.renderer) : [];
+  if (!info.timeField) return { legend };
+
   try {
-    const { timeField } = await fetchFeatureLayerInfo(layerUrl, secured);
-    if (!timeField) return undefined;
-    const values = await fetchArcGISTimeValues(layerUrl, timeField, secured);
-    return parseTimeDimension({ values: values.join(","), default: "current" });
+    const values = await fetchArcGISTimeValues(layerUrl, info.timeField, secured);
+    return { timeDimension: parseTimeDimension({ values: values.join(","), default: "current" }), legend };
   } catch (error) {
     console.warn(`[TOC] Could not read time settings for ${layerUrl}:`, error);
-    return undefined;
+    return { legend };
   }
 }
 
@@ -907,7 +925,9 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
   };
 
   const groups: TOCLayerGroup[] = [];
-  const timeDimension = isFeatureLayer ? await loadFeatureLayerTimeDimension(layerUrl, source.secure) : undefined;
+  const featureInfo = isFeatureLayer ? await loadFeatureLayerInfo(layerUrl, source.secure) : undefined;
+  const timeDimension = featureInfo?.timeDimension;
+  const rendererLegend = featureInfo?.legend ?? [];
 
   for (const groupName of groupNames) {
     const layer: TOCLayer = {
@@ -915,7 +935,7 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       name: layerName,
       displayName,
       tocDisplayName: displayName,
-      styleUrl: "",
+      styleUrl: source.legendUrl ?? "",
       height: 30,
       drawIndex: source.index ?? 0,
       index: source.index ?? 0,
@@ -923,7 +943,7 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       showLegend: false,
       legendHeight: -1,
       legendImage: null,
-      legendObj: null,
+      legendObj: !source.legendUrl && rendererLegend.length > 0 ? { legend: rendererLegend } : null,
       legendFetching: false,
       visible: false,
       defaultVisible: false,
