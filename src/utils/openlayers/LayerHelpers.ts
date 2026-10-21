@@ -35,6 +35,7 @@ import { getTopLeft } from "ol/extent";
 import { applyStyle } from "ol-mapbox-style";
 
 import { OL_LAYER_TYPES, OL_DATA_TYPES, OLLayerType, OLDataType, LayerOptions, RebuildParams, GroupedLayerOptions } from "@/utils/openlayers/types";
+import { createArcGISFeatureLayer } from "@/utils/openlayers/arcgisFeatureLayer";
 import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken, isSecuredUrl } from "@/utils/auth";
@@ -475,6 +476,13 @@ export class LayerHelpers {
           }),
         );
         break;
+
+      case OL_DATA_TYPES.FeatureArcGISRest: {
+        const featureLayer = createArcGISFeatureLayer(finalUrl as string, secured);
+        featureLayer.setProperties({ rebuildParams, name: finalName });
+        callback(featureLayer);
+        break;
+      }
 
       case OL_DATA_TYPES.ImageArcGISRest:
         {

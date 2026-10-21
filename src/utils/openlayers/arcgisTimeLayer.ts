@@ -4,8 +4,8 @@ import { EsriJSON } from "ol/format";
 import { Fill, Style } from "ol/style";
 import type Feature from "ol/Feature";
 import type { FeatureLike } from "ol/Feature";
-import { useArcGISTokenStore } from "@/stores/arcgisTokenStore";
 import { TIME_VALUE_APPLIER_PROPERTY, type TimeValueApplier } from "@/utils/timeDimension";
+import { buildQueryUrl, queryJSON, resolveToken } from "@/utils/openlayers/arcgisQuery";
 
 export interface ArcGISClassBreakInfo {
   classMaxValue: number;
@@ -22,35 +22,8 @@ export interface ArcGISVectorTimeInfo {
   drawingInfo?: ArcGISDrawingInfo;
 }
 
-interface EsriQueryResponse {
-  features?: Array<{ attributes?: Record<string, unknown> }>;
-  exceededTransferLimit?: boolean;
-  error?: { message?: string };
-}
-
 const EPSG_3857 = "EPSG:3857";
 const DEFAULT_FILL = "rgba(255, 153, 0, 0.5)";
-
-async function resolveToken(layerUrl: string, secured: boolean): Promise<string | null> {
-  const urlToken = new URL(layerUrl).searchParams.get("token");
-  if (urlToken) return urlToken;
-  if (!secured) return null;
-  return (await useArcGISTokenStore.getState().getValidToken()) ?? null;
-}
-
-function buildQueryUrl(layerUrl: string, params: Record<string, string>, token: string | null): string {
-  const query = new URLSearchParams({ ...params, f: "json" });
-  if (token) query.set("token", token);
-  return `${layerUrl.split("?")[0]}/query?${query.toString()}`;
-}
-
-async function queryJSON(url: string): Promise<EsriQueryResponse> {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-  const data = (await response.json()) as EsriQueryResponse;
-  if (data.error) throw new Error(data.error.message ?? "ArcGIS query failed");
-  return data;
-}
 
 /** Distinct time values as ISO strings, ascending. */
 export async function fetchArcGISTimeValues(layerUrl: string, timeField: string, secured: boolean): Promise<string[]> {
