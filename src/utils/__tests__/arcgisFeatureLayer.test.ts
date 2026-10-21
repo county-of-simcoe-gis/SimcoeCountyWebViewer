@@ -159,7 +159,7 @@ describe("createArcGISFeatureLayer", () => {
   it("falls back to the default style for unsupported renderers", () => {
     const olLayer = createArcGISFeatureLayer(LAYER_URL, false, {
       objectIdField: "OBJECTID",
-      renderer: { type: "classBreaks" } as unknown as EsriRenderer,
+      renderer: { type: "heatmap" } as unknown as EsriRenderer,
     });
 
     expect(olLayer.getStyleFunction()).toBeDefined();

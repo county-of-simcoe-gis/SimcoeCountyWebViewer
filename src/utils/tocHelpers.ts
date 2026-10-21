@@ -12,7 +12,7 @@ import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
 import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
 import { createArcGISFeatureLayer, fetchFeatureLayerInfo, type ArcGISFeatureLayerOptions } from "@/utils/openlayers/arcgisFeatureLayer";
-import { buildEsriLegendItems, type EsriRenderer } from "@/utils/esriSymbology";
+import { buildEsriLegendItems, type EsriClassBreakRenderer, type EsriRenderer } from "@/utils/esriSymbology";
 
 const LEGACY_RED_FOLDER_COLOR = "#cc0000";
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -493,7 +493,7 @@ interface ArcGISLegendEntry {
 }
 
 /** Legend swatches derived from a feature layer's renderer, in the same shape as the ArcGIS /legend endpoint. */
-function buildRendererLegend(renderer: EsriRenderer): ArcGISLegendEntry["legend"] {
+function buildRendererLegend(renderer: EsriRenderer | EsriClassBreakRenderer): ArcGISLegendEntry["legend"] {
   const swatchSize = 20;
   return buildEsriLegendItems(renderer, swatchSize).flatMap((item) => {
     const match = /^data:([^;]+);base64,(.*)$/.exec(item.imageDataUrl);

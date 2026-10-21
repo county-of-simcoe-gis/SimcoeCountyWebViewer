@@ -240,27 +240,27 @@ describe("legends for single-layer sources", () => {
     expect(groups[0].layers[0].legendObj).toEqual({ legend: [expect.objectContaining({ imageData: "AAAA" })] });
   });
 
-  // classBreaks renderers have no legend support; they must load without a legend instead of failing the source.
+  // classBreaks renderers with fill symbols get one swatch per class.
   const classBreaksRenderer = {
     type: "classBreaks",
     field: "value",
     classBreakInfos: [{ classMaxValue: 10, label: "1 - 10", symbol: { type: "esriSFS", style: "esriSFSSolid", color: [55, 247, 189, 255] } }],
   };
 
-  it("loads a classBreaks feature layer without a legend", async () => {
+  it("builds a legend for a classBreaks feature layer", async () => {
     stubMetadata(featureMetadata({ drawingInfo: { renderer: classBreaksRenderer } }));
 
     const groups = await getGroupsFromArcGISFeature(sourceFor(FEATURE_URL));
 
-    expect(groups[0].layers[0].legendObj).toBeNull();
+    expect(groups[0].layers[0].legendObj).toEqual(expect.objectContaining({ legend: [expect.objectContaining({ label: "1 - 10" })] }));
   });
 
-  it("loads a direct classBreaks feature layer without a legend", async () => {
+  it("builds a legend for a direct classBreaks feature layer", async () => {
     stubMetadata(featureMetadata({ drawingInfo: { renderer: classBreaksRenderer } }));
 
     const { groups } = await loadLayerGroupsFromSources([directSource({ sourceType: "FeatureArcGISRest" })], config);
 
-    expect(groups[0].layers[0].legendObj).toBeNull();
+    expect(groups[0].layers[0].legendObj).toEqual(expect.objectContaining({ legend: [expect.objectContaining({ label: "1 - 10" })] }));
   });
 
   it("loads a direct MapServer layer legend from the service legend endpoint", async () => {
@@ -316,5 +316,23 @@ describe("legends for single-layer sources", () => {
 
     expect(groups[0].layers[0].styleUrl).toBe("https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=dsr");
     expect(groups[0].layers[0].metadataUrl).toBe("https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json");
+  });
+
+  it("builds a legend from classBreaks picture-marker symbols", async () => {
+    stubMetadata(
+      featureMetadata({
+        drawingInfo: {
+          renderer: {
+            type: "classBreaks",
+            field: "WIND_SPEED",
+            classBreakInfos: [{ classMaxValue: 12, label: "< 12 km/h", symbol: { type: "esriPMS", imageData: "AAAA", contentType: "image/png", width: 16, height: 8 } }],
+          },
+        },
+      }),
+    );
+
+    const { groups } = await loadLayerGroupsFromSources([directSource({ sourceType: "FeatureArcGISRest" })], config);
+
+    expect(groups[0].layers[0].legendObj).toEqual({ legend: [expect.objectContaining({ imageData: "AAAA", label: "< 12 km/h" })] });
   });
 });

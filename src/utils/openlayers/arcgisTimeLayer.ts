@@ -9,7 +9,7 @@ import { buildQueryUrl, queryJSON, resolveToken, timeWhereClause } from "@/utils
 
 export interface ArcGISClassBreakInfo {
   classMaxValue: number;
-  symbol?: { color?: number[] };
+  symbol?: { type?: string; color?: number[] };
 }
 
 export interface ArcGISDrawingInfo {

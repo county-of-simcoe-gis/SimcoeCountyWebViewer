@@ -86,7 +86,8 @@ async function fetchFeaturesInExtent(layerUrl: string, secured: boolean, extent:
  * (bbox strategy); ids come from the object id field so overlapping loads don't duplicate features.
  */
 export function createArcGISFeatureLayer(layerUrl: string, secured: boolean, options: ArcGISFeatureLayerOptions = {}): VectorLayer<VectorSource> {
-  const styleFor = (renderer?: EsriRenderer) => (renderer && (renderer.type === "simple" || renderer.type === "uniqueValue") ? buildEsriStyleFunction(renderer) : undefined);
+  const styleFor = (renderer?: EsriRenderer) =>
+    renderer && (renderer.type === "simple" || renderer.type === "uniqueValue" || renderer.type === "classBreaks") ? buildEsriStyleFunction(renderer) : undefined;
 
   let infoPromise: Promise<ArcGISFeatureLayerInfo> | undefined;
   const getInfo = (): Promise<ArcGISFeatureLayerInfo> => {
