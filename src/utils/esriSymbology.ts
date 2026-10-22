@@ -35,6 +35,7 @@ export interface EsriSimpleLineSymbol {
 
 export interface EsriSimpleFillSymbol {
   type: "esriSFS";
+  style?: string;
   color: EsriColor;
   outline?: EsriSimpleLineSymbol;
 }
@@ -70,7 +71,13 @@ interface EsriSizeInfoVisualVariable {
   stops: EsriSizeStop[];
 }
 
-type EsriVisualVariable = EsriSizeInfoVisualVariable | { type: string };
+interface EsriRotationVisualVariable {
+  type: "rotationInfo";
+  rotationType?: string;
+  valueExpression?: string;
+}
+
+type EsriVisualVariable = EsriSizeInfoVisualVariable | EsriRotationVisualVariable | { type: string };
 
 export interface EsriSimpleRenderer {
   type: "simple";
@@ -95,7 +102,20 @@ export interface EsriUniqueValueRenderer {
   visualVariables?: EsriVisualVariable[];
 }
 
-export type EsriRenderer = EsriSimpleRenderer | EsriUniqueValueRenderer;
+export interface EsriClassBreakInfo {
+  classMaxValue: number;
+  label?: string;
+  symbol: EsriSymbol;
+}
+
+export interface EsriClassBreakRenderer {
+  type: "classBreaks";
+  field: string;
+  classBreakInfos: EsriClassBreakInfo[];
+  visualVariables?: EsriVisualVariable[];
+}
+
+export type EsriRenderer = EsriSimpleRenderer | EsriUniqueValueRenderer | EsriClassBreakRenderer;
 
 export interface EsriValueOption {
   value: string;
@@ -172,7 +192,7 @@ function resolveScaledSize(visualVariables: EsriVisualVariable[] | undefined, re
   return interpolateSize(sizeInfo.stops, scale);
 }
 
-function buildStyleForSymbol(symbol: EsriSymbol | undefined, visualVariables: EsriVisualVariable[] | undefined, resolution: number): Style {
+function buildStyleForSymbol(symbol: EsriSymbol | undefined, visualVariables: EsriVisualVariable[] | undefined, resolution: number, rotation = 0): Style {
   if (!symbol) return new Style({ stroke: new Stroke({ color: "rgba(255,0,0,1)", width: 2 }) });
 
   switch (symbol.type) {
@@ -215,7 +235,7 @@ function buildStyleForSymbol(symbol: EsriSymbol | undefined, visualVariables: Es
       return new Style({
         image: new Icon({
           src: `data:${symbol.contentType ?? "image/png"};base64,${symbol.imageData}`,
-          rotation: symbol.angle ? (symbol.angle * Math.PI) / 180 : 0,
+          rotation: rotation + (symbol.angle ? (symbol.angle * Math.PI) / 180 : 0),
           scale,
         }),
       });
@@ -225,11 +245,39 @@ function buildStyleForSymbol(symbol: EsriSymbol | undefined, visualVariables: Es
   }
 }
 
-/** Builds an OL style function from an Esri renderer, supporting "simple" and "uniqueValue" types. */
+function getRotationVariable(visualVariables?: EsriVisualVariable[]): EsriRotationVisualVariable | undefined {
+  return visualVariables?.find((v): v is EsriRotationVisualVariable => v.type === "rotationInfo");
+}
+
+/** Rotation in radians for a `$feature["FIELD"] + N` expression, read as geographic degrees. */
+function evaluateRotation(variable: EsriRotationVisualVariable | undefined, feature: FeatureLike): number {
+  const match = /^\$feature\["([^"]+)"\](?:\s*([+-])\s*(\d+(?:\.\d+)?))?$/.exec(variable?.valueExpression ?? "");
+  if (!match) return 0;
+  const base = Number(feature.get(match[1]));
+  if (!Number.isFinite(base)) return 0;
+  const offset = match[3] ? Number(match[3]) * (match[2] === "-" ? -1 : 1) : 0;
+  return ((base + offset) * Math.PI) / 180;
+}
+
+/** Builds an OL style function from an Esri renderer: "simple", "uniqueValue", or "classBreaks". */
 export function buildEsriStyleFunction(renderer: EsriRenderer): StyleFunction {
   if (renderer.type === "simple") {
     const { symbol, visualVariables } = renderer;
     return (_feature: FeatureLike, resolution: number) => buildStyleForSymbol(symbol, visualVariables, resolution);
+  }
+
+  if (renderer.type === "classBreaks") {
+    const { field, visualVariables } = renderer;
+    const classes = [...renderer.classBreakInfos].sort((a, b) => a.classMaxValue - b.classMaxValue);
+    const rotationVariable = getRotationVariable(visualVariables);
+    return (feature: FeatureLike, resolution: number) => {
+      const raw = feature.get(field);
+      if (raw === null || raw === undefined) return undefined;
+      const value = Number(raw);
+      const match = classes.find((info) => value <= info.classMaxValue);
+      if (!match) return undefined;
+      return buildStyleForSymbol(match.symbol, visualVariables, resolution, evaluateRotation(rotationVariable, feature));
+    };
   }
 
   // uniqueValue
@@ -306,6 +354,45 @@ export interface EsriLegendItem {
   imageDataUrl: string;
 }
 
+/** Draws an ArcGIS hatch or cross fill style as lines (no background), clipped to the swatch inset. */
+function drawFillPattern(ctx: CanvasRenderingContext2D, style: string, color: string, size: number): void {
+  const spacing = 4;
+  const backDiagonal = style === "esriSFSBackwardDiagonal" || style === "esriSFSDiagonalCross";
+  const forwardDiagonal = style === "esriSFSForwardDiagonal" || style === "esriSFSDiagonalCross";
+  const horizontal = style === "esriSFSHorizontal" || style === "esriSFSCross";
+  const vertical = style === "esriSFSVertical" || style === "esriSFSCross";
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(2, 2, size - 4, size - 4);
+  ctx.clip();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let offset = -size; offset <= size; offset += spacing) {
+    if (backDiagonal) {
+      ctx.moveTo(offset, 0);
+      ctx.lineTo(offset + size, size);
+    }
+    if (forwardDiagonal) {
+      ctx.moveTo(offset, size);
+      ctx.lineTo(offset + size, 0);
+    }
+  }
+  for (let pos = 0; pos <= size; pos += spacing) {
+    if (horizontal) {
+      ctx.moveTo(0, pos);
+      ctx.lineTo(size, pos);
+    }
+    if (vertical) {
+      ctx.moveTo(pos, 0);
+      ctx.lineTo(pos, size);
+    }
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
 /** Renders a single Esri symbol to a small swatch image. Picture markers already ARE an image
  * (their raw imageData is returned as-is); line/fill/marker symbols are drawn onto a canvas using
  * the exact color/width/dash the map style itself uses (see buildStyleForSymbol above), so the
@@ -332,8 +419,12 @@ function renderEsriSymbolSwatch(symbol: EsriSymbol | undefined, size = 20): stri
     ctx.lineTo(size - 2, size / 2);
     ctx.stroke();
   } else if (symbol.type === "esriSFS") {
-    ctx.fillStyle = esriColorToRgba(symbol.color);
-    ctx.fillRect(2, 2, size - 4, size - 4);
+    if (!symbol.style || symbol.style === "esriSFSSolid") {
+      ctx.fillStyle = esriColorToRgba(symbol.color);
+      ctx.fillRect(2, 2, size - 4, size - 4);
+    } else {
+      drawFillPattern(ctx, symbol.style, esriColorToRgba(symbol.color), size);
+    }
     if (symbol.outline) {
       ctx.strokeStyle = esriColorToRgba(symbol.outline.color);
       ctx.lineWidth = symbol.outline.width || 1;
@@ -355,12 +446,19 @@ function renderEsriSymbolSwatch(symbol: EsriSymbol | undefined, size = 20): stri
   return canvas.toDataURL("image/png");
 }
 
-/** Builds legend swatches directly from the renderer JSON: one entry for a "simple" renderer, or
- * one entry per uniqueValueInfo for a "uniqueValue" renderer. */
-export function buildEsriLegendItems(renderer: EsriRenderer, size = 20): EsriLegendItem[] {
+/** Builds legend swatches directly from the renderer JSON: one entry per classBreakInfo or uniqueValueInfo, or one for a "simple" renderer. */
+export function buildEsriLegendItems(renderer: EsriRenderer | EsriClassBreakRenderer, size = 20): EsriLegendItem[] {
   if (renderer.type === "simple") {
     return [{ label: "", imageDataUrl: renderEsriSymbolSwatch(renderer.symbol, size) }];
   }
+  if (renderer.type === "classBreaks") {
+    return renderer.classBreakInfos.map((info) => ({
+      label: info.label || String(info.classMaxValue),
+      imageDataUrl: renderEsriSymbolSwatch(info.symbol, size),
+    }));
+  }
+  // Other renderer types (e.g. heatmap) have no legend support yet.
+  if (renderer.type !== "uniqueValue") return [];
 
   return renderer.uniqueValueInfos.map((info) => ({
     label: info.label || info.value,

@@ -34,6 +34,7 @@ export const OL_DATA_TYPES = {
   WMTS: "WMTS",
   TileWMS: "TileWMS",
   ImageArcGISRest: "ImageArcGISRest",
+  FeatureArcGISRest: "FeatureArcGISRest",
   LayerGroup: "LayerGroup",
   VectorTile: "VectorTile",
   GeoTIFF: "GeoTIFF",

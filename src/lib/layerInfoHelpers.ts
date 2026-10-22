@@ -157,7 +157,11 @@ export function openLayerInfo(
 
   // Open the layer info modal
   const { openLayerInfo: openModal } = useLayerInfoStore.getState();
-  openModal(layerUrl, showDownload, secured);
+  openModal(layerUrl, showDownload, secured, {
+    title: layer.tocDisplayName || layer.name,
+    projection: layer.projection,
+    sourceUrl: layer.layerUrl ?? layer.serverUrl,
+  });
 
   return true;
 }

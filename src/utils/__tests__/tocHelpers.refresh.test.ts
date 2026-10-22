@@ -40,6 +40,29 @@ function buildWMSLayer(overrides: Partial<WMSLayerInput>): TOCLayer {
   return buildLayerFromWMS(group, wmsLayer, 0, config);
 }
 
+describe("buildLayerFromWMS legend and metadata URLs", () => {
+  it("uses GetLegendGraphic when capabilities provide no LegendURL", () => {
+    const layer = buildWMSLayer({ Name: "simcoe:Assessment Parcel" });
+
+    expect(layer.styleUrl).toBe("https://example.com/geoserver/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=simcoe%3AAssessment%20Parcel");
+  });
+
+  it("keeps the capabilities LegendURL when present", () => {
+    const layer = buildWMSLayer({
+      Name: "simcoe:roads",
+      Style: [{ LegendURL: [{ OnlineResource: "https://example.com/legend.png", size: [20, 20] }] }],
+    } as unknown as Partial<WMSLayerInput>);
+
+    expect(layer.styleUrl).toBe("https://example.com/legend.png");
+  });
+
+  it("encodes special characters in the metadata layer name", () => {
+    const layer = buildWMSLayer({ Name: "simcoe:Assessment & Parcel #1" });
+
+    expect(layer.metadataUrl).toBe("https://example.com/geoserver/rest/layers/simcoe%3AAssessment%20%26%20Parcel%20%231.json");
+  });
+});
+
 describe("buildLayerFromWMS refresh metadata", () => {
   it("reads REFRESH_INTERVAL from the GeoServer keyword list", () => {
     const layer = buildWMSLayer({ KeywordList: ["REFRESH_INTERVAL=300"] });

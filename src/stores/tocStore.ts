@@ -137,6 +137,7 @@ export interface TOCSource {
   source?: string;
   name?: string;
   layerName?: string;
+  legendUrl?: string; // Optional legend image URL shown in the TOC for type: "layer" sources
   tiled?: boolean;
   index?: number;
   projection?: string;
@@ -2636,7 +2637,8 @@ export const useTOCStore = create<TOCState>()(
                 name: layer.name,
                 projection: layer.projection || "EPSG:3857",
                 secured: !!layer.secured,
-                timeValue: !isDirectLayer && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
+                timeValue:
+                  (!isDirectLayer || layerSourceType === OL_DATA_TYPES.FeatureArcGISRest) && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
               },
               (olLayer: unknown) => {
                 if (olLayer) {

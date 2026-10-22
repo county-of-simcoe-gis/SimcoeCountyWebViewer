@@ -35,7 +35,7 @@
     "jspdf": "^4.0.0",
     "moment": "^2.30.1",
     "mssql": "^12.0.0",
-    "next": "^16.3.4",
+    "next": "^16.4.2",
     "next-auth": "^4.24.11",
     "ol": "^10.5.0",
     "ol-mapbox-style": "^13.0.1",
@@ -72,7 +72,7 @@
     "@types/react-dom": "^19",
     "@types/react-virtualized": "^9.22.3",
     "@vitejs/plugin-react": "^4.3.4",
-    "@vitest/coverage-v8": "^4.1.11",
+    "@vitest/coverage-v8": "^4.1.12",
     "cross-env": "^7.0.3",
     "daisyui": "^5.5.17",
     "dotenv-cli": "^11.0.0",
@@ -83,11 +83,13 @@
     "prisma": "6.12.0",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   },
   "overrides": {
     "effect": "3.20.0",
     "esbuild": "^0.28.1",
-    "js-yaml": "^4.3.2"
+    "follow-redirects": "^1.16.1",
+    "js-yaml": "^4.3.2",
+    "vite": "^7.3.7"
   }
 }

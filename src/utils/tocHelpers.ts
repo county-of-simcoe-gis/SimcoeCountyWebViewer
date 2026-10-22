@@ -11,6 +11,8 @@ import { parseArcgisRelationships } from "@/utils/arcgisFieldMetadata";
 import { normalizeRefreshInterval } from "@/utils/refreshInterval";
 import { parseTimeDimension, getTimeValueAt, TIME_VALUE_APPLIER_PROPERTY, type TimeDimension, type TimeValueApplier } from "@/utils/timeDimension";
 import { createArcGISTimeLayer, fetchArcGISTimeValues, type ArcGISVectorTimeInfo } from "@/utils/openlayers/arcgisTimeLayer";
+import { createArcGISFeatureLayer, fetchFeatureLayerInfo, type ArcGISFeatureLayerOptions } from "@/utils/openlayers/arcgisFeatureLayer";
+import { buildEsriLegendItems, type EsriClassBreakRenderer, type EsriRenderer } from "@/utils/esriSymbology";
 
 const LEGACY_RED_FOLDER_COLOR = "#cc0000";
 const HEX_COLOR_PATTERN = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -201,7 +203,8 @@ export function buildLayerFromWMS(group: Partial<TOCLayerGroup> & { secure?: boo
   // Build server URLs
   const geoserverPath = config.geoserverPath || "geoserver";
   const serverUrl = group.wmsGroupUrl?.split(`/${geoserverPath}/`)[0] + `/${geoserverPath}` || "";
-  const metadataUrl = `${serverUrl}/rest/layers/${layerNameOnly.split(" ").join("%20")}.json`;
+  const metadataUrl = `${serverUrl}/rest/layers/${encodeURIComponent(layerNameOnly)}.json`;
+  if (!styleUrl) styleUrl = `${serverUrl}/wms?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&LAYER=${encodeURIComponent(layerNameOnly)}`;
 
   // Generate unique ID for this layer
   const generateUniqueLayerId = (name: string, groupName: string): string => {
@@ -489,6 +492,193 @@ interface ArcGISLegendEntry {
   }>;
 }
 
+/** Legend swatches derived from a feature layer's renderer, in the same shape as the ArcGIS /legend endpoint. */
+function buildRendererLegend(renderer: EsriRenderer | EsriClassBreakRenderer): ArcGISLegendEntry["legend"] {
+  const swatchSize = 20;
+  return buildEsriLegendItems(renderer, swatchSize).flatMap((item) => {
+    const match = /^data:([^;]+);base64,(.*)$/.exec(item.imageDataUrl);
+    return match ? [{ label: item.label, url: "", imageData: match[2], contentType: match[1], height: swatchSize, width: swatchSize }] : [];
+  });
+}
+
+/** Subset of an ArcGIS REST layer JSON read when building a TOC layer. */
+interface ArcGISLayerMeta {
+  id: number;
+  name: string;
+  type?: string;
+  description?: string;
+  defaultVisibility?: boolean;
+  minScale?: number;
+  maxScale?: number;
+  displayField?: string;
+  hasAttachments?: boolean;
+  objectIdField?: string;
+  capabilities?: string;
+  relationships?: unknown;
+  sourceSpatialReference?: { latestWkid?: number };
+  extent?: { xmin: number; ymin: number; xmax: number; ymax: number; spatialReference?: { wkid?: number; latestWkid?: number } };
+  drawingInfo?: { transparency?: number; renderer?: EsriRenderer };
+  timeInfo?: { startTimeField?: string };
+}
+
+type ESRIGroupDef = TOCLayerGroup & { rawLayers: BuildESRILayerOptions["layer"][] };
+
+/** Resolves the ArcGIS token query value: the app token when `appToken` is set, else the user token for secured sources. */
+async function resolveArcGISTokenParam(source: TOCSource): Promise<string> {
+  if ((source as { appToken?: boolean }).appToken) {
+    try {
+      const resp = await fetch(apiUrl("/api/secure/arcgis/token"), { method: "POST", credentials: "same-origin" });
+      if (resp.ok) {
+        const data = await resp.json();
+        const tokenParam = data?.access_token || data?.token || data?.accessToken || "";
+        if (!tokenParam) console.warn("[TOC] App token endpoint returned no token");
+        return tokenParam;
+      }
+      console.warn("[TOC] Failed to fetch app token:", resp.status, resp.statusText);
+    } catch (err) {
+      console.warn("[TOC] Error fetching app token:", err);
+    }
+    return "";
+  }
+  if (source.secure) {
+    return (await useArcGISTokenStore.getState().getValidToken()) || "";
+  }
+  return "";
+}
+
+/** Parses one ArcGIS layer's metadata into the options consumed by buildESRILayer(). */
+function parseArcGISLayerItem(
+  item: ArcGISLayerMeta,
+  source: TOCSource,
+  rootUrl: string,
+  layerUrl: string,
+  legendMap: Record<number, ArcGISLegendEntry>,
+): { parsedLayer: BuildESRILayerOptions["layer"]; categories: string[] } {
+  // Parse the description for config options (CATEGORY, VISIBLE, LIVELAYER, etc.)
+  // Prefer a source-level `descriptionOverride` when provided in config.
+  const layerOptions = parseESRIDescription(source.descriptionOverride || item.description || "");
+  // Layer CATEGORY applies only when the map config override has none.
+  const layerTagCategories = parseESRIDescription(item.description || "").categories;
+  const categories = layerOptions.categories.length > 0 ? layerOptions.categories : layerTagCategories;
+  // Determine visibility: if visibleLayers is specified in config, use that
+  // list. Otherwise fall back to the ArcGIS service's defaultVisibility.
+  // A VISIBLE=TRUE flag in the ESRI description can also override.
+  const visibleLayers = source.group?.visibleLayers || [];
+  let visible = visibleLayers.length > 0 ? visibleLayers.includes(item.name) : (item.defaultVisibility ?? false);
+  if (layerOptions.isVisible !== null) visible = layerOptions.isVisible;
+
+  // Swap min/max scale (ArcGIS convention is inverted)
+  const origMin = item.minScale || 0;
+  const origMax = item.maxScale || 0;
+  const minScale = origMax;
+  const maxScale = origMin;
+
+  const parsedLayer: BuildESRILayerOptions["layer"] = {
+    name: item.name,
+    url: layerUrl,
+    rootUrl: rootUrl,
+    id: item.id,
+    options: {
+      ...layerOptions,
+      categories,
+      title: item.name,
+      opacity: item.drawingInfo?.transparency != null ? 1 - item.drawingInfo.transparency / 100 : 1,
+      minScale,
+      maxScale,
+      canDownload: false,
+      identifyTitleColumn: item.displayField || "",
+      displayName: item.name,
+    },
+    hasAttachments: item.hasAttachments ?? false,
+    hasRelatedRecords: parseArcgisRelationships(item.relationships).length > 0,
+    visible,
+    queryable: true,
+    opaque: false,
+    legend: legendMap[item.id] || undefined,
+    sourceSpatialReference: item.sourceSpatialReference,
+    extent: item.extent ? [item.extent.xmin, item.extent.ymin, item.extent.xmax, item.extent.ymax] : undefined,
+    // Use the extent's own spatialReference, NOT item.sourceSpatialReference - ArcGIS
+    // services commonly report `extent` in Web Mercator even when the layer's native
+    // storage SR (sourceSpatialReference) is something else (e.g. UTM 17N/26917).
+    extentSpatialReference: item.extent?.spatialReference,
+    // Non-Map services cannot be exported as images, so time-enabled ones render as vector features.
+    vectorTime:
+      item.timeInfo?.startTimeField && typeof item.capabilities === "string" && !item.capabilities.split(",").includes("Map")
+        ? { timeField: item.timeInfo.startTimeField, objectIdField: item.objectIdField || "OBJECTID", drawingInfo: item.drawingInfo }
+        : undefined,
+  };
+
+  return { parsedLayer, categories };
+}
+
+/** Adds a parsed layer to each named group, creating the group definition on first use. */
+function addLayerToESRIGroups(groupsObj: Record<string, ESRIGroupDef>, groupNames: string[], parsedLayer: BuildESRILayerOptions["layer"], source: TOCSource, rootUrl: string): void {
+  const secured = source.secure || false;
+  for (const category of groupNames) {
+    const cleanCategory = category.replaceAll("_", " ");
+    const groupValue = cleanCategory === "All Layers" ? "opengis:all_layers" : cleanCategory;
+
+    if (!groupsObj[groupValue]) {
+      groupsObj[groupValue] = {
+        value: groupValue,
+        label: cleanCategory,
+        url: rootUrl,
+        prefix: "",
+        defaultGroup: false,
+        visibleLayers: [],
+        wmsGroupUrl: rootUrl,
+        customRestUrl: rootUrl,
+        layers: [],
+        secured,
+        showAllFields: source.showAllFields ?? false,
+        primary: source.primary || false,
+        rawLayers: [],
+      };
+    }
+    groupsObj[groupValue].rawLayers.push(parsedLayer);
+  }
+}
+
+/** Builds OL layers for each group definition, dropping groups that end up empty. */
+async function buildESRIGroups(groupsObj: Record<string, ESRIGroupDef>): Promise<TOCLayerGroup[]> {
+  const groups: TOCLayerGroup[] = [];
+
+  for (const groupValue of Object.keys(groupsObj)) {
+    const groupDef = groupsObj[groupValue];
+    const builtLayers: TOCLayer[] = [];
+    let layerIndex = groupDef.rawLayers.length;
+
+    for (const rawLayer of groupDef.rawLayers) {
+      layerIndex--;
+      await new Promise<void>((resolve) => {
+        buildESRILayer(
+          {
+            group: groupDef,
+            layer: rawLayer,
+            layerIndex,
+          },
+          (builtLayer) => {
+            builtLayers.push(builtLayer);
+            resolve();
+          },
+        );
+      });
+    }
+
+    if (builtLayers.length > 0) {
+      // Strip the temporary rawLayers property before returning
+      const { rawLayers: _unused, ...cleanGroup } = groupDef;
+      void _unused;
+      groups.push({
+        ...cleanGroup,
+        layers: builtLayers,
+      });
+    }
+  }
+
+  return groups;
+}
+
 /**
  * Build layer groups from an ArcGIS REST MapServer service.
  *
@@ -504,27 +694,7 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
     const secured = source.secure || false;
     const rootUrl = source.layerUrl;
 
-    // Build the ArcGIS token query param once. Prefer server app token when
-    // the source explicitly requests it (source.appToken). Otherwise fall
-    // back to the user token store for secured services.
-    let tokenParam = "";
-    if ((source as { appToken?: boolean }).appToken) {
-      try {
-        const resp = await fetch(apiUrl("/api/secure/arcgis/token"), { method: "POST", credentials: "same-origin" });
-        if (resp.ok) {
-          const data = await resp.json();
-          tokenParam = data?.access_token || data?.token || data?.accessToken || "";
-          if (!tokenParam) console.warn("[TOC] App token endpoint returned no token");
-        } else {
-          console.warn("[TOC] Failed to fetch app token:", resp.status, resp.statusText);
-        }
-      } catch (err) {
-        console.warn("[TOC] Error fetching app token:", err);
-      }
-    } else if (secured) {
-      const token = await useArcGISTokenStore.getState().getValidToken();
-      if (token) tokenParam = token;
-    }
+    const tokenParam = await resolveArcGISTokenParam(source);
 
     // Fetch full layer list from the /layers endpoint
     let layersUrl = `${rootUrl}/layers?f=json`;
@@ -561,133 +731,59 @@ export async function getGroupsFromArcGIS(source: TOCSource): Promise<TOCLayerGr
       if (item.subLayerIds && item.subLayerIds.length > 0) continue;
       if (item.subLayers && item.subLayers.length > 0) continue;
 
-      // Parse the description for config options (CATEGORY, VISIBLE, LIVELAYER, etc.)
-      // Prefer a source-level `descriptionOverride` when provided in config.
-      const layerOptions = parseESRIDescription(source.descriptionOverride || item.description || "");
-      // Layer CATEGORY applies only when the map config override has none.
-      const layerTagCategories = parseESRIDescription(item.description || "").categories;
-      const categories = layerOptions.categories.length > 0 ? layerOptions.categories : layerTagCategories;
-      // Determine visibility: if visibleLayers is specified in config, use that
-      // list. Otherwise fall back to the ArcGIS service's defaultVisibility.
-      // A VISIBLE=TRUE flag in the ESRI description can also override.
-      const visibleLayers = source.group?.visibleLayers || [];
-      let visible = visibleLayers.length > 0 ? visibleLayers.includes(item.name) : (item.defaultVisibility ?? false);
-      if (layerOptions.isVisible !== null) visible = layerOptions.isVisible;
-
-      // Swap min/max scale (ArcGIS convention is inverted)
-      const origMin = item.minScale || 0;
-      const origMax = item.maxScale || 0;
-      const minScale = origMax;
-      const maxScale = origMin;
-
       // Build the layer URL with optional token
       const layerUrl = tokenParam ? `${rootUrl}/${item.id}?token=${tokenParam}` : `${rootUrl}/${item.id}`;
 
-      // Build the layer object expected by buildESRILayer()
-      const parsedLayer: BuildESRILayerOptions["layer"] = {
-        name: item.name,
-        url: layerUrl,
-        rootUrl: rootUrl,
-        id: item.id,
-        options: {
-          ...layerOptions,
-          categories,
-          title: item.name,
-          opacity: item.drawingInfo?.transparency != null ? 1 - item.drawingInfo.transparency / 100 : 1,
-          minScale,
-          maxScale,
-          canDownload: false,
-          identifyTitleColumn: item.displayField || "",
-          displayName: item.name,
-        },
-        hasAttachments: item.hasAttachments ?? false,
-        hasRelatedRecords: parseArcgisRelationships(item.relationships).length > 0,
-        visible,
-        queryable: true,
-        opaque: false,
-        legend: legendMap[item.id] || undefined,
-        sourceSpatialReference: item.sourceSpatialReference,
-        extent: item.extent ? [item.extent.xmin, item.extent.ymin, item.extent.xmax, item.extent.ymax] : undefined,
-        // Use the extent's own spatialReference, NOT item.sourceSpatialReference - ArcGIS
-        // services commonly report `extent` in Web Mercator even when the layer's native
-        // storage SR (sourceSpatialReference) is something else (e.g. UTM 17N/26917).
-        extentSpatialReference: item.extent?.spatialReference,
-        // Non-Map services cannot be exported as images, so time-enabled ones render as vector features.
-        vectorTime:
-          item.timeInfo?.startTimeField && typeof item.capabilities === "string" && !item.capabilities.split(",").includes("Map")
-            ? { timeField: item.timeInfo.startTimeField, objectIdField: item.objectIdField || "OBJECTID", drawingInfo: item.drawingInfo }
-            : undefined,
-      };
+      const { parsedLayer, categories } = parseArcGISLayerItem(item, source, rootUrl, layerUrl, legendMap);
 
       // Untagged layers use their parent Group Layer name, then "Uncategorized".
       const parentGroupName = groupNameByChildId.get(item.id);
       const groupNames = categories.length > 0 ? categories : [parentGroupName || "Uncategorized"];
 
-      // Group by category
-      for (const category of groupNames) {
-        const cleanCategory = category.replaceAll("_", " ");
-        const groupValue = cleanCategory === "All Layers" ? "opengis:all_layers" : cleanCategory;
-
-        if (!groupsObj[groupValue]) {
-          groupsObj[groupValue] = {
-            value: groupValue,
-            label: cleanCategory,
-            url: rootUrl,
-            prefix: "",
-            defaultGroup: false,
-            visibleLayers: [],
-            wmsGroupUrl: rootUrl,
-            customRestUrl: rootUrl,
-            layers: [],
-            secured,
-            showAllFields: source.showAllFields ?? false,
-            primary: source.primary || false,
-            rawLayers: [],
-          };
-        }
-        groupsObj[groupValue].rawLayers.push(parsedLayer);
-      }
+      addLayerToESRIGroups(groupsObj, groupNames, parsedLayer, source, rootUrl);
     }
 
-    // Build OL layers for each group
-    const groups: TOCLayerGroup[] = [];
-
-    for (const groupValue of Object.keys(groupsObj)) {
-      const groupDef = groupsObj[groupValue];
-      const builtLayers: TOCLayer[] = [];
-      let layerIndex = groupDef.rawLayers.length;
-
-      for (const rawLayer of groupDef.rawLayers) {
-        layerIndex--;
-        await new Promise<void>((resolve) => {
-          buildESRILayer(
-            {
-              group: groupDef,
-              layer: rawLayer,
-              layerIndex,
-            },
-            (builtLayer) => {
-              builtLayers.push(builtLayer);
-              resolve();
-            },
-          );
-        });
-      }
-
-      if (builtLayers.length > 0) {
-        // Strip the temporary rawLayers property before returning
-        const { rawLayers: _unused, ...cleanGroup } = groupDef;
-        void _unused;
-        groups.push({
-          ...cleanGroup,
-          layers: builtLayers,
-        });
-      }
-    }
-
-    return groups;
+    return buildESRIGroups(groupsObj);
   } catch (error) {
     console.error("Error loading ArcGIS groups:", error);
+    throw error;
+  }
+}
+
+/**
+ * Build a TOC layer from a single ArcGIS layer URL (e.g. .../FeatureServer/0).
+ * Feature-only layers cannot be exported as images, so they load as a bbox-driven vector layer.
+ */
+export async function getGroupsFromArcGISFeature(source: TOCSource): Promise<TOCLayerGroup[]> {
+  try {
+    const tokenParam = await resolveArcGISTokenParam(source);
+
+    const layerUrl = new URL(source.layerUrl);
+    if (tokenParam && !layerUrl.searchParams.has("token")) layerUrl.searchParams.set("token", tokenParam);
+
+    const metadataUrl = new URL(layerUrl);
+    metadataUrl.searchParams.set("f", "json");
+    const response = await fetch(metadataUrl.toString(), { method: "GET", mode: "cors" });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const item = (await response.json()) as ArcGISLayerMeta & { error?: { message?: string } };
+    if (item.error) {
+      throw new Error(item.error.message ?? "ArcGIS layer metadata request failed");
+    }
+
+    const featureUrl = layerUrl.toString();
+    const rendererLegend = item.drawingInfo?.renderer ? buildRendererLegend(item.drawingInfo.renderer) : [];
+    const legendMap: Record<number, ArcGISLegendEntry> = rendererLegend.length > 0 ? { [item.id]: { layerId: item.id, layerName: item.name, layerType: "Feature Layer", legend: rendererLegend } } : {};
+    const { parsedLayer, categories } = parseArcGISLayerItem(item, source, featureUrl, featureUrl, legendMap);
+    const featureLayer = { ...parsedLayer, featureLayer: { renderer: item.drawingInfo?.renderer, objectIdField: item.objectIdField || "OBJECTID" } };
+
+    const groupsObj: Record<string, ESRIGroupDef> = {};
+    addLayerToESRIGroups(groupsObj, categories.length > 0 ? categories : ["Uncategorized"], featureLayer, source, featureUrl);
+    return buildESRIGroups(groupsObj);
+  } catch (error) {
+    console.error("Error loading ArcGIS feature layer:", error);
     throw error;
   }
 }
@@ -787,17 +883,71 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
   }
 }
 
+/** Time slider values and renderer legend for a feature layer; empty when the metadata lookup fails. */
+async function loadFeatureLayerInfo(layerUrl: string, secured: boolean): Promise<{ timeDimension?: TimeDimension; legend: ArcGISLegendEntry["legend"] }> {
+  const info = await fetchFeatureLayerInfo(layerUrl, secured).catch((error: unknown) => {
+    console.warn(`[TOC] Could not read feature layer info for ${layerUrl}:`, error);
+    return undefined;
+  });
+  if (!info) return { legend: [] };
+
+  const legend = info.renderer ? buildRendererLegend(info.renderer) : [];
+  if (!info.timeField) return { legend };
+
+  try {
+    const values = await fetchArcGISTimeValues(layerUrl, info.timeField, secured);
+    return { timeDimension: parseTimeDimension({ values: values.join(","), default: "current" }), legend };
+  } catch (error) {
+    console.warn(`[TOC] Could not read time settings for ${layerUrl}:`, error);
+    return { legend };
+  }
+}
+
+/** MapServer service root for a sublayer URL such as `.../MapServer/76`; URLs without a trailing id are returned unchanged. */
+function mapServerRootUrl(layerUrl: string): string {
+  return layerUrl.split("?")[0].replace(/\/\d+$/, "");
+}
+
+/** Renderer-derived legend entry for one MapServer layer from the /layers listing; null when unavailable. */
+async function loadMapServerRendererLegend(source: TOCSource, layerName: string, tokenParam: string): Promise<ArcGISLegendEntry | null> {
+  try {
+    let layersUrl = `${mapServerRootUrl(source.layerUrl)}/layers?f=json`;
+    if (tokenParam) layersUrl += `&token=${tokenParam}`;
+    const response = await fetch(layersUrl, { method: "GET", mode: "cors" });
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const item = ((data.layers ?? []) as ArcGISLayerMeta[]).find((layer) => String(layer.id) === layerName || layer.name === layerName);
+    const legend = item?.drawingInfo?.renderer ? buildRendererLegend(item.drawingInfo.renderer) : [];
+    return item && legend.length > 0 ? { layerId: item.id, layerName: item.name, layerType: item.type ?? "", legend } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Server-rendered legend entry for one MapServer layer, falling back to its renderer; null when unavailable. */
+async function loadMapServerLayerLegend(source: TOCSource, layerName: string): Promise<ArcGISLegendEntry | null> {
+  const tokenParam = await resolveArcGISTokenParam(source);
+  const legendMap = await fetchArcGISLegend(mapServerRootUrl(source.layerUrl), source.secure, tokenParam);
+  const entry = Object.values(legendMap).find((legend) => String(legend.layerId) === layerName || legend.layerName === layerName);
+  if (entry && entry.legend.length > 0) return entry;
+  return loadMapServerRendererLegend(source, layerName, tokenParam);
+}
+
 /**
  * Build TOC layer groups from a direct layer source config entry (type: "layer").
  * This handles individual layers specified directly in the config (e.g. WMTS, XYZ)
  * rather than being discovered from a WMS/ArcGIS service.
  */
-function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
+async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGroup[]> {
   const layerName = (source.layerName || source.name || "Unnamed Layer").trim();
   const displayName = (source.name || layerName).trim();
   // If the config specifies "All Layers" (the virtual group), place the layer
   // into an "Uncategorized" group instead to avoid creating a duplicate.
   const groupNames = (source.groups || ["All Layers"]).map((g) => (g.toLowerCase() === "all layers" ? "Uncategorized" : g));
+  const isFeatureLayer = (source.sourceType || source.source) === OL_DATA_TYPES.FeatureArcGISRest;
+  // Feature services are addressed as <service>/FeatureServer/<layerId>.
+  const layerUrl = isFeatureLayer ? `${source.layerUrl.replace(/\/+$/, "")}/${layerName}` : source.layerUrl;
 
   const generateUniqueLayerId = (name: string, groupName: string): string => {
     const timestamp = Date.now();
@@ -808,6 +958,20 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
   };
 
   const groups: TOCLayerGroup[] = [];
+  const featureInfo = isFeatureLayer ? await loadFeatureLayerInfo(layerUrl, source.secure) : undefined;
+  const timeDimension = featureInfo?.timeDimension;
+  const rendererLegend = featureInfo?.legend ?? [];
+  const isMapServerLayer = (source.sourceType || source.source) === OL_DATA_TYPES.ImageArcGISRest || (source.sourceType || source.source) === OL_DATA_TYPES.TileArcGISRest;
+  const serverLegend = isMapServerLayer && !source.legendUrl ? await loadMapServerLayerLegend(source, layerName) : null;
+  const isWMSLayer = (source.sourceType || source.source) === OL_DATA_TYPES.ImageWMS || (source.sourceType || source.source) === OL_DATA_TYPES.TileWMS;
+  const wmsStyleUrl =
+    isWMSLayer && source.layerUrl.includes("/geoserver/")
+      ? `${source.layerUrl.split("?")[0]}?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=${encodeURIComponent(layerName)}`
+      : "";
+  // Workspace is the first path segment after /geoserver/ in <host>/geoserver/<workspace>/<service>/ows.
+  const geoserverMatch = isWMSLayer ? /^(.*)\/geoserver\/([^/?]+)\//.exec(source.layerUrl) : null;
+  const qualifiedLayerName = geoserverMatch && !layerName.includes(":") ? `${geoserverMatch[2]}:${layerName}` : layerName;
+  const wmsMetadataUrl = wmsStyleUrl && geoserverMatch ? `${geoserverMatch[1]}/geoserver/rest/layers/${encodeURIComponent(qualifiedLayerName)}.json` : null;
 
   for (const groupName of groupNames) {
     const layer: TOCLayer = {
@@ -815,7 +979,7 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
       name: layerName,
       displayName,
       tocDisplayName: displayName,
-      styleUrl: "",
+      styleUrl: source.legendUrl ?? wmsStyleUrl,
       height: 30,
       drawIndex: source.index ?? 0,
       index: source.index ?? 0,
@@ -823,17 +987,17 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
       showLegend: false,
       legendHeight: -1,
       legendImage: null,
-      legendObj: null,
+      legendObj: source.legendUrl ? null : (serverLegend ?? (rendererLegend.length > 0 ? { legend: rendererLegend } : null)),
       legendFetching: false,
       visible: false,
       defaultVisible: false,
       layer: null,
-      metadataUrl: null,
+      metadataUrl: wmsMetadataUrl,
       opacity: 1,
       minScale: 0,
       maxScale: 100000000000,
       liveLayer: false,
-      isQueryable: false,
+      isQueryable: isFeatureLayer,
       groupName,
       group: groupName,
       userLayer: false,
@@ -842,8 +1006,9 @@ function getGroupsFromDirectLayer(source: TOCSource): TOCLayerGroup[] {
       hasAttachments: false,
       // Store direct layer properties for OpenLayers initialization
       sourceType: source.sourceType || source.source,
-      layerUrl: source.layerUrl,
+      layerUrl,
       projection: source.projection || "EPSG:3857",
+      timeDimension,
     };
 
     groups.push({
@@ -907,8 +1072,11 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
         case "arcgis":
           groups = await getGroupsFromArcGIS(source);
           break;
+        case "arcgisfeature":
+          groups = await getGroupsFromArcGISFeature(source);
+          break;
         case "layer":
-          groups = getGroupsFromDirectLayer(source);
+          groups = await getGroupsFromDirectLayer(source);
           break;
         default:
           console.warn(`Unknown source type: ${source.type}`);
@@ -1151,6 +1319,7 @@ export interface BuildESRILayerOptions {
     rootUrl?: string;
     id: number;
     vectorTime?: ArcGISVectorTimeInfo;
+    featureLayer?: ArcGISFeatureLayerOptions;
     options: ESRILayerOptions & {
       title?: string;
       opacity?: number;
@@ -1263,7 +1432,9 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
   try {
     let timeDimension: TimeDimension | undefined;
     let vectorLayer: ReturnType<typeof createArcGISTimeLayer> | undefined;
-    if (layer.vectorTime) {
+    if (layer.featureLayer) {
+      vectorLayer = createArcGISFeatureLayer(layer.url, secured, layer.featureLayer);
+    } else if (layer.vectorTime) {
       const timeValues = await fetchArcGISTimeValues(layer.url, layer.vectorTime.timeField, secured);
       timeDimension = parseTimeDimension({ values: timeValues.join(","), default: "current" });
       vectorLayer = createArcGISTimeLayer(layer.url, secured, layer.vectorTime);
@@ -1329,7 +1500,7 @@ export async function buildESRILayer(options: BuildESRILayerOptions, callback: (
         name: layerNameOnly,
         displayName: displayName,
         tocDisplayName: tocDisplayName,
-        wfsUrl: wfsUrl,
+        wfsUrl: layer.featureLayer ? undefined : wfsUrl,
         rootInfoUrl: rootInfoUrl,
         disableParcelClick: liveLayer,
         queryable: queryable,
