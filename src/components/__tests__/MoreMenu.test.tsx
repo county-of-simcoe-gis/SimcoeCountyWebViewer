@@ -70,6 +70,7 @@ type SidebarItem = {
   imageName: string;
   enabled: boolean;
   secure?: boolean;
+  securityKeywords?: string[];
 };
 
 function resetStore(overrides: Partial<ReturnType<typeof useSidebarStore.getState>> = {}) {
@@ -167,6 +168,17 @@ describe("MoreMenu", () => {
       render(<MoreMenu />);
       expect(screen.getByText("SecureTheme")).toBeInTheDocument();
       expect(screen.getByText("SecureTool")).toBeInTheDocument();
+    });
+
+    it("hides secure items the authenticated user lacks the required role for", () => {
+      mockUseSession.mockReturnValue({ data: { user: { name: "Test", roles: ["planning"], locations: [] } }, status: "authenticated" });
+      resetStore({
+        themes: [{ id: "t2", name: "RoleTheme", type: "theme", imageName: "s.png", enabled: true, secure: true, securityKeywords: ["toggler_solid_waste"] } as SidebarItem],
+        tools: [{ id: "tl2", name: "RoleTool", type: "tool", imageName: "s.png", enabled: true, secure: true, securityKeywords: ["toggler_solid_waste"] } as SidebarItem],
+      });
+      render(<MoreMenu />);
+      expect(screen.queryByText("RoleTheme")).not.toBeInTheDocument();
+      expect(screen.queryByText("RoleTool")).not.toBeInTheDocument();
     });
   });
 

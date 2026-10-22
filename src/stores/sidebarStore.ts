@@ -16,6 +16,7 @@ export interface SidebarItem {
   helpLink?: string;
   enabled: boolean;
   secure?: boolean;
+  securityKeywords?: string[];
 }
 
 interface SidebarState {
@@ -112,6 +113,7 @@ function convertToSidebarItem(component: SidebarComponent, type: "theme" | "tool
     enabled: component.enabled !== false && component.disable !== true, // Default to enabled unless explicitly disabled
     config,
     secure: component.secure ?? false,
+    securityKeywords: component.securityKeywords,
   };
 }
 

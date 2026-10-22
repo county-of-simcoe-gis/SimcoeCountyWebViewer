@@ -14,6 +14,7 @@ import { trackTheme, trackTool, trackMyMaps } from "@/lib/appStats";
 import { FaLock } from "react-icons/fa";
 import ReportsNavBar from "@/components/ReportsNavBar";
 import { SectionTitle } from "@/components/ui";
+import { filterAccessibleSidebarItems } from "@/lib/sidebarAccess";
 
 // Lazy load tool components
 const MeasureTool = lazy(() => import("@/components/tools/Measure/MeasureTool"));
@@ -130,9 +131,9 @@ export default function Sidebar() {
   const isMyMapsEditing = useMyMapsStore((s) => s.isEditing);
   const { data: session } = useSession();
 
-  // Filter out secure items when user is not authenticated
-  const visibleThemes = useMemo(() => (session ? themes : themes.filter((t) => !t.secure)), [themes, session]);
-  const visibleTools = useMemo(() => (session ? tools : tools.filter((t) => !t.secure)), [tools, session]);
+  // Filter out tools and themes the current session cannot access
+  const visibleThemes = useMemo(() => filterAccessibleSidebarItems(themes, session), [themes, session]);
+  const visibleTools = useMemo(() => filterAccessibleSidebarItems(tools, session), [tools, session]);
 
   // When only one theme/tool exists, show its icon and name on the tab instead of generic "Themes"/"Tools"
   const isSingleTheme = visibleThemes.length === 1;

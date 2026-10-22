@@ -185,6 +185,12 @@ describe("sidebarStore", () => {
       expect(state.themes[1].secure).toBe(true);
     });
 
+    it("should propagate securityKeywords to SidebarItem", () => {
+      useSidebarStore.getState().loadFromConfig([{ ...mockToolComponents[0], id: 9, secure: true, securityKeywords: ["toggler_solid_waste"] }], []);
+
+      expect(useSidebarStore.getState().tools[0].securityKeywords).toEqual(["toggler_solid_waste"]);
+    });
+
     it("should apply hide flags", () => {
       useSidebarStore.getState().loadFromConfig([], [], {
         hideLayers: true,
