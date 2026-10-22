@@ -13,6 +13,7 @@ import { showFeedbackWindow } from "@/utils/mapHelpers";
 import { showURLWindow, showHelpWindow } from "@/utils/helpersUI";
 import { MenuList, MenuItem, MenuHeading } from "@/components/ui";
 import ThemeToggle from "@/components/ThemeToggle";
+import { filterAccessibleSidebarItems } from "@/lib/sidebarAccess";
 
 interface MenuItem {
   id: string;
@@ -39,9 +40,9 @@ export default function MoreMenu() {
   const config = useAppStore((state) => state.config);
   const { data: session } = useSession();
 
-  // Filter out secure items when user is not authenticated (match Sidebar behavior)
-  const visibleThemes = useMemo(() => (session ? themes : themes.filter((t) => !t.secure)), [themes, session]);
-  const visibleTools = useMemo(() => (session ? tools : tools.filter((t) => !t.secure)), [tools, session]);
+  // Filter out tools and themes the current session cannot access (match Sidebar behavior)
+  const visibleThemes = useMemo(() => filterAccessibleSidebarItems(themes, session), [themes, session]);
+  const visibleTools = useMemo(() => filterAccessibleSidebarItems(tools, session), [tools, session]);
 
   // Close menu on Escape key
   useEffect(() => {

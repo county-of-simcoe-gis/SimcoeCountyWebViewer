@@ -69,6 +69,7 @@ type SidebarItem = {
   helpLink?: string;
   enabled: boolean;
   secure?: boolean;
+  securityKeywords?: string[];
 };
 
 describe("Sidebar", () => {
@@ -200,6 +201,40 @@ describe("Sidebar", () => {
       render(<Sidebar />);
       expect(screen.getByText("PublicTool")).toBeInTheDocument();
       expect(screen.queryByText("SecureTool")).not.toBeInTheDocument();
+    });
+
+    it("hides secure tools the authenticated user lacks the required role for", () => {
+      mockUseSession.mockReturnValue({ data: { user: { name: "Test", roles: ["planning"], locations: [] } }, status: "authenticated" });
+
+      useSidebarStore.setState({
+        isOpen: true,
+        activeTab: 1,
+        tools: [
+          { id: "1", name: "PublicTool", type: "tool", imageName: "public.png", enabled: true, secure: false } as SidebarItem,
+          { id: "2", name: "TogglerTool", type: "tool", imageName: "secure.png", enabled: true, secure: true, securityKeywords: ["toggler_solid_waste"] } as SidebarItem,
+        ],
+        themes: [],
+        hideTools: false,
+      });
+
+      render(<Sidebar />);
+      expect(screen.getByText("PublicTool")).toBeInTheDocument();
+      expect(screen.queryByText("TogglerTool")).not.toBeInTheDocument();
+    });
+
+    it("shows secure tools the authenticated user has the required role for", () => {
+      mockUseSession.mockReturnValue({ data: { user: { name: "Test", roles: ["toggler_solid_waste"], locations: [] } }, status: "authenticated" });
+
+      useSidebarStore.setState({
+        isOpen: true,
+        activeTab: 1,
+        tools: [{ id: "2", name: "TogglerTool", type: "tool", imageName: "secure.png", enabled: true, secure: true, securityKeywords: ["toggler_solid_waste"] } as SidebarItem],
+        themes: [],
+        hideTools: false,
+      });
+
+      render(<Sidebar />);
+      expect(screen.getByText("TogglerTool")).toBeInTheDocument();
     });
   });
 
