@@ -474,7 +474,8 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 - **Feature Search** — Search returns features from WFS and ArcGIS layers, not only places.
 - **Table of Contents Grouping** — Folder headers can be given a custom colour, and untagged ArcGIS layers group under their parent Group Layer name.
 - **Splash Logo** — The loading screen can show a splash logo from configuration, with a fallback when none is set.
-- **General Maintenance** — Responsive mobile layout for the map and MyMaps button bar, and map max zoom can be set from the API configuration.
+- **ArcGIS Feature Layers** — ArcGIS feature layers can be displayed directly on the map, including layers with a time dimension.
+- **General Maintenance** — Responsive mobile layout for the map and MyMaps button bar, map max zoom can be set from the API configuration, and package dependencies were updated.
 
 ### v2.0.7 (2026-10-16)
 
