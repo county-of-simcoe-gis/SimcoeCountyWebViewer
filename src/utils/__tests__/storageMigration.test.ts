@@ -141,6 +141,24 @@ describe("runStorageMigrations", () => {
     localStorage.clear();
   });
 
+  it("returns null for a user with no stored version", () => {
+    expect(runStorageMigrations({ appVersion: "2.0.6", migrations: testMigrations })).toBeNull();
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.6");
+  });
+
+  it("returns the version stored before the update", () => {
+    localStorage.setItem(VERSION_KEY, "2.0.1");
+
+    expect(runStorageMigrations({ appVersion: "2.0.9", migrations: testMigrations })).toBe("2.0.1");
+    expect(localStorage.getItem(VERSION_KEY)).toBe("2.0.9");
+  });
+
+  it("returns the stored version when it already matches the app version", () => {
+    localStorage.setItem(VERSION_KEY, "2.0.6");
+
+    expect(runStorageMigrations({ appVersion: "2.0.6", migrations: testMigrations })).toBe("2.0.6");
+  });
+
   it("treats a new user as current and clears nothing", () => {
     runStorageMigrations({ appVersion: "2.0.6" });
 
