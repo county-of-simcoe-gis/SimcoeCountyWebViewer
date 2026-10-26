@@ -36,6 +36,16 @@ const nextConfig: NextConfig = {
     // Suppress TypeScript warnings during build (use with caution)
     ignoreBuildErrors: true,
   },
+  // Legacy api_v2 URLs used by the old viewers, mapped onto the new route paths
+  async rewrites() {
+    return [
+      { source: "/api_v2/public/search", destination: "/api/public/search" },
+      { source: "/api_v2/public/search/types", destination: "/api/public/search/types" },
+      { source: "/api_v2/public/search/:id", destination: "/api/public/search/:id" },
+      { source: "/api_v2/public/reports/property/:arn", destination: "/api/public/reports/property/:arn" },
+      { source: "/api_v2/public/reports/embed/:report", destination: "/api/public/reports/embed/:report" },
+    ];
+  },
   webpack: (config, { dev }) => {
     // Suppress warnings in production builds
     if (!dev) {
