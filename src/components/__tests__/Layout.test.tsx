@@ -1,7 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
+import { afterEach, beforeEach, vi } from "vitest";
 import Layout from "@/components/Layout";
 import { useConfig } from "@/hooks/useConfig";
+import { showURLWindow } from "@/utils/helpersUI";
+import { APP_VERSION, STORAGE_VERSION_KEY } from "@/utils/storageMigration";
 
 // Mock Header to avoid next-auth dependency in ProfileButton
 vi.mock("@/components/Header", () => ({
@@ -93,6 +95,11 @@ vi.mock("@/hooks/useConfig", () => ({
     loading: false,
     error: null,
   })),
+}));
+
+vi.mock("@/utils/helpersUI", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/utils/helpersUI")>()),
+  showURLWindow: vi.fn(),
 }));
 
 // Mock the stores to avoid infinite loops
@@ -200,5 +207,51 @@ describe("Layout", () => {
     } finally {
       vi.mocked(useConfig).mockImplementation(originalImpl!);
     }
+  });
+});
+
+describe("Layout revision history on version change", () => {
+  let originalImpl: typeof useConfig;
+
+  beforeEach(() => {
+    localStorage.clear();
+    vi.mocked(showURLWindow).mockClear();
+    originalImpl = vi.mocked(useConfig).getMockImplementation() as typeof useConfig;
+    vi.mocked(useConfig).mockImplementation(() => ({
+      config: { mapId: "test-map", whatsNewUrl: "/help#revision-history", sidebarToolComponents: [], sidebarThemeComponents: [] } as any,
+      loading: false,
+      error: null,
+      reloadConfig: vi.fn(),
+    }));
+  });
+
+  afterEach(() => {
+    vi.mocked(useConfig).mockImplementation(originalImpl);
+  });
+
+  it("opens revision history when the stored version differs from the app version", async () => {
+    localStorage.setItem(STORAGE_VERSION_KEY, "9.9.9");
+
+    render(<Layout />);
+
+    await waitFor(() => {
+      expect(showURLWindow).toHaveBeenCalledWith("/help#revision-history", true, "full", true, true, "Revision History");
+    });
+  });
+
+  it("does nothing when the stored version matches the app version", async () => {
+    localStorage.setItem(STORAGE_VERSION_KEY, APP_VERSION);
+
+    render(<Layout />);
+
+    await waitFor(() => expect(document.getElementById("map")).toBeInTheDocument());
+    expect(showURLWindow).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when no version is stored locally", async () => {
+    render(<Layout />);
+
+    await waitFor(() => expect(document.getElementById("map")).toBeInTheDocument());
+    expect(showURLWindow).not.toHaveBeenCalled();
   });
 });

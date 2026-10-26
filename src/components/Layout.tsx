@@ -12,7 +12,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { showURLWindow } from "@/utils/helpersUI";
 import { enableUserStorage, getUserStorage, userStorageReady } from "@/utils/userStorage";
 import { getStorageItem } from "@/utils/storage";
-import { runStorageMigrations } from "@/utils/storageMigration";
+import { APP_VERSION, runStorageMigrations } from "@/utils/storageMigration";
 import { trackMapLoad } from "@/lib/appStats";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
@@ -63,8 +63,11 @@ export default function Layout({ children }: LayoutProps) {
   }, [session, sessionStatus, setUserName]);
 
   // Apply versioned localStorage rules before stores and basemaps read them.
+  // Captured once: StrictMode re-runs this effect after the version was already updated.
+  const previousVersionRef = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    runStorageMigrations();
+    const version = runStorageMigrations();
+    if (previousVersionRef.current === undefined) previousVersionRef.current = version;
   }, []);
 
   // --- User storage sync (restore localStorage from server for saveToServer users) ---
@@ -175,8 +178,14 @@ export default function Layout({ children }: LayoutProps) {
     if (!config || startupFiredRef.current) return;
     startupFiredRef.current = true;
 
+    // Version changed since the last visit: show revision history in place of What's New
+    const previousVersion = previousVersionRef.current;
+    const versionChanged = !!previousVersion && previousVersion !== APP_VERSION;
+    if (versionChanged && config.whatsNewUrl) {
+      showURLWindow(config.whatsNewUrl, true, "full", true, true, "Revision History");
+    }
     // What's New — full-window mode
-    if (config.showWhatsNewOnStartup && config.whatsNewUrl) {
+    else if (config.showWhatsNewOnStartup && config.whatsNewUrl) {
       showURLWindow(config.whatsNewUrl, true, "full", true, true, "What's New");
     }
     // What's New — popup / toast mode (only if full-window mode is NOT enabled)

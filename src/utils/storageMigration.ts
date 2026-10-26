@@ -141,7 +141,7 @@ export interface StorageMigration {
 }
 
 export const STORAGE_VERSION_KEY = "currentVersion";
-const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "0.0.0";
 
 // Add rules here. Each runs once for users upgrading from an older version; order does not matter.
 export const STORAGE_MIGRATIONS: StorageMigration[] = [
@@ -211,10 +211,12 @@ export interface RunStorageMigrationsOptions {
 /**
  * Applies every rule newer than the stored currentVersion, up to appVersion.
  * A missing currentVersion is treated as 0.0.0, so all rules apply to it.
+ * Returns the currentVersion that was stored before this call, or null if none.
  */
-export function runStorageMigrations({ appVersion = APP_VERSION, migrations = STORAGE_MIGRATIONS }: RunStorageMigrationsOptions = {}): void {
-  const storedVersion = getStorageItem(STORAGE_VERSION_KEY) ?? "0.0.0";
-  if (compareVersions(storedVersion, appVersion) >= 0) return;
+export function runStorageMigrations({ appVersion = APP_VERSION, migrations = STORAGE_MIGRATIONS }: RunStorageMigrationsOptions = {}): string | null {
+  const previousVersion = getStorageItem(STORAGE_VERSION_KEY);
+  const storedVersion = previousVersion ?? "0.0.0";
+  if (compareVersions(storedVersion, appVersion) >= 0) return previousVersion;
 
   const pending = migrations
     .filter((migration) => compareVersions(migration.version, storedVersion) > 0 && compareVersions(migration.version, appVersion) <= 0)
@@ -224,8 +226,9 @@ export function runStorageMigrations({ appVersion = APP_VERSION, migrations = ST
     pending.forEach((migration) => migration.actions.forEach(applyStorageAction));
   } catch (error) {
     console.error("[StorageMigration] Failed; will retry on next load:", error);
-    return;
+    return previousVersion;
   }
 
   setStorageItem(STORAGE_VERSION_KEY, appVersion);
+  return previousVersion;
 }
