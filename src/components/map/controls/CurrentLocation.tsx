@@ -4,6 +4,8 @@ import { FaCrosshairs } from "react-icons/fa";
 import Map from "ol/Map";
 import { MapControlButton } from "@/components/ui/MapControlButton";
 import { useToast } from "@/hooks/useToast";
+import { useLocationFollowStore } from "@/stores/locationFollowStore";
+import { showTemporaryMarker } from "@/utils/openlayers/LocationMarker";
 
 // React component for the current location button
 interface CurrentLocationButtonProps {
@@ -19,7 +21,10 @@ export const CurrentLocationButton = React.memo(({ map }: CurrentLocationButtonP
     const options = { timeout: 5000 };
     navigator.geolocation.getCurrentPosition(
       function (pos) {
-        const coords = fromLonLat([pos.coords.longitude, pos.coords.latitude]);
+        const lonLat: [number, number] = [pos.coords.longitude, pos.coords.latitude];
+        // Follow mode already draws the live marker.
+        if (useLocationFollowStore.getState().mode === "off") showTemporaryMarker({ lonLat, accuracy: pos.coords.accuracy });
+        const coords = fromLonLat(lonLat);
         map.getView().animate({
           center: coords,
           zoom: 16,
