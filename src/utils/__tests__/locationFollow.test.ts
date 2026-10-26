@@ -1,8 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type Map from "ol/Map";
 import { useMapStore } from "@/stores/mapStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { RECENTER_INTERVAL_MS, createUserMoveInteraction, getCurrentFix, startUserWatch, stopUserWatch, updateFollowView } from "@/utils/openlayers/LocationFollow";
+import { showTemporaryMarker } from "@/utils/openlayers/LocationMarker";
 
 const fix = { lonLat: [-79.3832, 43.6532] as [number, number], accuracy: 10 };
 const coordinate = [-8827000, 5400000];
@@ -105,6 +106,25 @@ describe("LocationFollow engine", () => {
       setGeolocation(undefined);
 
       await expect(getCurrentFix()).rejects.toThrow("Geolocation unavailable");
+    });
+  });
+
+  describe("startUserWatch with a pending temporary marker", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("keeps the follow marker when following starts before the timeout", () => {
+      showTemporaryMarker(fix);
+      vi.mocked(LayerManager.removeLayer).mockClear();
+      startUserWatch(vi.fn(), vi.fn());
+
+      vi.advanceTimersByTime(5000);
+      expect(LayerManager.removeLayer).not.toHaveBeenCalled();
     });
   });
 

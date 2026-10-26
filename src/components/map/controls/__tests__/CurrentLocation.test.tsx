@@ -1,11 +1,17 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import CurrentLocation from "@/components/map/controls/CurrentLocation";
+import { useLocationFollowStore } from "@/stores/locationFollowStore";
+import { showTemporaryMarker } from "@/utils/openlayers/LocationMarker";
 import type Map from "ol/Map";
 
 // Mock ol/proj
 vi.mock("ol/proj", () => ({
   fromLonLat: vi.fn((coords) => coords), // Simple mock that returns the same coordinates
+}));
+
+vi.mock("@/utils/openlayers/LocationMarker", () => ({
+  showTemporaryMarker: vi.fn(),
 }));
 
 const mockMap = {
@@ -31,6 +37,7 @@ Object.defineProperty(global, "navigator", {
 describe("CurrentLocation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    useLocationFollowStore.setState({ mode: "off" });
     mockMap.getView = vi.fn().mockReturnValue(mockView);
   });
 
@@ -69,6 +76,37 @@ describe("CurrentLocation", () => {
       zoom: 16,
       duration: 1000,
     });
+  });
+
+  it("shows a location marker on successful geolocation", () => {
+    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+      success({
+        coords: {
+          longitude: -79.3832,
+          latitude: 43.6532,
+          accuracy: 12,
+        },
+      });
+    });
+
+    render(<CurrentLocation map={mockMap} />);
+
+    fireEvent.click(screen.getByTitle("Zoom to current location"));
+
+    expect(showTemporaryMarker).toHaveBeenCalledWith({ lonLat: [-79.3832, 43.6532], accuracy: 12 });
+  });
+
+  it("skips the temporary marker while following", () => {
+    useLocationFollowStore.setState({ mode: "follow" });
+    mockGeolocation.getCurrentPosition.mockImplementation((success) => {
+      success({ coords: { longitude: -79.3832, latitude: 43.6532, accuracy: 12 } });
+    });
+
+    render(<CurrentLocation map={mockMap} />);
+    fireEvent.click(screen.getByTitle("Zoom to current location"));
+
+    expect(showTemporaryMarker).not.toHaveBeenCalled();
+    expect(mockView.animate).toHaveBeenCalled();
   });
 
   it("handles geolocation error gracefully", () => {
