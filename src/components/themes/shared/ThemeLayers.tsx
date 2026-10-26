@@ -1,10 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import type OLMap from "ol/Map";
 import { Layer } from "ol/layer";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
 import { LayerHelpers, OL_DATA_TYPES } from "@/utils/openlayers";
 import { useMapStore } from "@/stores/mapStore";
+import { usePopupStore } from "@/stores/popupStore";
+import { getURLParameter } from "@/utils/helpersUrl";
+import { queryFeaturesByAttribute, getFeatureExtent, getFeatureCenter } from "@/utils/geoServerClient";
+import ThemePopupContent from "./ThemePopupContent";
 import { FaInfoCircle } from "react-icons/fa";
 
 interface ToggleLayerConfig {
@@ -18,6 +23,51 @@ interface ToggleLayerConfig {
   displayFieldName?: string;
   legendStyleName?: string;
   description?: string;
+  /** Maps a URL parameter (e.g. BAGTAG=<arn>) to a feature attribute to zoom to. */
+  UrlParameter?: { parameterName: string; fieldName: string };
+}
+
+// Module scope so a URL parameter zooms once per page load, not on every theme mount.
+const handledUrlParameters = new Set<string>();
+
+async function zoomToUrlParameterFeature(
+  map: OLMap,
+  layerConfig: ToggleLayerConfig,
+  serverUrl: string,
+  fieldName: string,
+  value: string,
+  popupLogoImage?: string,
+) {
+  try {
+    const result = await queryFeaturesByAttribute({
+      serviceUrl: `${serverUrl}wfs`,
+      layerName: layerConfig.layerName,
+      attributeName: fieldName,
+      attributeValue: value,
+      maxFeatures: 1,
+    });
+    const feature = result.features?.[0];
+    if (!result.success || !feature) return;
+
+    const extent = getFeatureExtent(feature);
+    if (extent) {
+      map.getView().fit(extent, { size: map.getSize(), duration: 1000, padding: [20, 20, 20, 20], minResolution: 1 });
+    }
+
+    const center = getFeatureCenter(feature);
+    if (center) {
+      usePopupStore
+        .getState()
+        .show(
+          center,
+          <ThemePopupContent properties={feature.properties ?? {}} moreInfoUrlFieldName={layerConfig.moreInfoUrlFieldName} popupLogoImage={popupLogoImage} />,
+          layerConfig.displayName,
+          layerConfig.layerName,
+        );
+    }
+  } catch (error) {
+    console.error(`Error zooming to ${layerConfig.layerName} feature:`, error);
+  }
 }
 
 interface ThemeLayersProps {
@@ -180,6 +230,21 @@ export default function ThemeLayers({ layers, themeId, popupLogoImage, onVisibil
     // map.on("moveend", handleMoveEnd);
     // return () => map.un("moveend", handleMoveEnd);
   }, [map, fetchAllFeatureCounts]);
+
+  // Zoom to features named by URL parameters configured via UrlParameter on a toggle layer
+  useEffect(() => {
+    if (!map) return;
+    layers.forEach((layerConfig) => {
+      if (!layerConfig.UrlParameter) return;
+      const { parameterName, fieldName } = layerConfig.UrlParameter;
+      const value = getURLParameter(parameterName);
+      const key = `${layerConfig.layerName}:${parameterName}`;
+      if (!value || handledUrlParameters.has(key)) return;
+      handledUrlParameters.add(key);
+      const serverUrl = layerConfig.serverUrl.endsWith("/") ? layerConfig.serverUrl : layerConfig.serverUrl + "/";
+      void zoomToUrlParameterFeature(map, layerConfig, serverUrl, fieldName, value, popupLogoImage);
+    });
+  }, [map, layers, popupLogoImage]);
 
   const handleToggle = (layerName: string, checked: boolean) => {
     const newStates = { ...layerStates, [layerName]: checked };
