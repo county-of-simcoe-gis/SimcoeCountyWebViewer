@@ -172,9 +172,12 @@ export class InteractionManager extends Interaction {
   override handleEvent(event: MapBrowserEvent<PointerEvent>): boolean {
     const eventType = event.type as InteractionEventType;
 
-    // Suppress the right-click context menu when any registered layer requests it.
-    if (eventType === "contextmenu" && LayerManager.hasRightClickSuppressLayer()) {
+    // Block the browser menu on every map right-click, even when no handler applies.
+    if (eventType === "contextmenu") {
       event.originalEvent.preventDefault();
+    }
+
+    if (eventType === "contextmenu" && LayerManager.hasRightClickSuppressLayer()) {
       return false;
     }
 
@@ -211,10 +214,6 @@ export class InteractionManager extends Interaction {
         return false;
       }
       this.lastClickTime = now;
-    }
-
-    if (eventType === "contextmenu") {
-      event.originalEvent.preventDefault();
     }
 
     if (eventType === "singleclick") {

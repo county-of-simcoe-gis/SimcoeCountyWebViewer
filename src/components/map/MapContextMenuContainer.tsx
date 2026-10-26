@@ -271,11 +271,6 @@ export const MapContextMenuContainer: React.FC = () => {
     setMenuState(null);
   }, []);
 
-  // Check if context menu should be disabled
-  const checkDisableFlags = useCallback(() => {
-    return useMapStore.getState().isToolActive();
-  }, []);
-
   // Initialize identify icon layer
   useEffect(() => {
     if (!map || identifyIconLayerRef.current) return;
@@ -324,9 +319,6 @@ export const MapContextMenuContainer: React.FC = () => {
       id: "context-menu",
       eventType: "contextmenu",
       priority: 100, // Standard priority
-      conditions: {
-        checkDisableFlags,
-      },
       handler: async (coordinate, pixel, event) => {
         // Handle context menu display
         handleContextMenu(coordinate, pixel, event);
@@ -337,7 +329,7 @@ export const MapContextMenuContainer: React.FC = () => {
     return () => {
       unregisterHandler("context-menu");
     };
-  }, [map, handleContextMenu, checkDisableFlags, registerHandler, unregisterHandler]);
+  }, [map, handleContextMenu, registerHandler, unregisterHandler]);
 
   if (!menuState?.visible) {
     return null;
