@@ -23,7 +23,8 @@
       "visible": true,
       "zIndex": 202,
       "clickable": true,
-      "displayFieldName": "Name"
+      "displayFieldName": "Name",
+      "UrlParameter": { "parameterName": "LANDFILL", "fieldName": "_siteNumber" }
     },
     {
       "displayName": "Bag Tag Locations",
@@ -32,7 +33,8 @@
       "visible": true,
       "zIndex": 203,
       "clickable": true,
-      "displayFieldName": "Name"
+      "displayFieldName": "Name",
+      "UrlParameter": { "parameterName": "BAGTAG", "fieldName": "arn" }
     }
   ]
 }
