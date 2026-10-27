@@ -5,6 +5,9 @@ import { bbox as bboxStrategy } from "ol/loadingstrategy";
 import type Feature from "ol/Feature";
 import type { Projection } from "ol/proj";
 import type { Extent } from "ol/extent";
+import { Style, Fill, Stroke, Text } from "ol/style";
+import type { FeatureLike } from "ol/Feature";
+import type { StyleFunction } from "ol/style/Style";
 import { buildEsriStyleFunction, type EsriRenderer } from "@/utils/esriSymbology";
 import { buildQueryUrl, queryJSON, resolveToken, timeWhereClause } from "@/utils/openlayers/arcgisQuery";
 import { TIME_VALUE_APPLIER_PROPERTY, type TimeValueApplier } from "@/utils/timeDimension";
@@ -18,12 +21,15 @@ export interface ArcGISFeatureLayerOptions {
   timeField?: string;
   // ISO timestamp of the time slice to load; undefined loads all features.
   timeValue?: string;
+  // Attribute drawn as text on each feature; omit for no labels.
+  labelField?: string;
 }
 
 export interface ArcGISFeatureLayerInfo {
   objectIdField: string;
   renderer?: EsriRenderer;
   timeField?: string;
+  fieldNames?: string[];
 }
 
 export async function fetchFeatureLayerInfo(layerUrl: string, secured: boolean): Promise<ArcGISFeatureLayerInfo> {
@@ -36,6 +42,7 @@ export async function fetchFeatureLayerInfo(layerUrl: string, secured: boolean):
     objectIdField?: string;
     drawingInfo?: { renderer?: EsriRenderer };
     timeInfo?: { startTimeField?: string };
+    fields?: Array<{ name?: string }>;
     error?: { message?: string };
   };
   if (data.error) throw new Error(data.error.message ?? "ArcGIS layer metadata request failed");
@@ -43,6 +50,7 @@ export async function fetchFeatureLayerInfo(layerUrl: string, secured: boolean):
     objectIdField: data.objectIdField || "OBJECTID",
     renderer: data.drawingInfo?.renderer,
     timeField: data.timeInfo?.startTimeField || undefined,
+    fieldNames: data.fields?.map((field) => field.name ?? ""),
   };
 }
 
@@ -81,13 +89,62 @@ async function fetchFeaturesInExtent(layerUrl: string, secured: boolean, extent:
   return features;
 }
 
+type StyleResult = Style | Style[] | void;
+
+const LABEL_FONT = "12px sans-serif";
+
+function toStyleArray(result: StyleResult): Style[] {
+  if (!result) return [];
+  return Array.isArray(result) ? result : [result];
+}
+
+const TEMPLATE_PLACEHOLDER = /\[([^\]]+)\]/g;
+
+/** Field names used by a label setting: "[A] km/h [B]" gives ["A", "B"]; a bare name gives itself. */
+function getLabelFields(labelField: string): string[] {
+  if (!labelField.includes("[")) return [labelField.trim()];
+  return [...labelField.matchAll(TEMPLATE_PLACEHOLDER)].map((match) => match[1].trim());
+}
+
+function attributeText(value: unknown): string {
+  return value === null || value === undefined ? "" : String(value);
+}
+
+function formatLabel(labelField: string, feature: FeatureLike): string {
+  if (!labelField.includes("[")) return attributeText(feature.get(labelField));
+  return labelField.replace(TEMPLATE_PLACEHOLDER, (_placeholder: string, name: string) => attributeText(feature.get(name.trim())));
+}
+
+function buildLabelStyleFunction(labelField: string): StyleFunction {
+  return (feature: FeatureLike) => {
+    const text = formatLabel(labelField, feature).trim();
+    if (!text) return undefined;
+    return new Style({
+      text: new Text({
+        text,
+        font: LABEL_FONT,
+        fill: new Fill({ color: "#000000" }),
+        stroke: new Stroke({ color: "#ffffff", width: 3 }),
+        offsetY: -12,
+      }),
+    });
+  };
+}
+
+/** Draws the renderer symbol and the label text as one style array. */
+function combineStyles(rendererStyle: StyleFunction | undefined, labelStyle: StyleFunction | undefined): StyleFunction | undefined {
+  if (!labelStyle) return rendererStyle;
+  return (feature, resolution) => [...toStyleArray(rendererStyle?.(feature, resolution)), ...toStyleArray(labelStyle(feature, resolution))];
+}
+
 /**
  * Vector layer for a single ArcGIS feature layer. Features are re-queried for each map extent
  * (bbox strategy); ids come from the object id field so overlapping loads don't duplicate features.
  */
 export function createArcGISFeatureLayer(layerUrl: string, secured: boolean, options: ArcGISFeatureLayerOptions = {}): VectorLayer<VectorSource> {
+  const labelStyle = options.labelField ? buildLabelStyleFunction(options.labelField) : undefined;
   const styleFor = (renderer?: EsriRenderer) =>
-    renderer && (renderer.type === "simple" || renderer.type === "uniqueValue" || renderer.type === "classBreaks") ? buildEsriStyleFunction(renderer) : undefined;
+    combineStyles(renderer && (renderer.type === "simple" || renderer.type === "uniqueValue" || renderer.type === "classBreaks") ? buildEsriStyleFunction(renderer) : undefined, labelStyle);
 
   let infoPromise: Promise<ArcGISFeatureLayerInfo> | undefined;
   const getInfo = (): Promise<ArcGISFeatureLayerInfo> => {
@@ -95,6 +152,10 @@ export function createArcGISFeatureLayer(layerUrl: string, secured: boolean, opt
     infoPromise ??= fetchFeatureLayerInfo(layerUrl, secured)
       .then((info) => {
         if (!options.renderer) olLayer.setStyle(styleFor(info.renderer));
+        if (options.labelField && info.fieldNames) {
+          const missing = getLabelFields(options.labelField).filter((name) => !info.fieldNames?.includes(name));
+          if (missing.length > 0) console.warn(`[arcgisFeatureLayer] labelField references missing field(s) ${missing.join(", ")} in ${layerUrl}`);
+        }
         return info;
       })
       .catch((error: unknown) => {

@@ -123,6 +123,7 @@ export interface AppConfig {
       urlType: string;
       type: string;
       descriptionOverride?: string;
+      labelField?: string; // Field name or "[FIELD] text" template drawn as text on single-layer FeatureArcGISRest sources
       showAllFields?: boolean;
     }>;
     helpLink: string;

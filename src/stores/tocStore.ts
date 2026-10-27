@@ -94,6 +94,7 @@ export interface TOCLayer {
   projection?: string; // Projection override for non-WMS layers
   refreshInterval?: number; // Timed refresh interval in seconds; 0 or undefined means none
   timeDimension?: TimeDimension; // WMS TIME dimension (discrete list or ISO range) stepped by refresh and the time slider
+  labelField?: string; // Field name or "[FIELD] text" template drawn as text on single-layer FeatureArcGISRest layers
   showAllFields?: boolean; // Show fields normally hidden by isExcludedKey
 }
 
@@ -143,6 +144,7 @@ export interface TOCSource {
   projection?: string;
   groups?: string[];
   descriptionOverride?: string;
+  labelField?: string; // Field name or "[FIELD] text" template drawn as text on single-layer FeatureArcGISRest sources
   appToken?: boolean; // When true, use server-side ArcGIS app token for REST requests
 }
 
@@ -2637,6 +2639,7 @@ export const useTOCStore = create<TOCState>()(
                 name: layer.name,
                 projection: layer.projection || "EPSG:3857",
                 secured: !!layer.secured,
+                labelField: layer.labelField,
                 timeValue:
                   (!isDirectLayer || layerSourceType === OL_DATA_TYPES.FeatureArcGISRest) && layer.timeDimension ? getTimeValueAt(layer.timeDimension, layer.timeDimension.defaultIndex) : undefined,
               },
