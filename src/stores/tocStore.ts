@@ -2658,6 +2658,8 @@ export const useTOCStore = create<TOCState>()(
                     disableParcelClick: false,
                     extendedProperties: layer.extendedProperties,
                     wfsUrl: layer.wfsUrl,
+                    isArcGIS: layerSourceType === OL_DATA_TYPES.FeatureArcGISRest || layerSourceType === OL_DATA_TYPES.ImageArcGISRest,
+                    arcgisFeatureService: layerSourceType === OL_DATA_TYPES.FeatureArcGISRest,
                     group: group.label,
                     INFO_FORMAT: layer.infoFormat,
                   });

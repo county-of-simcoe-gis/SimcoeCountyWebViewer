@@ -12,6 +12,7 @@ import type { IdentifyResult } from "@/components/ResultsPopup";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 import { parseArcgisLayerUrl } from "@/lib/attributeTable/arcgis";
 import { getArcgisFieldMetadata, type ArcgisLayerFieldMetadata } from "@/utils/arcgisFieldMetadata";
+import { normalizeFeatureQueryResponse, pointToEsriEnvelopeJSON } from "@/utils/identifyGeometry";
 import ThemePopupContent from "@/components/themes/shared/ThemePopupContent";
 import type TileWMS from "ol/source/TileWMS";
 import type ImageWMS from "ol/source/ImageWMS";
@@ -134,12 +135,13 @@ export default function LiveLayerClick() {
       const viewResolution = map.getView().getResolution();
       const source = layer.getSource();
       const isArcGISLayer = layer.get("isArcGIS") || false;
+      const isFeatureService = layer.get("arcgisFeatureService") === true;
 
       // Vector layers with already-loaded features (e.g. Road Closures' Blocks/Closures/Detours
       // layers, populated once from ArcGIS GeoJSON — see RoadClosuresLayers.tsx) have no
       // server-side identify endpoint to call; hit-test the already-loaded features at the
       // clicked pixel locally instead of making a network request.
-      if (source instanceof VectorSource) {
+      if (source instanceof VectorSource && !isFeatureService) {
         if (boxExtent) {
           const hitFeatures = source.getFeaturesInExtent(boxExtent).filter((feature) => feature.getGeometry()?.intersectsExtent(boxExtent));
           hitFeatures.forEach((feature) => feature.setProperties({ layerDisplayName: displayName }));
@@ -191,11 +193,15 @@ export default function LiveLayerClick() {
         const zoom = map.getView().getZoom() || 0;
         const tolerance = 20 - zoom;
 
-        const geometry = boxExtent ? JSON.stringify({ xmin: boxExtent[0], ymin: boxExtent[1], xmax: boxExtent[2], ymax: boxExtent[3], spatialReference: { wkid: 3857 } }) : coordinate.join(",");
+        const geometry = boxExtent
+          ? JSON.stringify({ xmin: boxExtent[0], ymin: boxExtent[1], xmax: boxExtent[2], ymax: boxExtent[3], spatialReference: { wkid: 3857 } })
+          : isFeatureService
+            ? pointToEsriEnvelopeJSON(coordinate, viewResolution ?? 0)
+            : coordinate.join(",");
 
         url = wfsUrl
           .replace("#GEOMETRY#", encodeURIComponent(geometry))
-          .replace("#GEOMETRYTYPE#", boxExtent ? "esriGeometryEnvelope" : "esriGeometryPoint")
+          .replace("#GEOMETRYTYPE#", boxExtent || isFeatureService ? "esriGeometryEnvelope" : "esriGeometryPoint")
           .replace("#TOLERANCE#", String(tolerance >= 10 ? tolerance : 10))
           .replace("#EXTENT#", extent.join(","))
           .replace("#RESOLUTION#", arcgisResolution);
@@ -246,6 +252,10 @@ export default function LiveLayerClick() {
           } catch {
             return [];
           }
+        }
+
+        if (isFeatureService && result) {
+          result = normalizeFeatureQueryResponse(result);
         }
 
         // Parse features based on layer type
