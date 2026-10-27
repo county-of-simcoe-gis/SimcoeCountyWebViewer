@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { get as getProjection } from "ol/proj";
+import Feature from "ol/Feature";
+import Point from "ol/geom/Point";
+import type { Style } from "ol/style";
 import { createArcGISFeatureLayer } from "@/utils/openlayers/arcgisFeatureLayer";
 import type { EsriRenderer } from "@/utils/esriSymbology";
 import { TIME_VALUE_APPLIER_PROPERTY, type TimeValueApplier } from "@/utils/timeDimension";
@@ -163,5 +166,56 @@ describe("createArcGISFeatureLayer", () => {
     });
 
     expect(olLayer.getStyleFunction()).toBeDefined();
+  });
+
+  it("draws the label field as text alongside the renderer symbol", () => {
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false, { objectIdField: "OBJECTID", renderer: simpleRenderer, labelField: "STATION_NAME" });
+    const feature = new Feature({ geometry: new Point([0, 0]), STATION_NAME: "Barrie" });
+
+    const styles = olLayer.getStyleFunction()!(feature, 1) as Style[];
+
+    expect(styles).toHaveLength(2);
+    expect(styles[1].getText()?.getText()).toBe("Barrie");
+    expect(olLayer.getDeclutter()).toBeFalsy();
+  });
+
+  it("omits text for features without a label value", () => {
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false, { objectIdField: "OBJECTID", renderer: simpleRenderer, labelField: "STATION_NAME" });
+    const feature = new Feature({ geometry: new Point([0, 0]) });
+
+    const styles = olLayer.getStyleFunction()!(feature, 1) as Style[];
+
+    expect(styles.every((style) => !style.getText())).toBe(true);
+  });
+
+  it("renders a [FIELD] template as text", () => {
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false, { objectIdField: "OBJECTID", labelField: "[WIND_SPEED] km/h [WIND_CHILL]C" });
+    const feature = new Feature({ geometry: new Point([0, 0]), WIND_SPEED: 12, WIND_CHILL: -5 });
+
+    const styles = olLayer.getStyleFunction()!(feature, 1) as Style[];
+
+    expect(styles[0].getText()?.getText()).toBe("12 km/h -5C");
+  });
+
+  it("leaves out empty template values", () => {
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false, { objectIdField: "OBJECTID", labelField: "[WIND_SPEED] km/h [WIND_CHILL]C" });
+    const feature = new Feature({ geometry: new Point([0, 0]), WIND_CHILL: 3 });
+
+    const styles = olLayer.getStyleFunction()!(feature, 1) as Style[];
+
+    expect(styles[0].getText()?.getText()).toBe("km/h 3C");
+  });
+
+  it("warns when the label field is not in the layer schema", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.mocked(fetch)
+      .mockResolvedValueOnce(jsonResponse({ objectIdField: "OBJECTID", fields: [{ name: "NAME" }] }) as unknown as Response)
+      .mockResolvedValueOnce(jsonResponse(esriPage([])) as unknown as Response);
+    const olLayer = createArcGISFeatureLayer(LAYER_URL, false, { labelField: "STATION_NAME" });
+
+    loadExtent(olLayer, EXTENT);
+
+    await vi.waitFor(() => expect(warn).toHaveBeenCalledWith(expect.stringContaining("STATION_NAME")));
+    warn.mockRestore();
   });
 });

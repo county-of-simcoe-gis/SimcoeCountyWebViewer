@@ -1019,6 +1019,7 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       layerUrl,
       projection: source.projection || "EPSG:3857",
       timeDimension,
+      labelField: isFeatureLayer ? source.labelField : undefined,
     };
 
     groups.push({
