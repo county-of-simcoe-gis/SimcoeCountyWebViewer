@@ -88,6 +88,93 @@ describe("type layer entries with sourceType FeatureArcGISRest", () => {
     expect(layer.isQueryable).toBe(true);
   });
 
+  it("makes the feature layer identifiable through its FeatureServer query endpoint", async () => {
+    stubMetadata(featureMetadata());
+    const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+    const serviceRoot = "https://services.arcgis.com/wjcPoefzjpzCgffS/arcgis/rest/services/Active_Fire_Danger_Map_of_Canada/FeatureServer";
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [
+        {
+          type: "layer",
+          layerUrl: serviceRoot,
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Fire Danger Map",
+          layerName: "0",
+          sourceType: "FeatureArcGISRest",
+          source: "rest",
+          projection: "EPSG:3857",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+      ],
+      config,
+    );
+
+    const [layer] = groups[0].layers;
+    expect(layer.liveLayer).toBe(true);
+    expect(layer.wfsUrl).toBe(
+      `${serviceRoot}/0/query?geometry=#GEOMETRY#&geometryType=#GEOMETRYTYPE#&inSR=3857&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&outSR=3857&resultRecordCount=50&f=json`,
+    );
+  });
+
+  it("makes MapServer and WMS direct layers identifiable while WMTS stays non-queryable", async () => {
+    stubMetadata(featureMetadata());
+    const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [
+        {
+          type: "layer",
+          layerUrl: "https://gis.example.ca/gis/rest/services/OpenData/MapServer/76",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "LSRCA Floodplain",
+          layerName: "76",
+          sourceType: "ImageArcGISRest",
+          source: "rest",
+          legendUrl: "https://example.com/legend.png",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+        {
+          type: "layer",
+          layerUrl: "https://cwfis.example.ca/geoserver/public/dsr/ows?service=wms&version=1.3.0&request=GetCapabilities",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Daily Severity Rating",
+          layerName: "dsr",
+          sourceType: "ImageWMS",
+          source: "WMS",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+        {
+          type: "layer",
+          layerUrl: "https://tiles.example.com/wmts",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Basemap",
+          layerName: "basemap",
+          sourceType: "WMTS",
+          source: "WMTS",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+      ],
+      config,
+    );
+
+    const layers = Object.fromEntries(groups[0].layers.map((layer) => [layer.name, layer]));
+    expect(layers["76"].isQueryable).toBe(true);
+    expect(layers["76"].wfsUrl).toContain("https://gis.example.ca/gis/rest/services/OpenData/MapServer/identify?");
+    expect(layers["76"].wfsUrl).toContain("layers=visible%3A76");
+    expect(layers["dsr"].isQueryable).toBe(true);
+    expect(layers["dsr"].liveLayer).toBe(true);
+    expect(layers["basemap"].isQueryable).toBe(false);
+  });
+
   it("loads the time slider values from the layer's time field", async () => {
     vi.stubGlobal(
       "fetch",

@@ -6,7 +6,37 @@ import MultiLineString from "ol/geom/MultiLineString";
 import Polygon from "ol/geom/Polygon";
 import MultiPolygon from "ol/geom/MultiPolygon";
 import Circle from "ol/geom/Circle";
-import { geometryToEsriJSON, getEsriGeometryType } from "@/utils/identifyGeometry";
+import { geometryToEsriJSON, getEsriGeometryType, normalizeFeatureQueryResponse, pointToEsriEnvelopeJSON } from "@/utils/identifyGeometry";
+
+describe("pointToEsriEnvelopeJSON", () => {
+  it("builds a search envelope around the point in EPSG:3857", () => {
+    const envelope = JSON.parse(pointToEsriEnvelopeJSON([100, 200], 2));
+    expect(envelope).toEqual({ xmin: 80, ymin: 180, xmax: 120, ymax: 220, spatialReference: { wkid: 3857 } });
+  });
+});
+
+describe("normalizeFeatureQueryResponse", () => {
+  it("maps query features to identify results with the response geometryType", () => {
+    const rings = [
+      [
+        [0, 0],
+        [1, 0],
+        [1, 1],
+        [0, 0],
+      ],
+    ];
+    const result = normalizeFeatureQueryResponse({
+      geometryType: "esriGeometryPolygon",
+      features: [{ attributes: { OBJECTID: 1 }, geometry: { rings } }],
+    });
+
+    expect(result.results).toEqual([{ attributes: { OBJECTID: 1 }, geometry: { rings }, geometryType: "esriGeometryPolygon" }]);
+  });
+
+  it("returns no results when the response has no features", () => {
+    expect(normalizeFeatureQueryResponse({}).results).toEqual([]);
+  });
+});
 
 describe("geometryToEsriJSON", () => {
   it("serializes a Point to ESRI point JSON", () => {

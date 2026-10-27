@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { GeoJSON, WKT } from "ol/format";
 import Feature from "ol/Feature";
 import Geometry from "ol/geom/Geometry";
-import { geometryToEsriJSON, getEsriGeometryType } from "@/utils/identifyGeometry";
+import { geometryToEsriJSON, getEsriGeometryType, normalizeFeatureQueryResponse, pointToEsriEnvelopeJSON } from "@/utils/identifyGeometry";
 import MultiPolygon from "ol/geom/MultiPolygon";
 import { useMapStore } from "@/stores/mapStore";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
@@ -160,6 +160,7 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
       const minScale = layer.get("minScale");
       const showAllFields = layer.get("showAllFields") === true;
       const isArcGISLayer = layer.get("isArcGIS") || false;
+      const isFeatureService = layer.get("arcgisFeatureService") === true;
 
       // Build axios config with auth headers for secured GeoServer layers
       // ArcGIS layers use URL-based tokens instead of Bearer headers
@@ -197,11 +198,12 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
 
           if (isArcGISLayer) {
             // Use ESRI JSON for ArcGIS layers
-            const esriGeometry = geometryToEsriJSON(geometry);
+            const isPointQuery = isFeatureService && geometry instanceof Point;
+            const esriGeometry = isFeatureService && geometry instanceof Point ? pointToEsriEnvelopeJSON(geometry.getCoordinates(), map.getView().getResolution() ?? 0) : geometryToEsriJSON(geometry);
             const mapSize = map.getSize() || [0, 0];
             const resolution = `${mapSize[0]},${mapSize[1]},96`;
             const extent = map.getView().calculateExtent();
-            const geometryType = getEsriGeometryType(geometry);
+            const geometryType = isPointQuery ? "esriGeometryEnvelope" : getEsriGeometryType(geometry);
 
             queryUrl = queryUrl
               .replace("#GEOMETRY#", encodeURIComponent(esriGeometry))
@@ -265,6 +267,10 @@ const Identify: React.FC<IdentifyProps> = ({ geometry, layerFilter }) => {
             } catch {
               console.warn(`Identify: Failed to parse WFS response from "${layerName}"`);
             }
+          }
+
+          if (result && isFeatureService) {
+            result = normalizeFeatureQueryResponse(result);
           }
 
           // Parse features from response
