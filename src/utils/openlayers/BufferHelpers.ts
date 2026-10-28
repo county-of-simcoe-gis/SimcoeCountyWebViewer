@@ -6,6 +6,7 @@
 import { Geometry, Point, LineString, Polygon, Circle } from "ol/geom";
 import { fromCircle } from "ol/geom/Polygon";
 import GeoJSON from "ol/format/GeoJSON";
+import { isEmpty } from "ol/extent";
 import proj4 from "proj4";
 import { register } from "ol/proj/proj4";
 import axiosInstance from "@/lib/axiosInstance";
@@ -39,8 +40,9 @@ export const getGeometryFromGeoJSON = (geoJSON: string): Geometry => {
  * @param geometry - OpenLayers geometry to buffer
  * @param distanceMeters - Buffer distance in meters
  * @param callback - Callback function that receives the buffered geometry
+ * @param onNoResult - Called when the buffer is empty (e.g. a negative distance larger than the shape)
  */
-export const bufferGeometry = async (geometry: Geometry, distanceMeters: number, callback: (bufferedGeometry: Geometry) => void): Promise<void> => {
+export const bufferGeometry = async (geometry: Geometry, distanceMeters: number, callback: (bufferedGeometry: Geometry) => void, onNoResult?: () => void): Promise<void> => {
   try {
     // Project geometry to UTM NAD83 for accuracy (same as old app)
     const utmGeometry = geometry.clone();
@@ -69,12 +71,20 @@ export const bufferGeometry = async (geometry: Geometry, distanceMeters: number,
     }
 
     const bufferedGeometry = getGeometryFromGeoJSON(geoJsonData);
+    if (isEmpty(bufferedGeometry.getExtent())) {
+      onNoResult?.();
+      return;
+    }
     bufferedGeometry.transform(nad83Proj, webMercatorProj);
 
     callback(bufferedGeometry);
   } catch (error) {
-    console.error("Server-side buffer error, falling back to client-side:", error);
-    // Fallback to client-side buffering if server fails
+    console.error("Server-side buffer error:", error);
+    // Client-side fallback cannot produce a correct inward buffer, so negatives have no result
+    if (distanceMeters < 0) {
+      onNoResult?.();
+      return;
+    }
     fallbackClientSideBuffer(geometry, distanceMeters, callback);
   }
 };
