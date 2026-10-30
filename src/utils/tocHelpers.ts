@@ -852,6 +852,7 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
     mergedGroups = mergedGroups.map((existingGroup) => {
       if (newGroup.label === existingGroup.label) {
         isDuplicateGroup = true;
+        existingGroup.primary = existingGroup.primary || newGroup.primary;
 
         newGroup.layers.forEach((sourceLayer) => {
           const newLayer = {
@@ -875,9 +876,7 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
   });
 
   if (alphaSort) {
-    return mergedGroups.sort((a, b) => {
-      return a.value.localeCompare(b.value);
-    });
+    return sortGroups(mergedGroups);
   } else {
     return mergedGroups;
   }
@@ -1127,7 +1126,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   }
 
   return {
-    groups: mergedGroups,
+    groups: sortGroups(mergedGroups),
     defaultGroupName,
     failedSources,
   };
@@ -1226,15 +1225,7 @@ const sortByIndexCompare = (a: TOCLayer, b: TOCLayer): number => {
   return b.drawIndex - a.drawIndex;
 };
 
-const sortGroupAlphaCompare = (a: TOCLayerGroup, b: TOCLayerGroup): number => {
-  if (a.value < b.value) {
-    return -1;
-  } else if (a.value > b.value) {
-    return 1;
-  } else {
-    return 0;
-  }
-};
+const sortGroupAlphaCompare = (a: TOCLayerGroup, b: TOCLayerGroup): number => a.label.localeCompare(b.label);
 
 const updateLayerIndex = (layers: TOCLayer[], preserveInitialOrder = false): TOCLayer[] => {
   let index = layers.length;
