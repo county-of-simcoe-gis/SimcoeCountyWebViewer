@@ -465,6 +465,19 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.9 (2026-10-29)
+
+- **Table of Contents Grouping** — Groups from primary sources stay together ahead of other sources, and groups are sorted by their display name so related groups groups sit side by side.
+- **Feature Layer Labels** — Feature layers can display labels from a configured label field.
+- **Feature Layer Identify** — Improved query handling and response normalization for feature layers in Identify.
+- **Bag Tag Locations** — Added a URL parameter to open bag tag purchase locations directly.
+- **Current Location Marker** — Updated the location marker and geolocation handling.
+- **Property Reports** — MPAC report sections are collapsible with updated styling, and Teranet plan images load through an image proxy.
+- **Legacy Viewer Links** — URL rewrites keep links from the legacy API v2 viewer working.
+- **Revision History on Update** — The revision history is shown when the app version changes, with storage migrations run on upgrade.
+- **MyMaps Buffer** — Fixed buffer handling for negative distances and improved error handling.
+- **Right-Click Menu** — Fixed context menu handling so the browser's default menu no longer appears over the map.
+
 ### v2.0.8 (2026-10-20)
 
 - **MyMaps Import** — Import KML, EsriJSON, and GeoJSON files into MyMaps.

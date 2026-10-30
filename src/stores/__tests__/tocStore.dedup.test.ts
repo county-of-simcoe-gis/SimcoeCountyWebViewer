@@ -702,6 +702,60 @@ describe("tocStore - LIST view deduplication", () => {
       expect(sourceFolderGroups[0].layers[0].id).toBe("layer2");
       expect(sourceFolderGroups[1].layers[0].id).toBe("layer1");
     });
+
+    it("keeps primary groups contiguous ahead of non-primary groups", () => {
+      const makeGroup = (value: string, primary: boolean): TOCLayerGroup => ({
+        value,
+        label: value,
+        defaultGroup: false,
+        url: "http://test.com/wms",
+        prefix: "",
+        visibleLayers: [],
+        wmsGroupUrl: "http://test.com/wms",
+        customRestUrl: "",
+        layers: [],
+        primary,
+      });
+
+      useTOCStore.getState().setLayerGroups("FOLDER", [makeGroup("Beta", false), makeGroup("Zulu", true), makeGroup("Alpha", true), makeGroup("Charlie", false)]);
+
+      const values = useTOCStore
+        .getState()
+        .layerFolderGroups.filter((group) => group.value !== MY_FAVOURITES_VALUE)
+        .map((group) => group.value);
+      expect(values).toEqual(["Alpha", "Zulu", "Beta", "Charlie"]);
+    });
+
+    it("orders primary groups by label so same-prefix labels stay together", () => {
+      const makeGroup = (value: string, label: string): TOCLayerGroup => ({
+        value,
+        label,
+        defaultGroup: false,
+        url: "http://test.com/wms",
+        prefix: "",
+        visibleLayers: [],
+        wmsGroupUrl: "http://test.com/wms",
+        customRestUrl: "",
+        layers: [],
+        primary: true,
+      });
+
+      useTOCStore
+        .getState()
+        .setLayerGroups("LIST", [
+          makeGroup("simcoe-secured:Emaps_Potential_Hazards", "Hazard Layers"),
+          makeGroup("simcoe-secured:Emaps_Water", "CI - Water"),
+          makeGroup("simcoe-secured:Emaps_Food", "CI - Food"),
+          makeGroup("simcoe-secured:Emaps_Solid_Waste_management", "Solid Waste Management"),
+          makeGroup("simcoe-secured:Emaps_Health", "CI - Health"),
+        ]);
+
+      const labels = useTOCStore
+        .getState()
+        .layerListGroups.filter((group) => group.value !== "all_layers" && group.value !== MY_FAVOURITES_VALUE)
+        .map((group) => group.label);
+      expect(labels).toEqual(["CI - Food", "CI - Health", "CI - Water", "Hazard Layers", "Solid Waste Management"]);
+    });
   });
 
   describe("Real-world scenario: Bruce Trail cross-workspace duplicates", () => {
