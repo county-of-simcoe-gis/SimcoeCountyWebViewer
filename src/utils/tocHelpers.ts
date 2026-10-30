@@ -852,6 +852,7 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
     mergedGroups = mergedGroups.map((existingGroup) => {
       if (newGroup.label === existingGroup.label) {
         isDuplicateGroup = true;
+        existingGroup.primary = existingGroup.primary || newGroup.primary;
 
         newGroup.layers.forEach((sourceLayer) => {
           const newLayer = {
@@ -875,9 +876,7 @@ export function mergeGroups(originalGroups: TOCLayerGroup[], newGroups: TOCLayer
   });
 
   if (alphaSort) {
-    return mergedGroups.sort((a, b) => {
-      return a.value.localeCompare(b.value);
-    });
+    return sortGroups(mergedGroups);
   } else {
     return mergedGroups;
   }
@@ -964,6 +963,15 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
   const isMapServerLayer = (source.sourceType || source.source) === OL_DATA_TYPES.ImageArcGISRest || (source.sourceType || source.source) === OL_DATA_TYPES.TileArcGISRest;
   const serverLegend = isMapServerLayer && !source.legendUrl ? await loadMapServerLayerLegend(source, layerName) : null;
   const isWMSLayer = (source.sourceType || source.source) === OL_DATA_TYPES.ImageWMS || (source.sourceType || source.source) === OL_DATA_TYPES.TileWMS;
+  // WMTS/XYZ direct layers stay non-queryable.
+  const isIdentifiable = isFeatureLayer || isMapServerLayer || isWMSLayer;
+  const identifyTokenParam = isFeatureLayer || isMapServerLayer ? await resolveArcGISTokenParam(source) : "";
+  const tokenSuffix = identifyTokenParam ? `&token=${identifyTokenParam}` : "";
+  const identifyWfsUrl = isFeatureLayer
+    ? `${layerUrl}/query?geometry=#GEOMETRY#&geometryType=#GEOMETRYTYPE#&inSR=3857&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&outSR=3857&resultRecordCount=50&f=json${tokenSuffix}`
+    : isMapServerLayer
+      ? `${mapServerRootUrl(source.layerUrl)}/identify?geometry=#GEOMETRY#&geometryType=#GEOMETRYTYPE#&layers=visible%3A${layerName}&sr=3857&datumTransformations=3857&tolerance=#TOLERANCE#&mapExtent=#EXTENT#&imageDisplay=#RESOLUTION#&maxAllowableOffset=10&returnGeometry=true&returnFieldName=false&f=json${tokenSuffix}`
+      : undefined;
   const wmsStyleUrl =
     isWMSLayer && source.layerUrl.includes("/geoserver/")
       ? `${source.layerUrl.split("?")[0]}?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=${encodeURIComponent(layerName)}`
@@ -996,8 +1004,9 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       opacity: 1,
       minScale: 0,
       maxScale: 100000000000,
-      liveLayer: false,
-      isQueryable: isFeatureLayer,
+      liveLayer: isIdentifiable,
+      isQueryable: isIdentifiable,
+      wfsUrl: identifyWfsUrl,
       groupName,
       group: groupName,
       userLayer: false,
@@ -1009,6 +1018,7 @@ async function getGroupsFromDirectLayer(source: TOCSource): Promise<TOCLayerGrou
       layerUrl,
       projection: source.projection || "EPSG:3857",
       timeDimension,
+      labelField: isFeatureLayer ? source.labelField : undefined,
     };
 
     groups.push({
@@ -1116,7 +1126,7 @@ export async function loadLayerGroupsFromSources(sources: TOCSource[], config: C
   }
 
   return {
-    groups: mergedGroups,
+    groups: sortGroups(mergedGroups),
     defaultGroupName,
     failedSources,
   };
@@ -1215,15 +1225,7 @@ const sortByIndexCompare = (a: TOCLayer, b: TOCLayer): number => {
   return b.drawIndex - a.drawIndex;
 };
 
-const sortGroupAlphaCompare = (a: TOCLayerGroup, b: TOCLayerGroup): number => {
-  if (a.value < b.value) {
-    return -1;
-  } else if (a.value > b.value) {
-    return 1;
-  } else {
-    return 0;
-  }
-};
+const sortGroupAlphaCompare = (a: TOCLayerGroup, b: TOCLayerGroup): number => a.label.localeCompare(b.label);
 
 const updateLayerIndex = (layers: TOCLayer[], preserveInitialOrder = false): TOCLayer[] => {
   let index = layers.length;

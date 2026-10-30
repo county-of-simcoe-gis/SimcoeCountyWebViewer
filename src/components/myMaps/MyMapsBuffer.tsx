@@ -148,7 +148,7 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
     // Update buffer preview if exists
     if (vectorLayerRef.current) {
       vectorLayerRef.current.setStyle(getStyle());
-      if (!isNaN(distance) && distance > 0) {
+      if (!isNaN(distance) && distance !== 0) {
         onPreviewBufferClick().catch((error) => {
           console.error("Error in color change buffer preview:", error);
         });
@@ -206,26 +206,35 @@ const MyMapsBuffer: React.FC<MyMapsBufferProps> = ({ visible, item }) => {
       const distanceMeters = convertToMeters(distance, units);
 
       // bufferGeometry is now async, so we await it
-      await bufferGeometry(geometry, distanceMeters, (bufferedGeometry) => {
-        const bufferFeature = new Feature({
-          geometry: bufferedGeometry,
-        });
+      await bufferGeometry(
+        geometry,
+        distanceMeters,
+        (bufferedGeometry) => {
+          const bufferFeature = new Feature({
+            geometry: bufferedGeometry,
+          });
 
-        bufferFeature.setStyle(getStyle());
-        bufferFeatureRef.current = bufferFeature;
+          bufferFeature.setStyle(getStyle());
+          bufferFeatureRef.current = bufferFeature;
 
-        // Clear previous buffer and add new one
-        vectorLayerRef.current!.getSource()!.clear();
+          // Clear previous buffer and add new one
+          vectorLayerRef.current!.getSource()!.clear();
 
-        if (distanceMeters > 0) {
-          vectorLayerRef.current!.setZIndex(999);
-        } else {
-          vectorLayerRef.current!.setZIndex(9999);
-        }
+          if (distanceMeters !== 0) {
+            vectorLayerRef.current!.setZIndex(999);
+          } else {
+            vectorLayerRef.current!.setZIndex(9999);
+          }
 
-        vectorLayerRef.current!.getSource()!.addFeature(bufferFeature);
-        setAddMessageVisible(true);
-      });
+          vectorLayerRef.current!.getSource()!.addFeature(bufferFeature);
+          setAddMessageVisible(true);
+        },
+        () => {
+          bufferFeatureRef.current = null;
+          vectorLayerRef.current?.getSource()?.clear();
+          setAddMessageVisible(false);
+        },
+      );
     } catch (error) {
       console.error("Error creating buffer preview:", error);
     }
@@ -390,36 +399,43 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
 
                         const distanceMeters = convertToMeters(distance, units);
 
-                        bufferGeometry(geometry, distanceMeters, (bufferedGeometry) => {
-                          const bufferFeature = new Feature({ geometry: bufferedGeometry });
+                        bufferGeometry(
+                          geometry,
+                          distanceMeters,
+                          (bufferedGeometry) => {
+                            const bufferFeature = new Feature({ geometry: bufferedGeometry });
 
-                          // Get current color from color picker button
-                          const currentColor = getCurrentColor();
+                            // Get current color from color picker button
+                            const currentColor = getCurrentColor();
 
-                          // Create style using selected color
-                          const style = new Style({
-                            stroke: new Stroke({
-                              color: [currentColor.r, currentColor.g, currentColor.b, 1],
-                              width: 3,
-                            }),
-                            fill: new Fill({
-                              color: [currentColor.r, currentColor.g, currentColor.b, 0.7],
-                            }),
-                          });
+                            // Create style using selected color
+                            const style = new Style({
+                              stroke: new Stroke({
+                                color: [currentColor.r, currentColor.g, currentColor.b, 1],
+                                width: 3,
+                              }),
+                              fill: new Fill({
+                                color: [currentColor.r, currentColor.g, currentColor.b, 0.7],
+                              }),
+                            });
 
-                          bufferFeature.setStyle(style);
+                            bufferFeature.setStyle(style);
 
-                          // Clear and add buffer
-                          const source = bufferLayer.getSource();
-                          if (source && "clear" in source && "addFeature" in source) {
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                            (source as any).clear();
-                            if (distanceMeters > 0) {
+                            // Clear and add buffer
+                            const source = bufferLayer.getSource();
+                            if (source && "clear" in source && "addFeature" in source) {
+                              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              (source as any).clear();
                               // eslint-disable-next-line @typescript-eslint/no-explicit-any
                               (source as any).addFeature(bufferFeature);
                             }
-                          }
-                        });
+                            showHideAddBufferLink(true);
+                          },
+                          () => {
+                            (bufferLayer.getSource() as any)?.clear();
+                            showHideAddBufferLink(false);
+                          },
+                        );
                       } catch (error) {
                         console.error("❌ Error creating buffer preview:", error);
                       }
@@ -730,7 +746,7 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
     if (item?.featureGeoJSON) {
       const currentDistance = getCurrentDistance();
 
-      if (!isNaN(currentDistance) && currentDistance > 0) {
+      if (currentDistance !== 0) {
         // Re-trigger buffer preview with new color
         updateBufferColor(hexColor);
       }
@@ -916,12 +932,9 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
     const handleDistanceChange = (e: Event) => {
       const newDistance = parseFloat((e.target as HTMLInputElement).value);
 
-      if (!isNaN(newDistance) && newDistance > 0) {
+      if (!isNaN(newDistance) && newDistance !== 0) {
         // Manually trigger buffer preview since React handlers are lost
         triggerBufferPreview(newDistance, getCurrentUnits());
-
-        // Show the add link
-        showHideAddBufferLink(true);
       } else {
         // Hide buffer preview and link when distance is 0 or invalid
         clearBufferPreview();
@@ -945,9 +958,8 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
       const newUnits = (e.target as HTMLSelectElement).value;
       const currentDistance = getCurrentDistance();
 
-      if (!isNaN(currentDistance) && currentDistance > 0) {
+      if (currentDistance !== 0) {
         triggerBufferPreview(currentDistance, newUnits);
-        showHideAddBufferLink(true);
       } else {
         clearBufferPreview();
         showHideAddBufferLink(false);
@@ -1009,9 +1021,9 @@ export const attachBufferListeners = (container: HTMLElement, item: MyMapsItem):
     // Only prevent propagation for link-specific events, not all mousedown/mouseup
     // This ensures header drag functionality isn't broken
 
-    // Initially hide the link (should only show when distance > 0)
+    // Initially hide the link (should only show when distance is non-zero)
     const currentDistance = getCurrentDistance();
-    showHideAddBufferLink(currentDistance > 0);
+    showHideAddBufferLink(currentDistance !== 0);
   } else {
     console.warn("MyMapsBuffer: Could not find buffer add link element for event binding");
   }

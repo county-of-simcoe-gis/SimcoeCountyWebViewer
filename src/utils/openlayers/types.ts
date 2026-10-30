@@ -63,6 +63,7 @@ export interface LayerOptions {
   maxZoom?: number | null;
   layers?: LayerOptions[];
   timeValue?: string;
+  labelField?: string;
 }
 
 // Layer Rebuild Parameters
@@ -78,6 +79,7 @@ export interface RebuildParams {
   name?: string;
   background?: string | null;
   timeValue?: string;
+  labelField?: string;
 }
 
 // Basemap Layer Interface (for basemap switcher)

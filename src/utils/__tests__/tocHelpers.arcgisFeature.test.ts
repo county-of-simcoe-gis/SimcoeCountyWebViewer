@@ -58,7 +58,7 @@ describe("type layer entries with sourceType FeatureArcGISRest", () => {
   it("builds a feature layer from the service root and layerName", async () => {
     stubMetadata(featureMetadata());
     const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
-    const serviceRoot = "https://services.arcgis.com/wjcPoefzjpzCgffS/arcgis/rest/services/Active_Fire_Danger_Map_of_Canada/FeatureServer";
+    const serviceRoot = "https://services.example.com/arcgis/rest/services/Sample_Hazard_Service/FeatureServer";
 
     const { groups } = await loadLayerGroupsFromSources(
       [
@@ -88,6 +88,121 @@ describe("type layer entries with sourceType FeatureArcGISRest", () => {
     expect(layer.isQueryable).toBe(true);
   });
 
+  it("passes labelField from a feature source to its TOC layer", async () => {
+    stubMetadata(featureMetadata());
+    const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+    const serviceRoot = "https://services.example.com/arcgis/rest/services/Sample_Hazard_Service/FeatureServer";
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [
+        {
+          type: "layer",
+          layerUrl: serviceRoot,
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Fire Danger Map",
+          layerName: "0",
+          sourceType: "FeatureArcGISRest",
+          source: "rest",
+          projection: "EPSG:3857",
+          groups: ["Hazard Layers"],
+          labelField: "NAME",
+        } as TOCSource,
+      ],
+      config,
+    );
+
+    expect(groups[0].layers[0].labelField).toBe("NAME");
+  });
+
+  it("makes the feature layer identifiable through its FeatureServer query endpoint", async () => {
+    stubMetadata(featureMetadata());
+    const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+    const serviceRoot = "https://services.example.com/arcgis/rest/services/Sample_Hazard_Service/FeatureServer";
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [
+        {
+          type: "layer",
+          layerUrl: serviceRoot,
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Fire Danger Map",
+          layerName: "0",
+          sourceType: "FeatureArcGISRest",
+          source: "rest",
+          projection: "EPSG:3857",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+      ],
+      config,
+    );
+
+    const [layer] = groups[0].layers;
+    expect(layer.liveLayer).toBe(true);
+    expect(layer.wfsUrl).toBe(
+      `${serviceRoot}/0/query?geometry=#GEOMETRY#&geometryType=#GEOMETRYTYPE#&inSR=3857&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=true&outSR=3857&resultRecordCount=50&f=json`,
+    );
+  });
+
+  it("makes MapServer and WMS direct layers identifiable while WMTS stays non-queryable", async () => {
+    stubMetadata(featureMetadata());
+    const config = { toc: { keywords: {}, default_group: "" }, geoserverPath: "geoserver" } as unknown as Parameters<typeof loadLayerGroupsFromSources>[1];
+
+    const { groups } = await loadLayerGroupsFromSources(
+      [
+        {
+          type: "layer",
+          layerUrl: "https://gis.example.ca/gis/rest/services/Sample/MapServer/76",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Sample Floodplain",
+          layerName: "76",
+          sourceType: "ImageArcGISRest",
+          source: "rest",
+          legendUrl: "https://example.com/legend.png",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+        {
+          type: "layer",
+          layerUrl: "https://geoserver.example.ca/geoserver/public/sample_raster/ows?service=wms&version=1.3.0&request=GetCapabilities",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Sample Raster",
+          layerName: "sample_raster",
+          sourceType: "ImageWMS",
+          source: "WMS",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+        {
+          type: "layer",
+          layerUrl: "https://tiles.example.com/wmts",
+          secure: false,
+          primary: false,
+          urlType: "",
+          name: "Basemap",
+          layerName: "basemap",
+          sourceType: "WMTS",
+          source: "WMTS",
+          groups: ["Hazard Layers"],
+        } as TOCSource,
+      ],
+      config,
+    );
+
+    const layers = Object.fromEntries(groups[0].layers.map((layer) => [layer.name, layer]));
+    expect(layers["76"].isQueryable).toBe(true);
+    expect(layers["76"].wfsUrl).toContain("https://gis.example.ca/gis/rest/services/Sample/MapServer/identify?");
+    expect(layers["76"].wfsUrl).toContain("layers=visible%3A76");
+    expect(layers["sample_raster"].isQueryable).toBe(true);
+    expect(layers["sample_raster"].liveLayer).toBe(true);
+    expect(layers["basemap"].isQueryable).toBe(false);
+  });
+
   it("loads the time slider values from the layer's time field", async () => {
     vi.stubGlobal(
       "fetch",
@@ -104,11 +219,11 @@ describe("type layer entries with sourceType FeatureArcGISRest", () => {
       [
         {
           type: "layer",
-          layerUrl: "https://services.arcgis.com/wjcPoefzjpzCgffS/arcgis/rest/services/Wildfire/FeatureServer",
+          layerUrl: "https://services.example.com/arcgis/rest/services/Sample/FeatureServer",
           secure: false,
           primary: false,
           urlType: "",
-          name: "Smoke Forecast",
+          name: "Sample Forecast",
           layerName: "0",
           sourceType: "FeatureArcGISRest",
           source: "rest",
@@ -310,12 +425,21 @@ describe("legends for single-layer sources", () => {
     stubMetadata(featureMetadata());
 
     const { groups } = await loadLayerGroupsFromSources(
-      [directSource({ layerUrl: "https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=wms&version=1.3.0&request=GetCapabilities", sourceType: "ImageWMS", source: "WMS", layerName: "dsr" })],
+      [
+        directSource({
+          layerUrl: "https://geoserver.example.ca/geoserver/public/sample_raster/ows?service=wms&version=1.3.0&request=GetCapabilities",
+          sourceType: "ImageWMS",
+          source: "WMS",
+          layerName: "sample_raster",
+        }),
+      ],
       config,
     );
 
-    expect(groups[0].layers[0].styleUrl).toBe("https://cwfis.cfs.nrcan.gc.ca/geoserver/public/dsr/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=dsr");
-    expect(groups[0].layers[0].metadataUrl).toBe("https://cwfis.cfs.nrcan.gc.ca/geoserver/rest/layers/public%3Adsr.json");
+    expect(groups[0].layers[0].styleUrl).toBe(
+      "https://geoserver.example.ca/geoserver/public/sample_raster/ows?service=WMS&version=1.3.0&request=GetLegendGraphic&format=image%2Fpng&layer=sample_raster",
+    );
+    expect(groups[0].layers[0].metadataUrl).toBe("https://geoserver.example.ca/geoserver/rest/layers/public%3Asample_raster.json");
   });
 
   it("builds a legend from classBreaks picture-marker symbols", async () => {
@@ -340,7 +464,7 @@ describe("legends for single-layer sources", () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async (url: string) => {
-        const body = url.startsWith("https://gis.lsrca.on.ca/gis/rest/services/OpenData/MapServer/legend")
+        const body = url.startsWith("https://gis.example.ca/gis/rest/services/Sample/MapServer/legend")
           ? { layers: [{ layerId: 76, layerName: "Floodplain", layerType: "Feature Layer", legend: [{ label: "", url: "", imageData: "CCCC", contentType: "image/png", height: 20, width: 20 }] }] }
           : {};
         return { ok: true, status: 200, statusText: "OK", json: async () => body } as Response;
@@ -348,7 +472,7 @@ describe("legends for single-layer sources", () => {
     );
 
     const { groups } = await loadLayerGroupsFromSources(
-      [directSource({ layerUrl: "https://gis.lsrca.on.ca/gis/rest/services/OpenData/MapServer/76", sourceType: "ImageArcGISRest", layerName: "76" })],
+      [directSource({ layerUrl: "https://gis.example.ca/gis/rest/services/Sample/MapServer/76", sourceType: "ImageArcGISRest", layerName: "76" })],
       config,
     );
 

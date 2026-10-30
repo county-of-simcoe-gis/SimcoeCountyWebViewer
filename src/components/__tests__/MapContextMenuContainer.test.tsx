@@ -9,6 +9,8 @@ import { useReportsStore } from "@/stores/reportsStore";
 import Map from "ol/Map";
 import View from "ol/View";
 
+const { mockRegisterHandler } = vi.hoisted(() => ({ mockRegisterHandler: vi.fn() }));
+
 // Mock OpenLayers Map and View classes
 vi.mock("ol/Map", () => {
   return {
@@ -82,7 +84,7 @@ vi.mock("@/config.json", () => ({
 // Mock useInteractionManager hook
 vi.mock("@/components/map/MapContainer", () => ({
   useInteractionManager: vi.fn(() => ({
-    registerHandler: vi.fn(),
+    registerHandler: mockRegisterHandler,
     unregisterHandler: vi.fn(),
     registerInteraction: vi.fn(),
     unregisterInteraction: vi.fn(),
@@ -227,34 +229,14 @@ describe("MapContextMenuContainer", () => {
     });
   });
 
-  it("does not show menu when a tool is active (mymaps-draw)", async () => {
-    useMapStore.setState({ activeToolId: "mymaps-draw" });
-
-    render(<MapContextMenuContainer />);
-
-    // checkDisableFlags should return true, preventing menu display
-    expect(useMapStore.getState().isToolActive()).toBe(true);
-  });
-
-  it("respects active tool gating (parcel)", () => {
+  it("registers the map menu handler without a tool gate", () => {
     useMapStore.setState({ activeToolId: "toggler" });
+
     render(<MapContextMenuContainer />);
 
-    expect(useMapStore.getState().isToolActive()).toBe(true);
-  });
-
-  it("respects active tool gating (coordinates)", () => {
-    useMapStore.setState({ activeToolId: "coordinates" });
-    render(<MapContextMenuContainer />);
-
-    expect(useMapStore.getState().isToolActive("coordinates")).toBe(true);
-  });
-
-  it("respects active tool gating (measure)", () => {
-    useMapStore.setState({ activeToolId: "measure" });
-    render(<MapContextMenuContainer />);
-
-    expect(useMapStore.getState().isToolActive("measure")).toBe(true);
+    const registered = mockRegisterHandler.mock.calls.find(([handler]) => handler.id === "context-menu")?.[0];
+    expect(registered).toBeDefined();
+    expect(registered.conditions).toBeUndefined();
   });
 
   it("handles property report functionality", async () => {

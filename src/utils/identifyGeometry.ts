@@ -44,3 +44,39 @@ export function getEsriGeometryType(geometry: Geometry): string {
   // Fallback for unknown/custom geometry types
   return "esriGeometryPolygon";
 }
+
+/** Clicked-point search radius in pixels; ArcGIS /query has no tolerance parameter. */
+const FEATURE_QUERY_TOLERANCE_PX = 10;
+
+/**
+ * Build an ESRI envelope JSON string around a point, sized from the view resolution.
+ */
+export function pointToEsriEnvelopeJSON(coordinate: number[], resolution: number): string {
+  const radius = FEATURE_QUERY_TOLERANCE_PX * resolution;
+  return JSON.stringify({
+    xmin: coordinate[0] - radius,
+    ymin: coordinate[1] - radius,
+    xmax: coordinate[0] + radius,
+    ymax: coordinate[1] + radius,
+    spatialReference: { wkid: 3857 },
+  });
+}
+
+export interface EsriQueryFeature {
+  geometry?: Record<string, unknown>;
+  attributes?: Record<string, unknown>;
+}
+
+export interface EsriQueryResponse {
+  geometryType?: string;
+  features?: EsriQueryFeature[];
+}
+
+/**
+ * Map a FeatureServer /query response to the identify `results` shape.
+ */
+export function normalizeFeatureQueryResponse(response: EsriQueryResponse): { results: (EsriQueryFeature & { geometryType?: string })[] } {
+  return {
+    results: (response.features ?? []).map((feature) => ({ ...feature, geometryType: response.geometryType })),
+  };
+}

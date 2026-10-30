@@ -148,6 +148,7 @@ export class LayerHelpers {
       minZoom = null,
       maxZoom = null,
       timeValue,
+      labelField,
     }: LayerOptions,
     callback: (layer: Layer) => void,
   ): void {
@@ -163,6 +164,7 @@ export class LayerHelpers {
       name,
       background,
       timeValue,
+      labelField,
     };
 
     let finalName = name;
@@ -478,7 +480,7 @@ export class LayerHelpers {
         break;
 
       case OL_DATA_TYPES.FeatureArcGISRest: {
-        const featureLayer = createArcGISFeatureLayer(finalUrl as string, secured, { timeValue });
+        const featureLayer = createArcGISFeatureLayer(finalUrl as string, secured, { timeValue, labelField });
         featureLayer.setProperties({ rebuildParams, name: finalName });
         callback(featureLayer);
         break;
