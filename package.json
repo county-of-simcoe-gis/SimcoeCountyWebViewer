@@ -90,6 +90,10 @@
     "esbuild": "^0.28.1",
     "follow-redirects": "^1.16.1",
     "js-yaml": "^4.3.2",
+    "postcss-selector-parser": "^6.1.5",
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "^11.0.1"
+    },
     "vite": "^7.3.7"
   }
 }
