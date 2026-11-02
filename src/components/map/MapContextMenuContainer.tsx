@@ -178,7 +178,7 @@ export const MapContextMenuContainer: React.FC = () => {
   }, [map]);
 
   // Get menu items based on config
-  const getMenuItems = useCallback((): ContextMenuItem[] => {
+  const getMenuItems = (): ContextMenuItem[] => {
     const visibility = config?.rightClickMenuVisibility || {};
 
     // Check if user is on mobile
@@ -242,7 +242,7 @@ export const MapContextMenuContainer: React.FC = () => {
         onClick: handleMore,
       },
     ];
-  }, [config, handlePropertyReport, handleAddMarker, handleReportProblem, handleIdentify, handleGoogleMaps, handleSaveMapExtent, handleMore, handleSwitchToBasic]);
+  };
 
   // Handle context menu display
   const handleContextMenu = useCallback(
