@@ -472,7 +472,6 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 - **Feature Layer Identify** — Improved query handling and response normalization for feature layers in Identify.
 - **Bag Tag Locations** — Added a URL parameter to open bag tag purchase locations directly.
 - **Current Location Marker** — Updated the location marker and geolocation handling.
-- **Property Reports** — MPAC report sections are collapsible with updated styling, and Teranet plan images load through an image proxy.
 - **Legacy Viewer Links** — URL rewrites keep links from the legacy API v2 viewer working.
 - **Revision History on Update** — The revision history is shown when the app version changes, with storage migrations run on upgrade.
 - **MyMaps Buffer** — Fixed buffer handling for negative distances and improved error handling.
