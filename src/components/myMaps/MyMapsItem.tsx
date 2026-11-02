@@ -88,15 +88,18 @@ const MyMapsItem: React.FC<MyMapsItemProps> = ({ item, onLabelChange, onDelete, 
   const getGeometryIcon = () => {
     switch (item.geometryType) {
       case "Point":
+      case "MultiPoint":
         return "point.png";
       case "LineString":
+      case "MultiLineString":
         return "polyline.png";
       case "Polygon":
+      case "MultiPolygon":
         return "polygon.png";
       case "Circle":
         return "circle.png";
       default:
-        return "default.png";
+        return "none.png";
     }
   };
 
