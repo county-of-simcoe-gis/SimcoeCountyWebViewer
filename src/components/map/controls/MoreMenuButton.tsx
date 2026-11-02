@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { RxDropdownMenu } from "react-icons/rx";
 import { useSidebarStore } from "@/stores/sidebarStore";
 import { MapControlButton } from "@/components/ui/MapControlButton";
@@ -32,7 +32,7 @@ export const MoreMenuButton = React.memo(() => {
     if (isFullscreen && isMoreMenuOpen) closeMoreMenu();
   }, [isFullscreen, isMoreMenuOpen, closeMoreMenu]);
 
-  const handleClick = useCallback(() => {
+  const handleClick = () => {
     if (isMoreMenuOpen) {
       closeMoreMenu();
       return;
@@ -43,7 +43,7 @@ export const MoreMenuButton = React.memo(() => {
     } else {
       openMoreMenuAtMapControl({ top: 100, left: 10 });
     }
-  }, [isMoreMenuOpen, closeMoreMenu, openMoreMenuAtMapControl]);
+  };
 
   // Only show when sidebar is open and not in fullscreen
   if (!isOpen || isFullscreen) return null;

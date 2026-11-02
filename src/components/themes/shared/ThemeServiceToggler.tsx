@@ -447,8 +447,8 @@ export default function ThemeServiceToggler({
     [layers, onLayerVisibilityChange],
   );
 
-  const handleShowAll = useCallback(() => setShowAll(true), []);
-  const handleHideAll = useCallback(() => setShowAll(false), []);
+  const handleShowAll = () => setShowAll(true);
+  const handleHideAll = () => setShowAll(false);
 
   // ---------- Render ----------
 
