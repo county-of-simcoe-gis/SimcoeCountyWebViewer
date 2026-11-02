@@ -44,6 +44,10 @@ const nextConfig: NextConfig = {
       { source: "/api_v2/public/search/:id", destination: "/api/public/search/:id" },
       { source: "/api_v2/public/reports/property/:arn", destination: "/api/public/reports/property/:arn" },
       { source: "/api_v2/public/reports/embed/:report", destination: "/api/public/reports/embed/:report" },
+      // Legacy standalone apps were served from nginx, which matched these paths case-insensitively
+      { source: "/layerinfo", destination: "/layerInfo" },
+      { source: "/featureReports", destination: "/featurereports" },
+      { source: "/Legend", destination: "/legend" },
     ];
   },
   webpack: (config, { dev }) => {
