@@ -71,7 +71,10 @@ export async function getPlanningReportImageUrl(options: PlanningImageOptions): 
 
   const sql = `SELECT ST_AsGeoJSON(geom) parcels, ST_AsGeoJSON(ST_Buffer(geom, $2)) buffer, ST_AsGeoJSON(ST_Envelope(ST_Buffer(geom, $2))) bounding_geom FROM sde.TERANET_DAPF WHERE $1 ILIKE '%' || arn || '%'`;
   const row = await pgWeblive.selectFirstWithValues<ParcelGeometryRow>(sql, [options.fieldValue, options.bufDistance]);
-  if (!row?.bounding_geom) return null;
+  if (!row?.bounding_geom) {
+    console.warn(`[PlanningImages] No parcel found for value "${options.fieldValue}"`);
+    return null;
+  }
 
   const bbox = envelopeBbox(JSON.parse(row.bounding_geom));
   const printBbox = [bbox[0] - 500, bbox[1] - 500, bbox[2] + 500, bbox[3] + 500];
@@ -95,7 +98,10 @@ export async function getPlanningReportImageUrl(options: PlanningImageOptions): 
     token: options.token ? encodeURIComponent(options.token) : "",
     reportType: isMain ? "Assessment Parcel spView" : options.reportType,
   });
-  if (!layer) return null;
+  if (!layer) {
+    console.warn("[PlanningImages] Map service details unavailable (token missing or rejected?)");
+    return null;
+  }
   printLayers.push(layer);
 
   return getMapImage({ height: options.height, width: options.width, dpi: 96, bbox: printBbox, basemap: getOrthoBasemap() }, printLayers);
@@ -119,7 +125,10 @@ export async function getLandValuesReportImageUrl(options: LandValuesImageOption
 
   const sql = `SELECT ST_AsGeoJSON(ST_Envelope(ST_Buffer(geom, $2))) bounding_geom FROM ${table} WHERE $1 ILIKE '%' || ${column} || '%'`;
   const row = await pgWeblive.selectFirstWithValues<{ bounding_geom: string }>(sql, [options.fieldValue, 50]);
-  if (!row?.bounding_geom) return null;
+  if (!row?.bounding_geom) {
+    console.warn(`[LandValuesImages] No parcel found for value "${options.fieldValue}"`);
+    return null;
+  }
 
   const bbox = envelopeBbox(JSON.parse(row.bounding_geom));
   const escapedValue = options.fieldValue.replace(/'/g, "''");
@@ -138,7 +147,10 @@ export async function getLandValuesReportImageUrl(options: LandValuesImageOption
     dpi: 96,
     token: options.token ? encodeURIComponent(options.token) : "",
   });
-  if (!layer) return null;
+  if (!layer) {
+    console.warn("[LandValuesImages] Map service details unavailable (token missing or rejected?)");
+    return null;
+  }
 
   return getMapImage({ height: options.height, width: options.width, dpi: 96, bbox, basemap: STREETS_BASEMAP }, [layer]);
 }

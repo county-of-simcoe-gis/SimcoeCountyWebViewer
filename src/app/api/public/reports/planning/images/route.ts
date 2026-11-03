@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const imageUrl = await getPlanningReportImageUrl({ fieldValue, reportType, bufDistance, width, height, token });
     if (!imageUrl) {
-      return new NextResponse(null, { status: 404 });
+      return NextResponse.json({ error: "Image could not be generated (parcel not found, or token missing/invalid)" }, { status: 404 });
     }
 
     return await proxyImage(imageUrl);
