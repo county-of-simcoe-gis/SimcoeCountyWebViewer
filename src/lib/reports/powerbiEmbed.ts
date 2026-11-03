@@ -10,6 +10,50 @@
 
 import { v4 as uuidv4 } from "uuid";
 import { SQLServer } from "@/lib/database/sqlServer";
+import { findReport, getAccessToken } from "@/lib/reports/powerbi";
+
+const EMBED_TOKEN_LIFETIME_MINUTES = 10;
+
+export type EmbedTokenResult =
+  | {
+      Id: string;
+      EmbedUrl?: string;
+      Type?: string;
+      EmbedToken: { Token: string; TokenId: string; Expiration: string };
+      MinutesToExpiration: number;
+      DefaultPage: null;
+      MobileDefaultPage: null;
+    }
+  | { error: string };
+
+/**
+ * Generate a short-lived PowerBI embed token for a report.
+ * Response keys and the /Date(ms)/ expiration match the old API so existing viewers keep working.
+ */
+export async function getEmbedToken(reportName: string): Promise<EmbedTokenResult> {
+  const accessToken = await getAccessToken();
+  const report = await findReport(accessToken, reportName);
+  if (!report) return { error: "Report not found" };
+
+  const response = await fetch("https://api.powerbi.com/v1.0/myorg/GenerateToken", {
+    method: "POST",
+    cache: "no-cache",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ lifetimeInMinutes: EMBED_TOKEN_LIFETIME_MINUTES, reports: [{ allowEdit: false, id: report.id }] }),
+  });
+  const json = await response.json();
+  if (!json.token) throw new Error("PowerBI embed token request failed");
+
+  return {
+    Id: report.id,
+    EmbedUrl: report.embedUrl,
+    Type: report.reportType,
+    EmbedToken: { Token: json.token, TokenId: json.tokenId, Expiration: `/Date(${new Date(json.expiration).getTime()})/` },
+    MinutesToExpiration: EMBED_TOKEN_LIFETIME_MINUTES,
+    DefaultPage: null,
+    MobileDefaultPage: null,
+  };
+}
 
 interface ReportParameter {
   name: string;

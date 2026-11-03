@@ -546,7 +546,14 @@ export const readFeaturesFromText = (text: string, format: ImportFormat): Featur
   const parser = FeatureHelpers.getVectorFormat(IMPORT_FORMAT_MAP[format]) as FeatureFormat | undefined;
   if (!parser) return [];
 
-  const detected = parser.readProjection(text);
+  // ol's EsriJSON reader throws instead of returning null when no spatialReference is declared.
+  let detected: ReturnType<typeof parser.readProjection> | null = null;
+  try {
+    detected = parser.readProjection(text);
+  } catch (error) {
+    const declaresSpatialReference = format === "EsriJSON" && JSON.parse(text)?.spatialReference?.wkid !== undefined;
+    if (format !== "EsriJSON" || declaresSpatialReference) throw error;
+  }
   const fallbackProjection = format === "EsriJSON" ? "EPSG:3857" : "EPSG:4326";
   const dataProjection = detected ? detected.getCode() : fallbackProjection;
 

@@ -6,10 +6,7 @@ import { pgTabular } from "@/lib/database/connections";
  * Insert an app usage stat into PostgreSQL.
  * Fire-and-forget telemetry — mirrors the old api_v2 endpoint.
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ appName: string; actionType: string; description: string }> }
-): Promise<NextResponse> {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ appName: string; actionType: string; description: string }> }): Promise<NextResponse> {
   try {
     const { appName, actionType, description } = await params;
     const userName = request.nextUrl.searchParams.get("user_name") || null;

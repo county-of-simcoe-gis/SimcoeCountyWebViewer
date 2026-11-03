@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import DOMPurify from "dompurify";
 import { FaImage, FaEyeSlash, FaListUl } from "react-icons/fa";
 import { useLayerManagerStore } from "@/stores/layerManagerStore";
 
@@ -342,7 +343,7 @@ const LayerLegendComponent = ({ legend, image, inline = false, forceMode, showLe
             );
           } else {
             // Assume it's HTML content - no loading state needed
-            return <div className="mx-1 my-0.5" dangerouslySetInnerHTML={{ __html: legend }} />;
+            return <div className="mx-1 my-0.5" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(legend) }} />;
           }
         }
 

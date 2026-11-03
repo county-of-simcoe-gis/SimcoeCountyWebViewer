@@ -345,6 +345,16 @@ You can also build links manually with query parameters.
 
 The property popup's **Share** button can also generate a direct property link.
 
+### Legacy Standalone Pages
+
+These pages keep the URLs of the retired standalone apps working. Parameter names are case-insensitive.
+
+| Page                | Parameters                                                                       | Example                                                    |
+| ------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| `/legend`           | Layer group name set to `1` to show it. All groups are shown if none are given. | `/legend/?Popular=1&All_Layers=1`                          |
+| `/layerInfo`        | `URL` layer metadata URL (required), `SHOW_DOWNLOAD=1` to show the download.     | `/layerInfo/?URL=<layer json url>&SHOW_DOWNLOAD=1`         |
+| `/featurereports`   | `TYPE` (`REALESTATE`, `FORESTRY` or `CHILDCARE`), `ID`, `SHOWHEADER=1`.          | `/featurereports/?TYPE=FORESTRY&ID=COPELAND&SHOWHEADER=1`  |
+
 ---
 
 ## Layer Setup
