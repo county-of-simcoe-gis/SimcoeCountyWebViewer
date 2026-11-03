@@ -1,6 +1,6 @@
 /**
  * Microsoft Graph API helper for fetching user group memberships
- * 
+ *
  * Azure AD tokens often don't include group claims, especially when users
  * have many group memberships. This module fetches groups from Microsoft Graph API
  * using client credentials flow.
@@ -16,6 +16,8 @@ interface GroupMembershipResponse {
   value: string[];
 }
 
+const GUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 // Cache for the app token
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
@@ -29,7 +31,7 @@ async function getGraphAppToken(): Promise<string> {
   }
 
   const tokenUrl = `https://login.microsoftonline.com/${process.env.AZURE_AD_TENANT_ID}/oauth2/v2.0/token`;
-  
+
   const params = new URLSearchParams({
     grant_type: "client_credentials",
     client_id: process.env.AZURE_AD_CLIENT_ID!,
@@ -54,7 +56,7 @@ async function getGraphAppToken(): Promise<string> {
   }
 
   const data: TokenResponse = await response.json();
-  
+
   // Cache the token
   cachedToken = {
     token: data.access_token,
@@ -67,29 +69,39 @@ async function getGraphAppToken(): Promise<string> {
 
 /**
  * Fetch user's group memberships from Microsoft Graph API
- * 
+ *
  * @param userObjectId - The user's Azure AD object ID (oid claim from token)
  * @returns Array of group IDs the user belongs to
  */
 export async function getUserGroups(userObjectId: string): Promise<string[]> {
+  if (!GUID_PATTERN.test(userObjectId)) {
+    console.warn("[MicrosoftGraph] Skipping group lookup, not a valid object ID:", userObjectId);
+    return [];
+  }
+
   try {
     console.log("[MicrosoftGraph] Fetching groups for user:", userObjectId);
-    
+
     const accessToken = await getGraphAppToken();
-    
+
     // Use getMemberGroups endpoint which returns group IDs
-    const graphUrl = `https://graph.microsoft.com/v1.0/users/${userObjectId}/getMemberGroups`;
-    
+    const graphUrl = `https://graph.microsoft.com/v1.0/users/${encodeURIComponent(userObjectId)}/getMemberGroups`;
+
     const response = await fetch(graphUrl, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         securityEnabledOnly: true,
       }),
     });
+
+    if (response.status === 404) {
+      console.warn("[MicrosoftGraph] User not found in directory:", userObjectId);
+      return [];
+    }
 
     if (!response.ok) {
       const errorText = await response.text();
@@ -100,7 +112,7 @@ export async function getUserGroups(userObjectId: string): Promise<string[]> {
     const data: GroupMembershipResponse = await response.json();
     console.log("[MicrosoftGraph] User groups fetched:", data.value?.length || 0, "groups");
     console.log("[MicrosoftGraph] Group IDs:", data.value);
-    
+
     return data.value || [];
   } catch (error) {
     console.error("[MicrosoftGraph] Error fetching user groups:", error);
