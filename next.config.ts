@@ -36,6 +36,24 @@ const nextConfig: NextConfig = {
     // Suppress TypeScript warnings during build (use with caution)
     ignoreBuildErrors: true,
   },
+  // Baseline hardening headers for every response
+  async headers() {
+    return [
+      {
+        source: "/:path*",
+        headers: [
+          { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+          // Report-only until violations from map/ArcGIS/PowerBI/Azure AD sources are reviewed; then switch to enforcing.
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: "object-src 'none'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com",
+          },
+        ],
+      },
+    ];
+  },
   // Legacy api_v2 URLs used by the old viewers, mapped onto the new route paths
   async rewrites() {
     return [

@@ -74,7 +74,14 @@ export default function GlobalURLModal() {
             <span className="loading loading-spinner loading-md"></span>
           </div>
         )}
-        <iframe src={url} title={title} onLoad={() => setIsLoading(false)} className={`w-full h-full border-none ${hideScroll ? "overflow-hidden" : "overflow-auto"}`} />
+        <iframe
+          src={url}
+          title={title}
+          sandbox="allow-same-origin allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms allow-downloads allow-modals"
+          referrerPolicy="strict-origin-when-cross-origin"
+          onLoad={() => setIsLoading(false)}
+          className={`w-full h-full border-none ${hideScroll ? "overflow-hidden" : "overflow-auto"}`}
+        />
       </div>
 
       {/* Footer with Close and Don't Show Again buttons */}

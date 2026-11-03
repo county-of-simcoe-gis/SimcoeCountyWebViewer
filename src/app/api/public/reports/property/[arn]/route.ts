@@ -268,6 +268,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "ARN parameter is required" }, { status: 400 });
   }
 
+  if (!/^[A-Za-z0-9_-]{1,50}$/.test(arn)) {
+    return NextResponse.json({ error: "Invalid ARN" }, { status: 400 });
+  }
+
   try {
     const sql = `
       SELECT *

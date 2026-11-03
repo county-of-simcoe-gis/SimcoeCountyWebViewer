@@ -29,11 +29,19 @@ export async function getAccessToken(): Promise<string | undefined> {
   }
 }
 
+const SECURED_HOSTNAME = "opengis2.simcoe.ca";
+
 /**
- * Determine whether a URL points to a secured GeoServer endpoint.
+ * Determine whether a URL points to the secured GeoServer endpoint.
+ * Compares the parsed hostname exactly so look-alike URLs never receive the Bearer token.
  */
 export function isSecuredUrl(url: string): boolean {
-  return url.includes("opengis2.simcoe.ca");
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname.toLowerCase() === SECURED_HOSTNAME;
+  } catch {
+    return false;
+  }
 }
 
 /**
