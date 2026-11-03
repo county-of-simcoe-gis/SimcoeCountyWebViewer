@@ -23,9 +23,9 @@ export class Postgres {
       database: dbName,
       user: user || this.getUserForDatabase(dbName),
       password: password || this.getPasswordForDatabase(dbName),
-      max: 10,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000,
+      max: 5,
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 10000,
     };
 
     this.pool = new Pool(config);

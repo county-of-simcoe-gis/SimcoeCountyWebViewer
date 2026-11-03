@@ -2,9 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 
 vi.mock("@/lib/database/connections", () => ({
   pgWeblive: { selectFirstWithValues: vi.fn() },
-}));
-vi.mock("@/lib/database/sqlServer", () => ({
-  SQLServer: vi.fn(),
+  sqlWeblive: { selectFirstWithValues: vi.fn() },
 }));
 vi.mock("@/lib/reports/imageGenerator", () => ({
   getLayerObject: vi.fn(),

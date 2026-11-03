@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-vi.mock("@/lib/database/sqlServer", () => ({ SQLServer: vi.fn() }));
+vi.mock("@/lib/database/connections", () => ({ sqlTabular: { executeWithValues: vi.fn() } }));
 vi.mock("@/lib/reports/powerbi", () => ({
   getAccessToken: vi.fn(),
   findReport: vi.fn(),

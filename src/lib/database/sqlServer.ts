@@ -31,7 +31,7 @@ export class SQLServer {
         enableArithAbort: true,
       },
       pool: {
-        max: 10,
+        max: 5,
         min: 0,
         idleTimeoutMillis: 30000,
       },
@@ -83,12 +83,23 @@ export class SQLServer {
    */
   private async getPool(): Promise<sql.ConnectionPool> {
     if (!this.poolPromise) {
-      this.poolPromise = new sql.ConnectionPool(this.config).connect().then((pool) => {
+      const connecting = new sql.ConnectionPool(this.config).connect().then((pool) => {
         this.pool = pool;
+        pool.on("error", () => this.reset(connecting));
         return pool;
       });
+      this.poolPromise = connecting;
+      // A failed connect must not stay cached or every later call would reject too
+      connecting.catch(() => this.reset(connecting));
     }
     return this.poolPromise;
+  }
+
+  private reset(failed: Promise<sql.ConnectionPool>): void {
+    if (this.poolPromise === failed) {
+      this.poolPromise = null;
+      this.pool = null;
+    }
   }
 
   /**

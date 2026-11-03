@@ -4,8 +4,7 @@
  * and SimcoeCountyWebApi helpers/parcelImageGenerator.js + pointImageGenerator.js
  */
 
-import { pgWeblive } from "@/lib/database/connections";
-import { SQLServer } from "@/lib/database/sqlServer";
+import { pgWeblive, sqlWeblive } from "@/lib/database/connections";
 import { getLayerObject, getMapImage, getOrthoBasemap, STREETS_BASEMAP } from "@/lib/reports/imageGenerator";
 
 const OVERVIEW_BBOX = "-8942711.7848,5465832.4289,-8805736.6301,5599902.9765";
@@ -79,9 +78,7 @@ export async function getPlanningReportImageUrl(options: PlanningImageOptions): 
   const bbox = envelopeBbox(JSON.parse(row.bounding_geom));
   const printBbox = [bbox[0] - 500, bbox[1] - 500, bbox[2] + 500, bbox[3] + 500];
 
-  const printLayers: Record<string, unknown>[] = [
-    { type: "geojson", geoJson: [toFeature("parcel_feature", row.parcels)], name: "parcels", style: polygonStyle("#FF5500", 1) },
-  ];
+  const printLayers: Record<string, unknown>[] = [{ type: "geojson", geoJson: [toFeature("parcel_feature", row.parcels)], name: "parcels", style: polygonStyle("#FF5500", 1) }];
   if (options.bufDistance > 0) {
     printLayers.push({ type: "geojson", geoJson: [toFeature("buffer_feature", row.buffer)], name: "buffer", style: polygonStyle("#00FFFF", 0.8) });
   }
@@ -163,18 +160,12 @@ export async function getParcelImageUrl(arn: string, overview: boolean, width: n
   if (overview) {
     serviceUrl = PARCEL_OVERVIEW_SERVICE_URL;
   } else {
-    const db = new SQLServer({ dbName: "weblive" });
-    try {
-      const row = await db.selectFirstWithValues<{ WKT: string | null }>(
-        "SELECT geometry::EnvelopeAggregate(Shape).ToString() as WKT FROM WEBLIVE.GIS.TERANET_DAPF WHERE ARN = @arn",
-        [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }]
-      );
-      const parcelBbox = row?.WKT ? wktToBbox(row.WKT) : null;
-      if (!parcelBbox) return null;
-      bbox = parcelBbox;
-    } finally {
-      await db.close();
-    }
+    const row = await sqlWeblive.selectFirstWithValues<{ WKT: string | null }>("SELECT geometry::EnvelopeAggregate(Shape).ToString() as WKT FROM WEBLIVE.GIS.TERANET_DAPF WHERE ARN = @arn", [
+      { name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn },
+    ]);
+    const parcelBbox = row?.WKT ? wktToBbox(row.WKT) : null;
+    if (!parcelBbox) return null;
+    bbox = parcelBbox;
   }
 
   return `${serviceUrl}export?bbox=${bbox}&layers=&layerDefs=%7B0%3A%22ARN+%3D+%27${arn}%27%22%7D&size=${width},${height}&format=jpg&transparent=true&dpi=96&f=image`;
