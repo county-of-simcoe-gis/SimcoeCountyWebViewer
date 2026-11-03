@@ -6,15 +6,15 @@ vi.mock("@/lib/database/connections", () => ({
 vi.mock("@/lib/database/sqlServer", () => ({
   SQLServer: vi.fn(),
 }));
-vi.mock("@/lib/secure/reports/imageGenerator", () => ({
+vi.mock("@/lib/reports/imageGenerator", () => ({
   getLayerObject: vi.fn(),
   getMapImage: vi.fn(),
-  ORTHO_2024_BASEMAP: { name: "ortho" },
+  getOrthoBasemap: vi.fn(() => ({ name: "ortho" })),
   STREETS_BASEMAP: { name: "streets" },
 }));
 
 import { pgWeblive } from "@/lib/database/connections";
-import { getLayerObject, getMapImage } from "@/lib/secure/reports/imageGenerator";
+import { getLayerObject, getMapImage } from "@/lib/reports/imageGenerator";
 import { getLandValuesReportImageUrl, getMlsImageUrl, getPlanningReportImageUrl, parseDimension, wktToBbox } from "@/lib/reports/reportImages";
 
 const mockSelect = vi.mocked(pgWeblive.selectFirstWithValues);

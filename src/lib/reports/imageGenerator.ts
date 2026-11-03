@@ -9,16 +9,26 @@
 const PRINT_URL = "https://opengis.simcoe.ca/print";
 const ORIGIN_URL = "https://opengis.simcoe.ca";
 
+const DEFAULT_ORTHO_YEAR = "2024";
+
+/** Ortho year used by report maps; set ORTHO_YEAR to switch (needs Ortho_<year>_Cache and a "<year> Ortho" GeoServer layer). */
+export function getOrthoYear(): string {
+  const year = process.env.ORTHO_YEAR;
+  return year && /^\d{4}$/.test(year) ? year : DEFAULT_ORTHO_YEAR;
+}
+
 // Default basemap for print service
-const DEFAULT_BASEMAP = {
-  type: "tiledwms",
-  layers: ["2024 Ortho"],
-  baseURL: "https://opengis.simcoe.ca/geoserver/wms",
-  imageFormat: "image/png",
-  customParams: { TRANSPARENT: true },
-  tileSize: [256, 256],
-  opacity: 1,
-};
+function getDefaultBasemap() {
+  return {
+    type: "tiledwms",
+    layers: [`${getOrthoYear()} Ortho`],
+    baseURL: "https://opengis.simcoe.ca/geoserver/wms",
+    imageFormat: "image/png",
+    customParams: { TRANSPARENT: true },
+    tileSize: [256, 256],
+    opacity: 1,
+  };
+}
 
 /**
  * Streets (B&W) basemap for print service — used by council reports.
@@ -54,46 +64,42 @@ export const STREETS_BASEMAP = {
   ],
 };
 
-/**
- * 2024 Ortho (WMTS) basemap for print service — used by planning report images.
- * Matches the old print_config.json "2024 Ortho" entry.
- */
-const ORTHO_2024_MATRIX_SIZES: Array<[number, number]> = [
-  [145, 187],
-  [289, 373],
-  [577, 746],
-  [1154, 1492],
-  [2308, 2984],
-  [4616, 5968],
-  [9231, 11935],
-  [18461, 23869],
-  [36922, 47737],
-  [73843, 95474],
-  [147685, 190947],
-  [295500, 382061],
-];
+const WEB_MERCATOR_ORIGIN = 20037508.342787;
+const LEVEL_0_SCALE_DENOMINATOR = 1091957.5469304254;
+const PIXEL_SIZE_METERS = 0.00028;
+const ORTHO_LEVELS = 12;
 
-export const ORTHO_2024_BASEMAP = {
-  type: "WMTS",
-  imageFormat: "image/png",
-  opacity: 1,
-  style: "Default Style",
-  version: "1.0.0",
-  dimensions: [] as string[],
-  dimensionParams: {},
-  requestEncoding: "REST",
-  customParams: { TRANSPARENT: "true", zIndex: 5 },
-  matrixSet: "EPSG:3857",
-  baseURL: "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2024_Cache/MapServer/tile/{TileMatrix}/{TileRow}/{TileCol}",
-  layer: "Ortho_2024_Cache",
-  matrices: ORTHO_2024_MATRIX_SIZES.map((matrixSize, i) => ({
-    identifier: String(i),
-    scaleDenominator: 1091957.5469304254 / 2 ** i,
-    topLeftCorner: [-20037508.342787, 20037508.342787],
-    tileSize: [256, 256],
-    matrixSize,
-  })),
-};
+/**
+ * Ortho (WMTS) basemap for the print service. The caches share one tiling scheme, so only the
+ * year changes the URL/layer; matrix sizes span the whole world so any cache extent is covered.
+ */
+export function getOrthoBasemap(year: string = getOrthoYear()) {
+  return {
+    type: "WMTS",
+    imageFormat: "image/png",
+    opacity: 1,
+    style: "Default Style",
+    version: "1.0.0",
+    dimensions: [] as string[],
+    dimensionParams: {},
+    requestEncoding: "REST",
+    customParams: { TRANSPARENT: "true", zIndex: 5 },
+    matrixSet: "EPSG:3857",
+    baseURL: `https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_${year}_Cache/MapServer/tile/{TileMatrix}/{TileRow}/{TileCol}`,
+    layer: `Ortho_${year}_Cache`,
+    matrices: Array.from({ length: ORTHO_LEVELS }, (_, level) => {
+      const scaleDenominator = LEVEL_0_SCALE_DENOMINATOR / 2 ** level;
+      const tilesAcrossWorld = Math.round((2 * WEB_MERCATOR_ORIGIN) / (scaleDenominator * PIXEL_SIZE_METERS * 256));
+      return {
+        identifier: String(level),
+        scaleDenominator,
+        topLeftCorner: [-WEB_MERCATOR_ORIGIN, WEB_MERCATOR_ORIGIN],
+        tileSize: [256, 256],
+        matrixSize: [tilesAcrossWorld, tilesAcrossWorld],
+      };
+    }),
+  };
+}
 
 /**
  * Get an ArcGIS OAuth2 app token
@@ -300,7 +306,7 @@ export async function getMapImage(
 
   // Add requested layers + basemap
   printData.attributes.map.layers.push(...layers);
-  printData.attributes.map.layers.push(options.basemap ?? DEFAULT_BASEMAP);
+  printData.attributes.map.layers.push(options.basemap ?? getDefaultBasemap());
 
   const printAppId = layout.replace(/ /g, "_");
   const outputFormat = printData.outputFormat;

@@ -6,7 +6,7 @@
 
 import { pgWeblive } from "@/lib/database/connections";
 import { SQLServer } from "@/lib/database/sqlServer";
-import { getLayerObject, getMapImage, ORTHO_2024_BASEMAP, STREETS_BASEMAP } from "@/lib/secure/reports/imageGenerator";
+import { getLayerObject, getMapImage, getOrthoBasemap, STREETS_BASEMAP } from "@/lib/reports/imageGenerator";
 
 const OVERVIEW_BBOX = "-8942711.7848,5465832.4289,-8805736.6301,5599902.9765";
 const PARCEL_SERVICE_URL = "https://maps.simcoe.ca/arcgis/rest/services/Public/ParcelImage_Report/MapServer/";
@@ -98,7 +98,7 @@ export async function getPlanningReportImageUrl(options: PlanningImageOptions): 
   if (!layer) return null;
   printLayers.push(layer);
 
-  return getMapImage({ height: options.height, width: options.width, dpi: 96, bbox: printBbox, basemap: ORTHO_2024_BASEMAP }, printLayers);
+  return getMapImage({ height: options.height, width: options.width, dpi: 96, bbox: printBbox, basemap: getOrthoBasemap() }, printLayers);
 }
 
 export interface LandValuesImageOptions {
