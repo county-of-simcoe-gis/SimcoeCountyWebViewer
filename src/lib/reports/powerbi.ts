@@ -24,7 +24,7 @@ function getConfig() {
   };
 }
 
-async function getAccessToken(): Promise<string> {
+export async function getAccessToken(): Promise<string> {
   const { tenantId, clientId, clientSecret } = getConfig();
   const body = new URLSearchParams({
     grant_type: "client_credentials",
@@ -44,14 +44,25 @@ async function getAccessToken(): Promise<string> {
   return json.access_token;
 }
 
-async function getReportId(token: string, reportName: string): Promise<string> {
+export interface PowerBiReport {
+  id: string;
+  name: string;
+  embedUrl?: string;
+  reportType?: string;
+}
+
+export async function findReport(token: string, reportName: string): Promise<PowerBiReport | undefined> {
   const { workspaceId } = getConfig();
   const response = await fetch(`${POWERBI_API}/groups/${workspaceId}/reports`, {
     cache: "no-cache",
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await response.json();
-  const report = (json.value as Array<{ id: string; name: string }> | undefined)?.find((r) => r.name === reportName);
+  return (json.value as PowerBiReport[] | undefined)?.find((r) => r.name === reportName);
+}
+
+async function getReportId(token: string, reportName: string): Promise<string> {
+  const report = await findReport(token, reportName);
   if (!report) throw new Error(`PowerBI report not found: ${reportName}`);
   return report.id;
 }

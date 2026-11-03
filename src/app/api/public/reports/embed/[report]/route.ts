@@ -1,5 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { setReportParameters } from "@/lib/reports/powerbiEmbed";
+import { getEmbedToken, setReportParameters } from "@/lib/reports/powerbiEmbed";
+import { isHostAllowed } from "@/lib/common";
+
+/**
+ * GET /api/public/reports/embed/:report
+ * Returns the PowerBI embed configuration (embed URL and short-lived token) for the report.
+ */
+export async function GET(request: NextRequest, { params }: { params: Promise<{ report: string }> }): Promise<NextResponse> {
+  try {
+    if (!isHostAllowed(request.headers.get("host") ?? undefined)) {
+      return NextResponse.json({ error: "Unauthorized Domain!" }, { status: 403 });
+    }
+
+    const { report } = await params;
+    return NextResponse.json(await getEmbedToken(report));
+  } catch (error) {
+    console.error("Error in reports embed token handler:", error);
+    return NextResponse.json({ error: "Failed to retrieve embed token" }, { status: 500 });
+  }
+}
 
 /**
  * POST /api/public/reports/embed/:report
