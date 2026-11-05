@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Feature } from "ol";
 import { Style } from "ol/style";
@@ -22,6 +22,7 @@ import PropertyReport from "@/components/PropertyReport";
 import IdentifyQuery from "@/components/Identify/IdentifyQuery";
 import Identify from "@/components/Identify";
 import Zoning from "@/components/themes/Zoning/Zoning";
+import { fetchZoneTypeByArn, getZoningLabels } from "@/components/themes/Zoning/zoningType";
 import { activateTab } from "@/utils/helpersUI";
 
 export interface PropertyInfo {
@@ -83,6 +84,22 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
   const broadbandSpeed = other?.BroadbandSpeed;
   const propertyLink = getPropertyLink(propertyLinkParameter, arn);
 
+  const [zoneType, setZoneType] = useState<string | undefined>(undefined);
+  useEffect(() => {
+    if (!hasZoning || !arn) {
+      setZoneType(undefined);
+      return;
+    }
+    let cancelled = false;
+    fetchZoneTypeByArn(arn).then((value) => {
+      if (!cancelled) setZoneType(value);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [hasZoning, arn]);
+  const zoningLabels = getZoningLabels(zoneType);
+
   const handleCopyARN = () => {
     navigator.clipboard.writeText(arn);
     setCopied(true);
@@ -118,7 +135,7 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
     // This works even when the Zoning theme is disabled in the sidebar.
     useReportsStore.getState().setReport({
       id: `zoning-${arn}-${Date.now()}`,
-      title: `Zoning: ${arn}`,
+      title: `${zoningLabels.reportPrefix}: ${arn}`,
       content: <Zoning initialArn={arn} hideHeader onClose={() => useReportsStore.getState().clearReport()} />,
       createdAt: new Date(),
       source: "zoning",
@@ -245,10 +262,18 @@ export default function PropertyPopup({ propInfo, feature, onClose, onClearParce
 
         {/* Has Zoning */}
         {hasZoning !== undefined && (
-          <InfoWindowRow label="Has Zoning">
+          <InfoWindowRow label={zoningLabels.hasRow}>
             {hasZoning ? "Yes" : "No"}
             {hasZoning && (
-              <Image src="/images/information.png" alt="View Zoning" title="View Zoning" width={16} height={16} className="inline-block -mb-0.5 ml-1.5 cursor-pointer" onClick={handleViewZoning} />
+              <Image
+                src="/images/information.png"
+                alt={zoningLabels.viewAction}
+                title={zoningLabels.viewAction}
+                width={16}
+                height={16}
+                className="inline-block -mb-0.5 ml-1.5 cursor-pointer"
+                onClick={handleViewZoning}
+              />
             )}
           </InfoWindowRow>
         )}

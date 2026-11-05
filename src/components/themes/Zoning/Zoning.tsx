@@ -17,6 +17,7 @@ import VectorLayer from "ol/layer/Vector";
 import { Circle as CircleStyle, Fill, Stroke, Style } from "ol/style";
 import { GeoJSON } from "ol/format";
 import localConfig from "./config.json";
+import { getZoningLabels, isPrecinct } from "./zoningType";
 
 // ── Props ────────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,8 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
 
   const [sections, setSections] = useState<FeatureSection[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [zoneType, setZoneType] = useState<unknown>(undefined);
+  const labels = getZoningLabels(zoneType);
 
   // Highlight layer
   const highlightSourceRef = useRef<VectorSource>(new VectorSource());
@@ -134,6 +137,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
   const loadReport = useCallback(async (geojson: string, searchType: string, searchName: string) => {
     setIsLoading(true);
     setSections([]);
+    setZoneType(undefined);
 
     const geoJsonFormat = new GeoJSON();
     const isAssessmentParcel = searchType === "Assessment Parcel";
@@ -159,6 +163,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
     }
 
     const results: FeatureSection[] = [];
+    let detectedZoneType: unknown;
 
     for (const layer of config.queryLayers) {
       try {
@@ -192,7 +197,11 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
             })
           : [];
 
-        results.push({ title: layer.title, features: olFeatures, featureTitleColumn: layer.featureTitleColumn });
+        // One zone_type per parcel is assumed, so the first feature decides the wording.
+        const layerZoneType = olFeatures[0]?.get("zone_type");
+        if (detectedZoneType === undefined) detectedZoneType = layerZoneType;
+
+        results.push({ title: isPrecinct(layerZoneType) ? getZoningLabels(layerZoneType).title : layer.title, features: olFeatures, featureTitleColumn: layer.featureTitleColumn });
       } catch (err) {
         console.error(`[Zoning] Error querying layer ${layer.layerName}:`, err);
         results.push({ title: layer.title, features: [], featureTitleColumn: layer.featureTitleColumn });
@@ -200,6 +209,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
     }
 
     setSections(results);
+    setZoneType(detectedZoneType);
     setIsLoading(false);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -235,7 +245,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
     <PanelComponent icon={<FaPalette size={20} className="text-neutral/70" />} name={name} helpLink={helpLink} hideHeader={hideHeader} onClose={onClose} onSidebarVisibility={onSidebarVisibility}>
       <div className="flex flex-col h-full">
         {/* Header */}
-        <div className="px-3 pt-3 pb-2 font-semibold text-sm">Zoning Results</div>
+        <div className="px-3 pt-3 pb-2 font-semibold text-sm">{labels.resultsHeading}</div>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto">
@@ -244,7 +254,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
               <span className="loading loading-spinner loading-sm" />
             </div>
           ) : (
-            <SpatialQueryResults sections={sections} highlightSource={highlightSourceRef.current} emptyMessage="Perform a search to see zoning results." />
+            <SpatialQueryResults sections={sections} highlightSource={highlightSourceRef.current} emptyMessage={labels.emptyMessage} />
           )}
         </div>
 
@@ -257,7 +267,7 @@ export default function Zoning({ name = "Zoning", helpLink, hideHeader, onClose,
           )}
           {config.byLawUrl && (
             <a href={config.byLawUrl} target="_blank" rel="noopener noreferrer" className="btn btn-sm btn-outline flex-1">
-              Zoning Bylaw
+              {labels.bylawLink}
             </a>
           )}
           {config.contactUsEmail && (
