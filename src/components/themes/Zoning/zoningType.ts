@@ -12,14 +12,14 @@ export const ZONING_LABELS = {
   reportPrefix: "Zoning",
 };
 
-export const CPPS_LABELS = {
-  title: "Community Planning Permit System (CPPS)",
-  resultsHeading: "Community Planning Permit System (CPPS) Results",
-  emptyMessage: "Perform a search to see Community Planning Permit System (CPPS) results.",
-  bylawLink: "CPPS By-law",
-  hasRow: "Has CPPS Data",
-  viewAction: "View CPPS Data",
-  reportPrefix: "CPPS",
+export const PRECINCT_LABELS = {
+  title: "Precinct",
+  resultsHeading: "Precinct Results",
+  emptyMessage: "Perform a search to see precinct results.",
+  bylawLink: "Precinct By-law",
+  hasRow: "Has Precinct",
+  viewAction: "View Precinct",
+  reportPrefix: "Precinct",
 };
 
 export function isPrecinct(zoneType: unknown): boolean {
@@ -27,7 +27,7 @@ export function isPrecinct(zoneType: unknown): boolean {
 }
 
 export function getZoningLabels(zoneType: unknown) {
-  return isPrecinct(zoneType) ? CPPS_LABELS : ZONING_LABELS;
+  return isPrecinct(zoneType) ? PRECINCT_LABELS : ZONING_LABELS;
 }
 
 /** Looks up the zone_type of the zoning feature for a parcel; undefined when not found or on error. */

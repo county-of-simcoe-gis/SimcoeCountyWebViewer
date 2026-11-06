@@ -189,7 +189,7 @@ describe("Zoning", () => {
 
   // ── Footer links ───────────────────────────────────────────────────────────
 
-  describe("Precinct (CPPS) wording", () => {
+  describe("Precinct wording", () => {
     const precinctFeature = { type: "Feature", geometry: { type: "Point", coordinates: [0, 0] }, properties: { zone_type: "PRECINCT", label: "P1" } };
 
     it("switches heading, empty message and bylaw link when zone_type is PRECINCT", async () => {
@@ -198,8 +198,8 @@ describe("Zoning", () => {
 
       render(<Zoning {...defaultProps} initialArn="123" />);
 
-      expect(await screen.findByText("Community Planning Permit System (CPPS) Results")).toBeInTheDocument();
-      expect(screen.getByText("CPPS By-law")).toBeInTheDocument();
+      expect(await screen.findByText("Precinct Results")).toBeInTheDocument();
+      expect(screen.getByText("Precinct By-law")).toBeInTheDocument();
       expect(screen.queryByText("Zoning Results")).not.toBeInTheDocument();
       expect(screen.queryByText("Zoning Bylaw")).not.toBeInTheDocument();
     });

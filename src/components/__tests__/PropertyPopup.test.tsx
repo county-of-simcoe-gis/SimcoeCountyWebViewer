@@ -101,13 +101,13 @@ describe("PropertyPopup", () => {
     expect(screen.getByText("Yes")).toBeInTheDocument();
   });
 
-  it("shows CPPS wording when zone_type is PRECINCT", async () => {
+  it("shows precinct wording when zone_type is PRECINCT", async () => {
     mockFetchZoneTypeByArn.mockResolvedValue("PRECINCT");
     render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
 
-    expect(await screen.findByText("Has CPPS Data")).toBeInTheDocument();
+    expect(await screen.findByText("Has Precinct")).toBeInTheDocument();
     expect(screen.queryByText("Has Zoning")).not.toBeInTheDocument();
-    expect(screen.getByAltText("View CPPS Data")).toBeInTheDocument();
+    expect(screen.getByAltText("View Precinct")).toBeInTheDocument();
   });
 
   it("keeps zoning wording when the zone_type lookup finds nothing", async () => {

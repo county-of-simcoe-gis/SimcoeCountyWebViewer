@@ -10,7 +10,7 @@ vi.mock("@/utils/config", () => ({
   getComponentConfig: vi.fn(() => mockComponentConfig),
 }));
 
-import { isPrecinct, getZoningLabels, fetchZoneTypeByArn, CPPS_LABELS, ZONING_LABELS } from "../zoningType";
+import { isPrecinct, getZoningLabels, fetchZoneTypeByArn, PRECINCT_LABELS, ZONING_LABELS } from "../zoningType";
 
 describe("zoningType", () => {
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe("zoningType", () => {
   });
 
   it("returns labels by zone type", () => {
-    expect(getZoningLabels("PRECINCT")).toBe(CPPS_LABELS);
+    expect(getZoningLabels("PRECINCT")).toBe(PRECINCT_LABELS);
     expect(getZoningLabels("ZONING")).toBe(ZONING_LABELS);
     expect(getZoningLabels(undefined)).toBe(ZONING_LABELS);
   });
