@@ -24,7 +24,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 
   // Check if ARN is a condo parent (20 characters)
-  if (arn.length !== 20) {
+  if (arn.length !== 20 || !/^[A-Za-z0-9_-]+$/.test(arn)) {
     return NextResponse.json({ error: "Invalid condo parent ARN. Must be 20 characters." }, { status: 400 });
   }
 
@@ -40,7 +40,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Execute stored procedure to get condo children
     const children = await sqlTabular.selectAllWithValues<CondoChild>("EXEC [uspOpenGISCondoChildren] @condoArn, @locations", values);
-    console.log(values, children);
 
     // If no children found, return empty array
     if (!children || children.length === 0) {

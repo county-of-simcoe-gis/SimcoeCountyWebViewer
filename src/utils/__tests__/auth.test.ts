@@ -19,6 +19,14 @@ describe("auth utils", () => {
     it("returns false for non-secured URLs", () => {
       expect(isSecuredUrl("https://opengis.simcoe.ca/geoserver/simcoe/ows")).toBe(false);
     });
+
+    it("returns false for look-alike hosts and non-https URLs", () => {
+      expect(isSecuredUrl("https://evil.com/?x=opengis2.simcoe.ca")).toBe(false);
+      expect(isSecuredUrl("https://opengis2.simcoe.ca.evil.com/geoserver")).toBe(false);
+      expect(isSecuredUrl("https://opengis2.simcoe.ca@evil.com/geoserver")).toBe(false);
+      expect(isSecuredUrl("http://opengis2.simcoe.ca/geoserver")).toBe(false);
+      expect(isSecuredUrl("/relative/opengis2.simcoe.ca")).toBe(false);
+    });
   });
 
   describe("getAccessToken", () => {

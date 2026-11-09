@@ -345,6 +345,16 @@ You can also build links manually with query parameters.
 
 The property popup's **Share** button can also generate a direct property link.
 
+### Legacy Standalone Pages
+
+These pages keep the URLs of the retired standalone apps working. Parameter names are case-insensitive.
+
+| Page              | Parameters                                                                      | Example                                                   |
+| ----------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `/legend`         | Layer group name set to `1` to show it. All groups are shown if none are given. | `/legend/?Popular=1&All_Layers=1`                         |
+| `/layerInfo`      | `URL` layer metadata URL (required), `SHOW_DOWNLOAD=1` to show the download.    | `/layerInfo/?URL=<layer json url>&SHOW_DOWNLOAD=1`        |
+| `/featurereports` | `TYPE` (`REALESTATE`, `FORESTRY` or `CHILDCARE`), `ID`, `SHOWHEADER=1`.         | `/featurereports/?TYPE=FORESTRY&ID=COPELAND&SHOWHEADER=1` |
+
 ---
 
 ## Layer Setup
@@ -464,6 +474,16 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 ---
 
 ## Revision History
+
+### v2.0.10 (2026-11-05)
+
+- **Legacy Standalone Pages** — The retired `/legend`, `/layerInfo`, and `/featurereports` pages are available again, and their legacy URLs work regardless of letter case. Feature reports cover Real Estate, Forestry, and Child Care.
+- **Legacy API Endpoints** — Added the public property report PDF, parcel, planning, land value, and MLS image, condo children, and embedded report endpoints so links from the legacy viewers keep working.
+- **Report Map Images** — Report maps use a configurable ortho year, and failed image generation returns detailed error messages.
+- **Precinct Zoning** — Properties in a precinct show Precinct wording, results, and by-law link in the Zoning theme and the property popup.
+- **MyMaps** — Fixed geometry icons in the MyMaps item list, and EsriJSON import handles projection errors without failing.
+- **Security Hardening** — User object IDs are validated before group lookup, and server action scanner probes are rejected.
+- **General Maintenance** — Database connections are shared across requests, menu and sidebar callbacks were simplified, and package dependencies were updated.
 
 ### v2.0.9 (2026-10-29)
 

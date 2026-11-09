@@ -13,6 +13,11 @@ const protectedPrefixes = [
 
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // The app defines no server actions; requests carrying this header are scanner probes.
+  if (req.headers.has("next-action")) {
+    return new NextResponse(null, { status: 400 });
+  }
   // console.log("Middleware:", { pathname });
 
   // Check if the path requires authentication
@@ -42,5 +47,6 @@ export const config = {
   // All other routes are public and don't need middleware checks
   matcher: [
     "/api/secure/:path*", // All secure API routes
+    { source: "/:path*", has: [{ type: "header", key: "next-action" }] }, // Server action probes
   ],
 };

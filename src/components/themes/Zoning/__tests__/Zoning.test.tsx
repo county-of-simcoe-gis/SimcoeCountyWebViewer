@@ -189,6 +189,33 @@ describe("Zoning", () => {
 
   // ── Footer links ───────────────────────────────────────────────────────────
 
+  describe("Precinct wording", () => {
+    const precinctFeature = { type: "Feature", geometry: { type: "Point", coordinates: [0, 0] }, properties: { zone_type: "PRECINCT", label: "P1" } };
+
+    it("switches heading, empty message and bylaw link when zone_type is PRECINCT", async () => {
+      mockComponentConfig = { config: JSON.stringify({ byLawUrl: "https://example.com/bylaw" }) };
+      mockQueryByAttribute.mockResolvedValue({ features: [precinctFeature] });
+
+      render(<Zoning {...defaultProps} initialArn="123" />);
+
+      expect(await screen.findByText("Precinct Results")).toBeInTheDocument();
+      expect(screen.getByText("Precinct By-law")).toBeInTheDocument();
+      expect(screen.queryByText("Zoning Results")).not.toBeInTheDocument();
+      expect(screen.queryByText("Zoning Bylaw")).not.toBeInTheDocument();
+    });
+
+    it("keeps zoning wording when zone_type is ZONING", async () => {
+      mockQueryByAttribute.mockResolvedValue({ features: [{ ...precinctFeature, properties: { zone_type: "ZONING", label: "R1" } }] });
+
+      render(<Zoning {...defaultProps} initialArn="123" />);
+
+      await waitFor(() => expect(mockQueryByAttribute).toHaveBeenCalled());
+      expect(screen.getByText("Zoning Results")).toBeInTheDocument();
+    });
+  });
+
+  // ── Footer links ───────────────────────────────────────────────────────────
+
   describe("Footer Links", () => {
     // The config has empty strings for termsUrl, byLawUrl, contactUsEmail
     // so no links should render by default.

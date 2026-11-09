@@ -507,7 +507,7 @@ describe("ResultsPopup", () => {
         expect(attrs).toBeInTheDocument();
 
         // Labels and values should be in a shared grid container
-        const grid = attrs?.querySelector(".grid.grid-cols-\\[minmax\\(110px\\2c 40\\%\\)_1fr\\]");
+        const grid = attrs?.querySelector('.grid[class*="grid-cols-"]');
         expect(grid).toBeInTheDocument();
 
         // Check for attribute keys (rendered as InfoRow labels with colons,

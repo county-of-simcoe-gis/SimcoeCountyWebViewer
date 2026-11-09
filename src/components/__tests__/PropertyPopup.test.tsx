@@ -9,6 +9,13 @@ import { useAppStore } from "@/stores/appStore";
 import { useURLModalStore } from "@/stores/urlModalStore";
 import { useToastStore } from "@/hooks/useToast";
 
+const mockFetchZoneTypeByArn = vi.fn();
+
+vi.mock("@/components/themes/Zoning/zoningType", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/components/themes/Zoning/zoningType")>();
+  return { ...actual, fetchZoneTypeByArn: (...args: unknown[]) => mockFetchZoneTypeByArn(...args) };
+});
+
 describe("PropertyPopup", () => {
   const mockFeature = new Feature({
     geometry: new Polygon([
@@ -44,6 +51,7 @@ describe("PropertyPopup", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchZoneTypeByArn.mockResolvedValue("ZONING");
 
     // Mock clipboard API
     Object.defineProperty(navigator, "clipboard", {
@@ -91,6 +99,23 @@ describe("PropertyPopup", () => {
 
     expect(screen.getByText("Has Zoning")).toBeInTheDocument();
     expect(screen.getByText("Yes")).toBeInTheDocument();
+  });
+
+  it("shows precinct wording when zone_type is PRECINCT", async () => {
+    mockFetchZoneTypeByArn.mockResolvedValue("PRECINCT");
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    expect(await screen.findByText("Has Precinct")).toBeInTheDocument();
+    expect(screen.queryByText("Has Zoning")).not.toBeInTheDocument();
+    expect(screen.getByAltText("View Precinct")).toBeInTheDocument();
+  });
+
+  it("keeps zoning wording when the zone_type lookup finds nothing", async () => {
+    mockFetchZoneTypeByArn.mockResolvedValue(undefined);
+    render(<PropertyPopup propInfo={defaultPropInfo} feature={mockFeature} onClose={mockOnClose} onClearParcelLayer={mockOnClearParcelLayer} />);
+
+    await waitFor(() => expect(mockFetchZoneTypeByArn).toHaveBeenCalledWith("1234567890"));
+    expect(screen.getByText("Has Zoning")).toBeInTheDocument();
   });
 
   it("displays no zoning when false", () => {

@@ -234,11 +234,11 @@ export const authOptions: NextAuthOptions = {
         // Get groups from profile or fetch from Microsoft Graph API
         let groups = profile?.groups || [];
 
-        // If no groups in profile, fetch from Microsoft Graph API using the user's object ID
-        if (groups.length === 0 && profile.sub) {
+        // Graph needs the object ID (oid); `sub` is a pairwise ID and returns 404.
+        if (groups.length === 0 && oid) {
           console.log("[NextAuth JWT] No groups in profile, fetching from Microsoft Graph API...");
           try {
-            groups = await getUserGroups(profile.sub);
+            groups = await getUserGroups(oid);
             console.log("[NextAuth JWT] Fetched groups from Graph API:", groups.length, "groups");
           } catch (error) {
             console.error("[NextAuth JWT] Error fetching groups from Graph API:", error);

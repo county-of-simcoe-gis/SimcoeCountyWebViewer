@@ -156,7 +156,8 @@ const broadbandSql = `
   LIMIT 1
 `;
 
-async function getBroadbandSpeed(arn: string): Promise<string> {
+/** Returns null when the lookup itself failed (as opposed to no data), so callers can skip caching. */
+async function getBroadbandSpeed(arn: string): Promise<string | null> {
   try {
     const broadbandResult = await pgWeblive.selectFirstWithValues<BroadbandResult>(broadbandSql, [arn]);
 
@@ -166,7 +167,7 @@ async function getBroadbandSpeed(arn: string): Promise<string> {
     return "No information available";
   } catch (error) {
     console.error("Error fetching broadband speed:", error);
-    return "No information available";
+    return null;
   }
 }
 
@@ -256,6 +257,76 @@ function formatRecord(result: SQLResult, broadbandSpeed: string): PropertyReport
   };
 }
 
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_MAX_ENTRIES = 500;
+const reportCache = new Map<string, { expires: number; results: PropertyReportResult[] }>();
+const inFlight = new Map<string, Promise<PropertyReportResult[]>>();
+
+interface LoadedReport {
+  results: PropertyReportResult[];
+  cacheable: boolean;
+}
+
+async function loadReport(arn: string): Promise<LoadedReport> {
+  const sql = `
+    SELECT *
+    FROM TABULAR.dbo.view_PropertyReportInfo_map
+    WHERE ARN = @arn
+    ORDER BY UseForPropertyReport DESC
+  `;
+  const values = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
+
+  // Run both DB queries in parallel
+  const [rows, broadbandSpeed] = await Promise.all([sqlTabular.selectAllWithValues<SQLResult>(sql, values), getBroadbandSpeed(arn)]);
+
+  const results = rows.map((row) => formatRecord(row, broadbandSpeed ?? "No information available"));
+
+  // Fallback: if Municipality is missing on any record, look it up once by the ARN prefix
+  if (results.some((r) => !r.Municipality)) {
+    try {
+      const lookupSql = `
+        SELECT TOP (1) [FriendlyName] as muni
+        FROM [TABULAR].[dbo].[tbl_PartnerLookup]
+        WHERE municode = LEFT(@arn, 4)
+      `;
+      const lookupValues = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
+      const lookup = await sqlTabular.selectFirstWithValues<PartnerLookupResult>(lookupSql, lookupValues);
+      if (lookup?.muni) {
+        results.forEach((r) => {
+          if (!r.Municipality) r.Municipality = lookup.muni;
+        });
+      }
+    } catch (lookupError) {
+      console.error("Error looking up municipality from tbl_PartnerLookup:", lookupError);
+    }
+  }
+
+  return { results, cacheable: broadbandSpeed !== null };
+}
+
+/** Cached, with concurrent requests for the same ARN sharing one load. Failures are never cached. */
+function getReport(arn: string): Promise<PropertyReportResult[]> {
+  const cached = reportCache.get(arn);
+  if (cached && cached.expires > Date.now()) return Promise.resolve(cached.results);
+
+  const pending = inFlight.get(arn);
+  if (pending) return pending;
+
+  const promise = loadReport(arn)
+    .then(({ results, cacheable }) => {
+      if (!cacheable) return results;
+      if (reportCache.size >= CACHE_MAX_ENTRIES) {
+        const oldest = reportCache.keys().next().value;
+        if (oldest !== undefined) reportCache.delete(oldest);
+      }
+      reportCache.set(arn, { expires: Date.now() + CACHE_TTL_MS, results });
+      return results;
+    })
+    .finally(() => inFlight.delete(arn));
+  inFlight.set(arn, promise);
+  return promise;
+}
+
 /**
  * GET handler for property report
  * Returns an array of all records associated with the ARN (an ARN can have
@@ -268,45 +339,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ error: "ARN parameter is required" }, { status: 400 });
   }
 
+  if (!/^[A-Za-z0-9_-]{1,50}$/.test(arn)) {
+    return NextResponse.json({ error: "Invalid ARN" }, { status: 400 });
+  }
+
   try {
-    const sql = `
-      SELECT *
-      FROM TABULAR.dbo.view_PropertyReportInfo_map
-      WHERE ARN = @arn
-      ORDER BY UseForPropertyReport DESC
-    `;
-    const values = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
-
-    // Run both DB queries in parallel
-    const [rows, broadbandSpeed] = await Promise.all([sqlTabular.selectAllWithValues<SQLResult>(sql, values), getBroadbandSpeed(arn)]);
-
-    if (!rows.length) {
-      return NextResponse.json([]);
-    }
-
-    const results = rows.map((row) => formatRecord(row, broadbandSpeed));
-
-    // Fallback: if Municipality is missing on any record, look it up once by the ARN prefix
-    if (results.some((r) => !r.Municipality)) {
-      try {
-        const lookupSql = `
-          SELECT TOP (1) [FriendlyName] as muni
-          FROM [TABULAR].[dbo].[tbl_PartnerLookup]
-          WHERE municode = LEFT(@arn, 4)
-        `;
-        const lookupValues = [{ name: "arn", type: "NVarChar", typeOpts: { length: 250 }, value: arn }];
-        const lookup = await sqlTabular.selectFirstWithValues<PartnerLookupResult>(lookupSql, lookupValues);
-        if (lookup?.muni) {
-          results.forEach((r) => {
-            if (!r.Municipality) r.Municipality = lookup.muni;
-          });
-        }
-      } catch (lookupError) {
-        console.error("Error looking up municipality from tbl_PartnerLookup:", lookupError);
-      }
-    }
-
-    return NextResponse.json(results);
+    return NextResponse.json(await getReport(arn));
   } catch (error) {
     console.error("Error fetching property report:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
