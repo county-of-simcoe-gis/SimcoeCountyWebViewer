@@ -462,7 +462,7 @@ function convertSettingsToAppConfig(settings: SettingsType & Record<string, unkn
     if (general.controls) {
       config.controls = {
         ...general.controls,
-        attribution: general.controls.attribution || false, // Provide default for required field
+        attribution: general.controls.attribution ?? true, // Provide default for required field
       };
     }
 

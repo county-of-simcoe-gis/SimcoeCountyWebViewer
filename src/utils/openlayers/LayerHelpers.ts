@@ -149,6 +149,7 @@ export class LayerHelpers {
       maxZoom = null,
       timeValue,
       labelField,
+      attribution,
     }: LayerOptions,
     callback: (layer: Layer) => void,
   ): void {
@@ -287,6 +288,7 @@ export class LayerHelpers {
             source: new XYZ({
               url: finalUrl as string,
               crossOrigin: "anonymous",
+              attributions: attribution || undefined,
             }),
             minZoom: minZoom || undefined,
             maxZoom: maxZoom || undefined,
@@ -659,6 +661,7 @@ export class LayerHelpers {
               url: finalUrl as string,
               crossOrigin: "anonymous",
               tileGrid: tileGrid,
+              attributions: attribution || undefined,
             }),
           }),
         );
@@ -690,6 +693,7 @@ export class LayerHelpers {
           url: finalUrl as string,
           tileGrid: customTileGrid,
           crossOrigin: "anonymous",
+          attributions: attribution || undefined,
         });
         callback(
           new TileLayer({
@@ -729,6 +733,9 @@ export class LayerHelpers {
                 // Use applyStyle which handles source creation, sprite + glyph loading
                 applyStyle(vtLayer, glStyle, "esri")
                   .then(() => {
+                    if (attribution) {
+                      (vtLayer.getSource() as VectorTileSource | null)?.setAttributions(attribution);
+                    }
                     callback(vtLayer);
                   })
                   .catch((err) => {

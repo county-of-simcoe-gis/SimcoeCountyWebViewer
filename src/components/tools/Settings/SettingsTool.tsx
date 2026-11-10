@@ -38,6 +38,7 @@ const controlGroups = {
     { key: "scaleSelector" as keyof ControlVisibility, label: "Scale Selector", tooltip: "Shows a dropdown to select a specific map scale" },
     { key: "basemap" as keyof ControlVisibility, label: "Basemap Switcher", tooltip: "Shows the basemap switcher to change the background map" },
     { key: "grid" as keyof ControlVisibility, label: "Grid", tooltip: "Toggles a coordinate grid overlay on the map" },
+    { key: "attribution" as keyof ControlVisibility, label: "Basemap Attribution", tooltip: "Shows the data source credits for the visible basemap" },
   ],
   other: [
     { key: "gitHubButton" as keyof ControlVisibility, label: "GitHub Button", tooltip: "Shows a link to the project's GitHub repository" },

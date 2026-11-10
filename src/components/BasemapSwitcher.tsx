@@ -30,6 +30,7 @@ interface BasemapLayer {
   rootPath?: string;
   spritePath?: string;
   pngPath?: string;
+  attribution?: string;
 }
 
 interface BasemapService {
@@ -44,6 +45,7 @@ interface ImageryService {
   name: string;
   fullExtent?: number[];
   type: string;
+  attribution?: string;
 }
 
 interface BasemapConfig {
@@ -51,9 +53,11 @@ interface BasemapConfig {
   topoServices: BasemapService[];
   imageryServices: ImageryService[];
   worldImageryService?: string;
+  worldImageryAttribution?: string;
   streetService?: {
     url: string;
     fullExtent?: number[];
+    attribution?: string;
   };
 }
 
@@ -187,6 +191,9 @@ export default function BasemapSwitcher() {
           if (apiBasemapServices.worldImageryService) {
             data.worldImageryService = apiBasemapServices.worldImageryService;
           }
+          if (apiBasemapServices.worldImageryAttribution) {
+            data.worldImageryAttribution = apiBasemapServices.worldImageryAttribution;
+          }
           // console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
         }
 
@@ -279,6 +286,7 @@ export default function BasemapSwitcher() {
             tiled: true,
             extent: service.fullExtent,
             name: service.name,
+            attribution: service.attribution,
           },
           (newLayer) => {
             if (newLayer) {
@@ -326,6 +334,7 @@ export default function BasemapSwitcher() {
           url: basemapConfig.streetService.url,
           name: "Streets",
           extent: basemapConfig.streetService.fullExtent,
+          attribution: basemapConfig.streetService.attribution,
         },
         (newLayer) => {
           if (newLayer) {
@@ -368,6 +377,7 @@ export default function BasemapSwitcher() {
           sourceType: OL_DATA_TYPES.XYZ,
           url: basemapConfig.worldImageryService,
           name: "World Imagery",
+          attribution: basemapConfig.worldImageryAttribution,
         },
         (newLayer) => {
           if (newLayer) {
@@ -475,6 +485,7 @@ export default function BasemapSwitcher() {
               rootPath: layerConfig.rootPath,
               spritePath: layerConfig.spritePath,
               pngPath: layerConfig.pngPath,
+              attribution: layerConfig.attribution,
             },
             (layer) => {
               if (layer) {
