@@ -19,7 +19,6 @@
       "layers": [
         {
           "url": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}",
-          "attribution": "Esri, TomTom, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, and the GIS User Community",
           "type": "ESRI_TILED",
           "isOverlay": true,
           "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999],
@@ -40,7 +39,6 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_WorldTopoCanadianStyle.json",
-          "attribution": "Esri, TomTom, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, and the GIS User Community",
           "print": false,
           "display": true
         },
@@ -76,7 +74,6 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_LightGreyBackground.json",
-          "attribution": "Esri, TomTom, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, and the GIS User Community",
           "print": false,
           "display": true
         },
@@ -112,7 +109,6 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_Streets_Night_Background.json",
-          "attribution": "Esri, TomTom, Garmin, FAO, NOAA, USGS, © OpenStreetMap contributors, and the GIS User Community",
           "print": false,
           "display": true
         },
