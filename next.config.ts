@@ -4,6 +4,11 @@ import packageJson from "./package.json";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || undefined;
 
+// Exact origins allowed to call /api_v2/public/* from a browser (scheme and port included).
+const publicApiAllowedOrigins = [
+];
+const publicApiOriginPattern = `(?<allowedOrigin>${publicApiAllowedOrigins.map((o) => o.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|")})`;
+
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname),
@@ -12,6 +17,8 @@ const nextConfig: NextConfig = {
   },
   // Configure the base path for the application
   basePath,
+  // Legacy api_v2 callers (Salesforce) send trailing slashes and don't follow the 308; middleware rewrites them instead.
+  skipTrailingSlashRedirect: true,
   // @arcgis/core ships as ESM — Next.js needs to transpile it for SSR/CSR compat
   transpilePackages: ["@arcgis/core"],
   images: {
@@ -50,6 +57,21 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy-Report-Only",
             value: "object-src 'none'; base-uri 'self'; form-action 'self' https://login.microsoftonline.com",
           },
+        ],
+      },
+      // CORS for the legacy public API; the origin is echoed back only when it matches the allowlist.
+      {
+        source: "/api_v2/public/:path*",
+        headers: [{ key: "Vary", value: "Origin" }],
+      },
+      {
+        source: "/api_v2/public/:path*",
+        has: [{ type: "header", key: "origin", value: publicApiOriginPattern }],
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: ":allowedOrigin" },
+          { key: "Access-Control-Allow-Methods", value: "GET, POST, OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type, Accept" },
+          { key: "Access-Control-Max-Age", value: "86400" },
         ],
       },
     ];
