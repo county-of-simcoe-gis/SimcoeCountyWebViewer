@@ -1,124 +1,83 @@
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import Map from "ol/Map";
+import View from "ol/View";
+import TileLayer from "ol/layer/Tile";
+import { XYZ } from "ol/source";
 import AttributionControl from "@/components/map/controls/AttributionControl";
-import type Map from "ol/Map";
 
-// Mock OpenLayers
-const mockMap = {
-  getLayers: vi.fn(),
-  on: vi.fn(),
-  un: vi.fn(),
-} as unknown as Map;
-
-const mockLayer = {
-  getVisible: vi.fn(),
-  getSource: vi.fn(),
-};
-
-const mockSource = {
-  getAttributions: vi.fn(),
-};
-
-const mockLayerCollection = {
-  on: vi.fn(),
-  un: vi.fn(),
-  forEach: vi.fn(),
-};
-
-describe("AttributionControl", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockMap.getLayers = vi.fn().mockReturnValue(mockLayerCollection);
+const makeLayer = (attributions?: string | string[]) =>
+  new TileLayer({
+    source: new XYZ({ url: "https://example.com/{z}/{x}/{y}.png", attributions }),
   });
 
-  it("renders nothing when no attributions are available", () => {
-    mockLayerCollection.forEach.mockImplementation(() => {
-      // No layers to iterate over
-    });
+describe("AttributionControl with real OpenLayers sources", () => {
+  let map: Map;
 
-    const { container } = render(<AttributionControl map={mockMap} />);
+  beforeEach(() => {
+    map = new Map({ view: new View({ center: [0, 0], zoom: 5 }) });
+  });
+
+  it("renders nothing when no layers have attributions", () => {
+    map.addLayer(makeLayer());
+    const { container } = render(<AttributionControl map={map} />);
     expect(container.firstChild).toBeNull();
+  });
+
+  it("shows attributions from function-based sources", () => {
+    map.addLayer(makeLayer("© County of Simcoe"));
+    render(<AttributionControl map={map} />);
+    expect(screen.getByText("© County of Simcoe")).toBeInTheDocument();
+  });
+
+  it("dedupes identical attributions and strips markup", () => {
+    map.addLayer(makeLayer(['<a href="https://example.com">© Esri</a>']));
+    map.addLayer(makeLayer("© Esri"));
+    render(<AttributionControl map={map} />);
+    expect(screen.getAllByText("© Esri")).toHaveLength(1);
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+  });
+
+  it("updates when a layer is added, hidden or removed", () => {
+    const layer = makeLayer("© Layer A");
+    render(<AttributionControl map={map} />);
+    expect(screen.queryByText("© Layer A")).not.toBeInTheDocument();
+
+    act(() => map.addLayer(layer));
+    expect(screen.getByText("© Layer A")).toBeInTheDocument();
+
+    act(() => layer.setVisible(false));
+    expect(screen.queryByText("© Layer A")).not.toBeInTheDocument();
+
+    act(() => layer.setVisible(true));
+    expect(screen.getByText("© Layer A")).toBeInTheDocument();
+
+    act(() => layer.setOpacity(0));
+    expect(screen.queryByText("© Layer A")).not.toBeInTheDocument();
+
+    act(() => layer.setOpacity(1));
+    act(() => map.removeLayer(layer));
+    expect(screen.queryByText("© Layer A")).not.toBeInTheDocument();
+  });
+
+  it("joins credits on one line and renders into the map element", () => {
+    const target = document.createElement("div");
+    document.body.appendChild(target);
+    vi.spyOn(map, "getTargetElement").mockReturnValue(target);
+    map.addLayer(makeLayer("© A"));
+    map.addLayer(makeLayer("© B"));
+
+    const { container } = render(<AttributionControl map={map} />);
+
+    expect(container.firstChild).toBeNull();
+    expect(target.querySelector('[data-testid="map-attribution"]')?.textContent).toBe("© A | © B");
+    expect(target.hasAttribute("data-has-attribution")).toBe(true);
+
+    target.remove();
   });
 
   it("renders nothing when map is not provided", () => {
     const { container } = render(<AttributionControl />);
     expect(container.firstChild).toBeNull();
-  });
-
-  it("displays attributions from visible layers", () => {
-    const testAttributions = ["© Test Attribution 1", "© Test Attribution 2"];
-
-    mockLayerCollection.forEach.mockImplementation((callback) => {
-      callback(mockLayer);
-    });
-
-    mockLayer.getVisible.mockReturnValue(true);
-    mockLayer.getSource.mockReturnValue(mockSource);
-    mockSource.getAttributions.mockReturnValue(testAttributions);
-
-    render(<AttributionControl map={mockMap} />);
-
-    expect(screen.getByText("© Test Attribution 1")).toBeInTheDocument();
-    expect(screen.getByText("© Test Attribution 2")).toBeInTheDocument();
-  });
-
-  it("filters out empty attributions", () => {
-    const testAttributions = ["© Valid Attribution", "", null, undefined];
-
-    mockLayerCollection.forEach.mockImplementation((callback) => {
-      callback(mockLayer);
-    });
-
-    mockLayer.getVisible.mockReturnValue(true);
-    mockLayer.getSource.mockReturnValue(mockSource);
-    mockSource.getAttributions.mockReturnValue(testAttributions);
-
-    const { container } = render(<AttributionControl map={mockMap} />);
-
-    expect(screen.getByText("© Valid Attribution")).toBeInTheDocument();
-    // Should only render one div for the valid attribution
-    const attributionDivs = container.querySelectorAll(".leading-tight");
-    expect(attributionDivs).toHaveLength(1);
-  });
-
-  it("removes HTML tags from attributions", () => {
-    const testAttributions = ['<a href="#">© Attribution with HTML</a>'];
-
-    mockLayerCollection.forEach.mockImplementation((callback) => {
-      callback(mockLayer);
-    });
-
-    mockLayer.getVisible.mockReturnValue(true);
-    mockLayer.getSource.mockReturnValue(mockSource);
-    mockSource.getAttributions.mockReturnValue(testAttributions);
-
-    render(<AttributionControl map={mockMap} />);
-
-    expect(screen.getByText("© Attribution with HTML")).toBeInTheDocument();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
-  });
-
-  it("ignores invisible layers", () => {
-    const testAttributions = ["© Hidden Attribution"];
-
-    mockLayerCollection.forEach.mockImplementation((callback) => {
-      callback(mockLayer);
-    });
-
-    mockLayer.getVisible.mockReturnValue(false);
-    mockLayer.getSource.mockReturnValue(mockSource);
-    mockSource.getAttributions.mockReturnValue(testAttributions);
-
-    const { container } = render(<AttributionControl map={mockMap} />);
-
-    expect(container.firstChild).toBeNull();
-  });
-
-  it("sets up and cleans up event listeners", () => {
-    render(<AttributionControl map={mockMap} />);
-
-    expect(mockLayerCollection.on).toHaveBeenCalledWith("add", expect.any(Function));
-    expect(mockLayerCollection.on).toHaveBeenCalledWith("remove", expect.any(Function));
-    expect(mockMap.on).toHaveBeenCalledWith("moveend", expect.any(Function));
   });
 });

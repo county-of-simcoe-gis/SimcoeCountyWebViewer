@@ -159,8 +159,12 @@
   }
 
   .map-control-zone-bottom-right {
-    bottom: 0.3em;
+    bottom: 2em;
     right: 0.3em;
+  }
+
+  .no-scale-line .map-control-zone-bottom-right {
+    bottom: 0.3em;
   }
 
   /* Adjust zone content spacing for mobile */
@@ -182,4 +186,17 @@
     top: 3.5em; /* Stack vertically on mobile */
     left: 0.5em;
   }
+}
+
+/* Lift bottom-right controls above the single-line attribution strip */
+.app-map[data-has-attribution] .ol-scale-line {
+  bottom: 1.6em !important;
+}
+
+.app-map[data-has-attribution] .map-control-zone-bottom-right {
+  bottom: 3.1em;
+}
+
+.app-map[data-has-attribution].no-scale-line .map-control-zone-bottom-right {
+  bottom: 1.6em;
 }

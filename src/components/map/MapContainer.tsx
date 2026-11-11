@@ -23,7 +23,7 @@ import "@/components/map/controls/MapControls.css";
 import Map from "ol/Map";
 import View from "ol/View";
 import { defaults as defaultInteractions, MouseWheelZoom, PinchRotate, DragRotate, Interaction } from "ol/interaction";
-import { ScaleLine, Attribution } from "ol/control";
+import { ScaleLine } from "ol/control";
 import { Feature } from "ol";
 import { Point, Geometry } from "ol/geom";
 import { Vector as VectorLayer } from "ol/layer";
@@ -549,13 +549,6 @@ export default function MapContainer() {
     // Add OpenLayers built-in controls based on configuration
     if (mapControls.scaleLine) {
       mapInstance.addControl(scaleLineControl);
-    }
-
-    if (mapControls.attribution) {
-      const attributionControl = new Attribution({
-        collapsible: false,
-      });
-      mapInstance.addControl(attributionControl);
     }
 
     // All other controls are managed via the zone system
@@ -1272,41 +1265,6 @@ export default function MapContainer() {
       }
     };
   }, [map, controlVisibility.scaleLine]);
-
-  // Handle Attribution control visibility
-  useEffect(() => {
-    if (!map) return;
-
-    if (controlVisibility.attribution) {
-      // Check if Attribution is already added
-      const controls = map.getControls().getArray();
-      const hasAttribution = controls.some((c) => c instanceof Attribution);
-
-      if (!hasAttribution) {
-        const attributionControl = new Attribution({
-          collapsible: false,
-        });
-        map.addControl(attributionControl);
-      }
-    } else {
-      // Remove Attribution if it exists
-      const controls = map.getControls().getArray();
-      const existingAttribution = controls.find((c) => c instanceof Attribution);
-
-      if (existingAttribution) {
-        map.removeControl(existingAttribution);
-      }
-    }
-
-    return () => {
-      // Cleanup on unmount
-      const controls = map.getControls().getArray();
-      const existingAttribution = controls.find((c) => c instanceof Attribution);
-      if (existingAttribution) {
-        map.removeControl(existingAttribution);
-      }
-    };
-  }, [map, controlVisibility.attribution]);
 
   // Handle rotate interactions visibility — managed via centralized interaction store
   useEffect(() => {

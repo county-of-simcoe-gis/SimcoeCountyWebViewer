@@ -2,6 +2,7 @@
   "defaultButton": "topo",
   "streetService": {
     "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Cache/MapServer/tile/{z}/{y}/{x}",
+    "attribution": "© County of Simcoe",
     "fullExtent": [-8938992.401246801, 5456230.285257593, -8801900.781241283, 5610242.681997935]
   },
   "bathymetryService": {
@@ -9,6 +10,7 @@
     "fullExtent": [-9118041.67548189, 5494116.533098262, -8805900.95513073, 5785509.4618044235]
   },
   "worldImageryService": "https://server.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  "worldImageryAttribution": "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
   "topoServices": [
     {
       "name": "Topographic",
@@ -25,6 +27,7 @@
         },
         {
           "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Topo_Cache/MapServer/tile/{z}/{y}/{x}",
+          "attribution": "© County of Simcoe",
           "type": "SIMCOE_TILED",
           "isOverlay": true,
           "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999],
@@ -44,6 +47,7 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_Canada_Topographic.json",
+          "attribution": "Esri Canada",
           "minZoom": 0,
           "maxZoom": 23,
           "print": false,
@@ -58,6 +62,7 @@
       "layers": [
         {
           "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer/tile/{z}/{y}/{x}",
+          "attribution": "© County of Simcoe",
           "type": "SIMCOE_TILED",
           "isOverlay": true,
           "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999],
@@ -77,6 +82,7 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_LightGrey.json",
+          "attribution": "Esri Canada",
           "minZoom": 0,
           "maxZoom": 23,
           "print": false,
@@ -91,6 +97,7 @@
       "layers": [
         {
           "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Black_And_White_Cache/MapServer/tile/{z}/{y}/{x}",
+          "attribution": "© County of Simcoe",
           "type": "SIMCOE_TILED",
           "isOverlay": true,
           "fullExtent": [-9127039.9939, 5219474.5973000005, -8607132.7041, 5807644.523699999],
@@ -110,6 +117,7 @@
           "type": "ESRI_VECTOR_TILED",
           "isOverlay": true,
           "rootPath": "/basemap/ESRI_Streets_Night.json",
+          "attribution": "Esri Canada",
           "minZoom": 0,
           "maxZoom": 23,
           "print": false,
@@ -124,6 +132,7 @@
       "layers": [
         {
           "url": "https://ws.lioservices.lrc.gov.on.ca/arcgis1/rest/services/LIO_Cartographic/LIO_Topographic/MapServer/tile/{z}/{y}/{x}",
+          "attribution": "© King's Printer for Ontario",
           "type": "ESRI_TILED",
           "isOverlay": true,
           "fullExtent": [-1.85562536661e7, -773026.2100000009, -2019762.2597999983, 1.0008766186999999]
@@ -146,90 +155,105 @@
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1954_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "1954",
+      "attribution": "© County of Simcoe 1954",
       "fullExtent": [-8939199.533337621, 5454802.440978845, -8801041.585877508, 5612748.673941727],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1978_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "1978",
+      "attribution": "© County of Simcoe 1978",
       "fullExtent": [-8939198.774465304, 5454802.850841734, -8801041.351645766, 5612747.926099348],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1989_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "1989",
+      "attribution": "© County of Simcoe 1989",
       "fullExtent": [-8939198.774465304, 5454802.850841734, -8801041.351645766, 5612747.926099348],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_1997_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "1997",
+      "attribution": "© County of Simcoe 1997",
       "fullExtent": [-8939209.262138586, 5453383.540504173, -8799634.494968254, 5612747.404426142],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2002_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2002",
+      "attribution": "© County of Simcoe 2002",
       "fullExtent": [-8947220.760967761, 5448558.705193831, -8773607.10943329, 5611306.111624397],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2008_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2008",
+      "attribution": "© County of Simcoe 2008",
       "fullExtent": [-8947614.320379963, 5442293.149513868, -8801041.665360063, 5612817.832685983],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2012_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2012",
+      "attribution": "© County of Simcoe 2012",
       "fullExtent": [-8940584.631934738, 5454803.475123008, -8801041.532479912, 5612759.41073959],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2013_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2013",
+      "attribution": "© County of Simcoe 2013",
       "fullExtent": [-8939184.415645305, 5456195.94916096, -8801076.676160479, 5611330.116028212],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2016_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2016",
+      "attribution": "© County of Simcoe 2016",
       "fullExtent": [-8940584.631934738, 5454803.4751230525, -8801041.532479912, 5612759.410739558],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2018_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2018",
+      "attribution": "© County of Simcoe 2018",
       "fullExtent": [-8940584.631934738, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2022_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2022",
+      "attribution": "© County of Simcoe 2022",
       "fullExtent": [-8939184.811223287, 5454803.475123089, -8801041.532479914, 5612759.410739516],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2023_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2023",
+      "attribution": "© County of Simcoe 2023",
       "fullExtent": [-8939184.811223287, 5454803.475123089, -8801041.532479914, 5612759.410739516],
       "type": "TileImage"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2024_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2024",
+      "attribution": "© County of Simcoe 2024",
       "fullExtent": [-8897238.520918317, 5489107.141924027, -8844782.837534107, 5578047.364868764],
       "type": "TileImage"
     },
     {
       "url": "http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
       "name": "Google",
+      "attribution": "Imagery © Google",
       "fullExtent": [-8939184.811223287, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
       "type": "XYZ"
     },
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2025_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2025",
+      "attribution": "© County of Simcoe 2025",
       "fullExtent": [-8983611.530493377, 5442614.280048877, -8761058.114186544, 5615779.196228709],
       "type": "TileImage"
     }
