@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, renderHook, fireEvent, waitFor, act } from "@testing-library/react";
-import BasemapSwitcher, { getImageryNameAtSlider, resolveSavedImageryIndex, type SavedBasemapOptions } from "@/components/BasemapSwitcher";
+import BasemapSwitcher, { getDefaultImageryIndex, getImageryNameAtSlider, resolveSavedImageryIndex, type SavedBasemapOptions } from "@/components/BasemapSwitcher";
 import { useMapStore } from "@/stores/mapStore";
 import { useAppStore } from "@/stores/appStore";
 import { LayerManager } from "@/utils/openlayers/LayerManager";
@@ -240,6 +240,27 @@ describe("BasemapSwitcher", () => {
       expect(mockBasemapConfig.imageryServices).toBeDefined();
       expect(mockBasemapConfig.topoServices.length).toBeGreaterThan(0);
       expect(mockBasemapConfig.imageryServices.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Default imagery", () => {
+    const imageryServices = [
+      { name: "2024", url: "", type: "TileImage" },
+      { name: "2025", url: "", type: "TileImage" },
+      { name: "2026", url: "", type: "TileImage" },
+    ];
+
+    it("returns the index of the configured default name", () => {
+      expect(getDefaultImageryIndex({ imageryServices, defaultImageryName: "2025" })).toBe(1);
+    });
+
+    it("falls back to the newest service when the name is unset or unknown", () => {
+      expect(getDefaultImageryIndex({ imageryServices })).toBe(2);
+      expect(getDefaultImageryIndex({ imageryServices, defaultImageryName: "1999" })).toBe(2);
+    });
+
+    it("returns 0 when there are no services", () => {
+      expect(getDefaultImageryIndex({ imageryServices: [] })).toBe(0);
     });
   });
 

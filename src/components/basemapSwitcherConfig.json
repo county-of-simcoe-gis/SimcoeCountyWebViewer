@@ -1,5 +1,6 @@
 {
   "defaultButton": "topo",
+  "defaultImageryName": "2025",
   "streetService": {
     "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Streets_Cache/MapServer/tile/{z}/{y}/{x}",
     "attribution": "© County of Simcoe",
@@ -250,11 +251,19 @@
       "fullExtent": [-8939184.811223287, 5455923.230242465, -8801043.336866248, 5612747.0814112425],
       "type": "XYZ"
     },
+
     {
       "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2025_Cache/MapServer/tile/{z}/{y}/{x}",
       "name": "2025",
       "attribution": "© County of Simcoe 2025",
       "fullExtent": [-8983611.530493377, 5442614.280048877, -8761058.114186544, 5615779.196228709],
+      "type": "TileImage"
+    },
+    {
+      "url": "https://maps.simcoe.ca/arcgis/rest/services/Public/Ortho_2026_Cache/MapServer/tile/{z}/{y}/{x}",
+      "name": "2026",
+      "attribution": "© County of Simcoe 2026",
+      "fullExtent": [-8970519.7409, 5436741.353399999, -8725826.4703, 5652568.615699999],
       "type": "TileImage"
     }
   ]

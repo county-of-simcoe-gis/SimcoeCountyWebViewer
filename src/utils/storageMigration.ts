@@ -154,6 +154,14 @@ export const STORAGE_MIGRATIONS: StorageMigration[] = [
       { type: "removeField", key: "Saved Basemap Options", field: "imageryServiceName" },
     ],
   },
+  {
+    version: "2.0.11",
+    description: "Clear saved imagery service selection",
+    actions: [
+      // Must match BASEMAP_STORAGE_KEY in BasemapSwitcher.tsx.
+      { type: "removeField", key: "Saved Basemap Options", field: "imageryServiceName" },
+    ],
+  },
 ];
 
 /** Compares dotted numeric versions; missing segments count as zero. */
