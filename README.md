@@ -475,6 +475,12 @@ Edits on the host hot-reload inside the container. Container `node_modules` are 
 
 ## Revision History
 
+### v2.0.11 (2026-11-12)
+
+- **Basemap Attribution** — The visible basemap's data source credits show along the bottom-right of the map, and can be turned on or off with the new Basemap Attribution option in Settings. Attribution text can be set on basemap, street, imagery, and World Imagery services in the basemap configuration.
+- **2026 Imagery** — Added the 2026 imagery service to the Basemap Switcher. The default imagery is configurable with `defaultImageryName` (2025 by default), and any saved imagery selection is reset on upgrade.
+- **Legacy Public API** — Added CORS support for the legacy `/api_v2/public` endpoints, limited to an allowlist of origins, and trailing-slash requests are handled without redirects.
+
 ### v2.0.10 (2026-11-05)
 
 - **Legacy Standalone Pages** — The retired `/legend`, `/layerInfo`, and `/featurereports` pages are available again, and their legacy URLs work regardless of letter case. Feature reports cover Real Estate, Forestry, and Child Care.
