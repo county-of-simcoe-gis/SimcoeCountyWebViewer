@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getEmbedToken, setReportParameters } from "@/lib/reports/powerbiEmbed";
 import { isHostAllowed } from "@/lib/common";
 
-const PUBLIC_POST_REPORTS = ["Public_Embedded"];
+const PUBLIC_POST_REPORTS = ["Public_Embedded", "Prescription"];
 const MAX_PARAMS = 20;
 
 /**
