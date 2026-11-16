@@ -64,6 +64,7 @@ export interface LayerOptions {
   layers?: LayerOptions[];
   timeValue?: string;
   labelField?: string;
+  attribution?: string;
 }
 
 // Layer Rebuild Parameters
@@ -94,6 +95,7 @@ export interface BasemapLayerConfig {
   rootPath?: string;
   spritePath?: string;
   pngPath?: string;
+  attribution?: string;
 }
 
 // Grouped Layer Options

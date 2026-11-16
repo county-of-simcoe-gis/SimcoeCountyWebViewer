@@ -40,6 +40,39 @@ import { FeatureHelpers } from "@/utils/openlayers/FeatureHelpers";
 import { getAxiosClient } from "@/lib/axiosInstance";
 import { getAccessToken, isSecuredUrl } from "@/utils/auth";
 
+const serviceCopyrightCache = new globalThis.Map<string, Promise<string | null>>();
+
+// Strips the tile template so ".../MapServer/tile/{z}/{y}/{x}" resolves to the service root
+function getArcGISServiceRoot(url: string): string | null {
+  const match = url.match(/^(https?:\/\/.*?\/(?:MapServer|VectorTileServer))(?:[/?]|$)/i);
+  return match ? match[1] : null;
+}
+
+function fetchServiceCopyright(url: string): Promise<string | null> {
+  const root = getArcGISServiceRoot(url);
+  if (!root) return Promise.resolve(null);
+
+  let pending = serviceCopyrightCache.get(root);
+  if (!pending) {
+    pending = getAxiosClient(root)
+      .get(root, { params: { f: "json" } })
+      .then((response) => {
+        const text = response.data?.copyrightText;
+        return typeof text === "string" && text.trim() ? text.trim() : null;
+      })
+      .catch(() => null);
+    serviceCopyrightCache.set(root, pending);
+  }
+  return pending;
+}
+
+// The service's own copyrightText replaces any configured attribution once it loads
+function applyServiceCopyright(getSource: () => Source | null | undefined, url: string): void {
+  fetchServiceCopyright(url).then((text) => {
+    if (text) getSource()?.setAttributions(text);
+  });
+}
+
 export class LayerHelpers {
   /**
    * Get the layer type from a layer instance
@@ -149,6 +182,7 @@ export class LayerHelpers {
       maxZoom = null,
       timeValue,
       labelField,
+      attribution,
     }: LayerOptions,
     callback: (layer: Layer) => void,
   ): void {
@@ -280,19 +314,21 @@ export class LayerHelpers {
 
     // Main switch for creating layers based on sourceType
     switch (sourceType) {
-      case OL_DATA_TYPES.XYZ:
-        callback(
-          new TileLayer({
-            properties: { rebuildParams, name: finalName },
-            source: new XYZ({
-              url: finalUrl as string,
-              crossOrigin: "anonymous",
-            }),
-            minZoom: minZoom || undefined,
-            maxZoom: maxZoom || undefined,
+      case OL_DATA_TYPES.XYZ: {
+        const xyzLayer = new TileLayer({
+          properties: { rebuildParams, name: finalName },
+          source: new XYZ({
+            url: finalUrl as string,
+            crossOrigin: "anonymous",
+            attributions: attribution || undefined,
           }),
-        );
+          minZoom: minZoom || undefined,
+          maxZoom: maxZoom || undefined,
+        });
+        applyServiceCopyright(() => xyzLayer.getSource(), finalUrl as string);
+        callback(xyzLayer);
         break;
+      }
 
       case OL_DATA_TYPES.OSM:
         callback(
@@ -652,16 +688,17 @@ export class LayerHelpers {
         const tileGrid = createXYZ({
           extent: extent,
         });
-        callback(
-          new TileLayer({
-            properties: { rebuildParams, name: finalName },
-            source: new XYZ({
-              url: finalUrl as string,
-              crossOrigin: "anonymous",
-              tileGrid: tileGrid,
-            }),
+        const simcoeLayer = new TileLayer({
+          properties: { rebuildParams, name: finalName },
+          source: new XYZ({
+            url: finalUrl as string,
+            crossOrigin: "anonymous",
+            tileGrid: tileGrid,
+            attributions: attribution || undefined,
           }),
-        );
+        });
+        applyServiceCopyright(() => simcoeLayer.getSource(), finalUrl as string);
+        callback(simcoeLayer);
         break;
 
       case OL_DATA_TYPES.TileImage:
@@ -690,13 +727,14 @@ export class LayerHelpers {
           url: finalUrl as string,
           tileGrid: customTileGrid,
           crossOrigin: "anonymous",
+          attributions: attribution || undefined,
         });
-        callback(
-          new TileLayer({
-            properties: { rebuildParams, name: finalName },
-            source: xyzSource,
-          }),
-        );
+        const tileImageLayer = new TileLayer({
+          properties: { rebuildParams, name: finalName },
+          source: xyzSource,
+        });
+        applyServiceCopyright(() => xyzSource, finalUrl as string);
+        callback(tileImageLayer);
         break;
 
       case OL_DATA_TYPES.VectorTile:
@@ -729,6 +767,10 @@ export class LayerHelpers {
                 // Use applyStyle which handles source creation, sprite + glyph loading
                 applyStyle(vtLayer, glStyle, "esri")
                   .then(() => {
+                    if (attribution) {
+                      (vtLayer.getSource() as VectorTileSource | null)?.setAttributions(attribution);
+                    }
+                    applyServiceCopyright(() => vtLayer.getSource(), url);
                     callback(vtLayer);
                   })
                   .catch((err) => {

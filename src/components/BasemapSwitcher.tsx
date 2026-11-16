@@ -30,6 +30,7 @@ interface BasemapLayer {
   rootPath?: string;
   spritePath?: string;
   pngPath?: string;
+  attribution?: string;
 }
 
 interface BasemapService {
@@ -44,16 +45,20 @@ interface ImageryService {
   name: string;
   fullExtent?: number[];
   type: string;
+  attribution?: string;
 }
 
 interface BasemapConfig {
   defaultButton: string;
+  defaultImageryName?: string;
   topoServices: BasemapService[];
   imageryServices: ImageryService[];
   worldImageryService?: string;
+  worldImageryAttribution?: string;
   streetService?: {
     url: string;
     fullExtent?: number[];
+    attribution?: string;
   };
 }
 
@@ -115,6 +120,16 @@ export function getImageryNameAtSlider(services: ImageryService[], sliderValue: 
   return services[Math.round(sliderValue)]?.name ?? null;
 }
 
+/** Index of the configured default imagery, falling back to the newest (last) service. */
+export function getDefaultImageryIndex(config: Pick<BasemapConfig, "imageryServices" | "defaultImageryName">): number {
+  const services = config.imageryServices ?? [];
+  if (config.defaultImageryName) {
+    const index = services.findIndex((service) => service.name === config.defaultImageryName);
+    if (index !== -1) return index;
+  }
+  return Math.max(services.length - 1, 0);
+}
+
 /** Resolves the saved imagery year to an index, or null when it is unavailable. */
 export function resolveSavedImageryIndex(services: ImageryService[], saved: SavedBasemapOptions): number | null {
   if (saved.imageryServiceName) {
@@ -169,6 +184,9 @@ export default function BasemapSwitcher() {
           if (apiBasemapServices.defaultButton) {
             data.defaultButton = apiBasemapServices.defaultButton;
           }
+          if (apiBasemapServices.defaultImageryName) {
+            data.defaultImageryName = apiBasemapServices.defaultImageryName;
+          }
 
           // Merge imagery services: API entries replace matching local entries (by name),
           // API-only entries are appended. Matches old app's mergeObj + dedup-by-name.
@@ -186,6 +204,9 @@ export default function BasemapSwitcher() {
           }
           if (apiBasemapServices.worldImageryService) {
             data.worldImageryService = apiBasemapServices.worldImageryService;
+          }
+          if (apiBasemapServices.worldImageryAttribution) {
+            data.worldImageryAttribution = apiBasemapServices.worldImageryAttribution;
           }
           // console.log("BasemapSwitcher: Merged API basemap overrides", Object.keys(apiBasemapServices));
         }
@@ -279,6 +300,7 @@ export default function BasemapSwitcher() {
             tiled: true,
             extent: service.fullExtent,
             name: service.name,
+            attribution: service.attribution,
           },
           (newLayer) => {
             if (newLayer) {
@@ -326,6 +348,7 @@ export default function BasemapSwitcher() {
           url: basemapConfig.streetService.url,
           name: "Streets",
           extent: basemapConfig.streetService.fullExtent,
+          attribution: basemapConfig.streetService.attribution,
         },
         (newLayer) => {
           if (newLayer) {
@@ -368,6 +391,7 @@ export default function BasemapSwitcher() {
           sourceType: OL_DATA_TYPES.XYZ,
           url: basemapConfig.worldImageryService,
           name: "World Imagery",
+          attribution: basemapConfig.worldImageryAttribution,
         },
         (newLayer) => {
           if (newLayer) {
@@ -475,6 +499,7 @@ export default function BasemapSwitcher() {
               rootPath: layerConfig.rootPath,
               spritePath: layerConfig.spritePath,
               pngPath: layerConfig.pngPath,
+              attribution: layerConfig.attribution,
             },
             (layer) => {
               if (layer) {
@@ -607,7 +632,7 @@ export default function BasemapSwitcher() {
         });
 
         const savedImageryIndex = saved ? resolveSavedImageryIndex(config.imageryServices, saved) : null;
-        const sliderValue = savedImageryIndex ?? (config.imageryServices?.length ? config.imageryServices.length - 1 : 0);
+        const sliderValue = savedImageryIndex ?? getDefaultImageryIndex(config);
         updateImageryLayers(sliderValue);
         setImagerySliderValue(sliderValue);
         setStreetsCheckbox(streets);
@@ -902,8 +927,8 @@ export default function BasemapSwitcher() {
 
     if (basemap === "IMAGERY") {
       // Determine the target imagery index from NAME parameter
-      // Default to the newest imagery (max index) if no NAME match found
-      let targetIndex = config.imageryServices.length - 1;
+      // Default to the configured default imagery if no NAME match found
+      let targetIndex = getDefaultImageryIndex(config);
 
       if (name && config.imageryServices && config.imageryServices.length > 0) {
         for (let index = 0; index < config.imageryServices.length; index++) {
@@ -981,7 +1006,7 @@ export default function BasemapSwitcher() {
       hasProcessedUrlParamsRef.current = true;
       const saved = loadBasemapOptions();
       const savedImageryIndex = saved ? resolveSavedImageryIndex(config.imageryServices, saved) : null;
-      setImagerySliderValue(savedImageryIndex ?? config.imageryServices.length - 1);
+      setImagerySliderValue(savedImageryIndex ?? getDefaultImageryIndex(config));
     }
   }, [config, urlParameters, urlParametersLoaded, getUrlParam, handleURLParameters]);
 
